@@ -209,7 +209,7 @@ const PSPEED = 8.5, GRAV = 26, JUMP = 9.5;
    Each entry: [shape, size, pos, rot, color, flags]  flags: 'm' mirror on x, 'g' glow.
    Space: about 1x1x1 centred on the origin, front facing +z, y up.
    size is the scale: sphere = radii, box = width/height/depth, cylinder & cone = [radius, height, radius]. */
-const PART_SHAPES = ['sphere','box','cylinder','cone','torus','tri','half'];
+const PART_SHAPES = ['sphere','box','cylinder','cone','torus','tri','half','rock','ring','oct','octcone'];
 const RAW_LIB = {
   elephant: { spin: false, p: [
     ['sphere',[.42,.36,.55],[0,.05,-.05],0,'#8f96a0'], ['sphere',[.29,.28,.28],[0,.22,.45],0,'#979ea8'],
@@ -307,6 +307,104 @@ const RAW_LIB = {
   burger: { spin: true, p: [
     ['sphere',[.3,.08,.3],[0,-.12,0],0,'#d89a4a'], ['cylinder',[.31,.07,.31],[0,-.04,0],0,'#5a3220'], ['box',[.46,.02,.46],[0,.0,0],[0,.785,0],'#ffc93c'],
     ['cylinder',[.33,.03,.33],[0,.025,0],0,'#5cb85c'], ['sphere',[.3,.16,.3],[0,.08,0],0,'#e0a552'], ['sphere',[.02,.01,.03],[.1,.22,.05],0,'#fff4d6','m'], ['sphere',[.02,.01,.03],[0,.23,-.1],0,'#fff4d6']] },
+  bullet: { spin: false, tracer: true, p: [
+    ['cylinder',[.06,.2,.06],[0,0,-.04],[1.57,0,0],'#b87333'], ['cone',[.06,.14,.06],[0,0,.13],[1.57,0,0],'#d9935a'], ['cylinder',[.066,.03,.066],[0,0,-.15],[1.57,0,0],'#8a5a2b']] },
+  fireball: { spin: false, p: [
+    ['cone',[.2,.55,.2],[0,0,-.3],[-1.57,0,0],'#ff5a1a','g'], ['cone',[.12,.42,.12],[.12,.08,-.26],[-1.4,0,-.3],'#ff9a2a','g'], ['cone',[.12,.42,.12],[-.12,-.06,-.26],[-1.7,0,.3],'#ff9a2a','g'],
+    ['sphere',[.25,.25,.25],[0,0,.02],0,'#ffa030','g'], ['sphere',[.16,.16,.16],[0,0,.13],0,'#fff2a0','g']] },
+  iceshard: { spin: true, p: [
+    ['octcone',[.11,.65,.11],[0,0,.05],[1.57,0,0],'#bfefff','g'], ['octcone',[.11,.25,.11],[0,0,-.24],[-1.57,0,0],'#9fdfff'],
+    ['octcone',[.06,.38,.06],[.1,.06,-.04],[1.3,0,-.5],'#dff6ff','m'], ['octcone',[.06,.32,.06],[0,-.1,-.04],[1.9,0,0],'#9fdfff']] },
+  goo: { spin: false, p: [
+    ['sphere',[.25,.21,.3],[0,0,0],0,'#7ad83a'], ['sphere',[.12,.12,.12],[.18,-.07,-.15],0,'#5fbf2a','m'], ['sphere',[.09,.09,.09],[0,.12,-.26],0,'#9cf05a'],
+    ['sphere',[.05,.08,.05],[.06,-.22,.06],0,'#5fbf2a'], ['sphere',[.04,.04,.04],[.08,.1,.24],0,'#d8ffb0','gm']] },
+  bat: { spin: false, p: [
+    ['sphere',[.12,.14,.15],[0,0,0],0,'#2a2230'], ['sphere',[.1,.1,.1],[0,.1,.1],0,'#2a2230'], ['cone',[.03,.08,.03],[.05,.2,.1],0,'#2a2230','m'],
+    ['box',[.42,.02,.24],[.26,.03,-.02],[0,0,.3],'#3a2f45','m'], ['sphere',[.02,.02,.02],[.04,.12,.19],0,'#ff2a4a','gm']] },
+  grenade: { spin: true, p: [
+    ['sphere',[.18,.22,.18],[0,0,0],0,'#4a5a2a'], ['cylinder',[.185,.02,.185],[0,.06,0],0,'#36421e'], ['cylinder',[.185,.02,.185],[0,-.06,0],0,'#36421e'],
+    ['cylinder',[.07,.08,.07],[0,.24,0],0,'#8a8f96'], ['box',[.03,.2,.06],[.08,.18,0],[0,0,-.3],'#8a8f96'], ['ring',[.06,.06,.06],[-.08,.29,0],[0,1.57,0],'#c8ced8']] },
+  sword: { spin: true, p: [
+    ['box',[.07,.72,.02],[0,.2,0],0,'#d9dee6'], ['cone',[.05,.14,.012],[0,.63,0],0,'#d9dee6'], ['box',[.3,.05,.07],[0,-.18,0],0,'#c9a24a'],
+    ['cylinder',[.03,.22,.03],[0,-.32,0],0,'#4a2e1c'], ['sphere',[.045,.045,.045],[0,-.45,0],0,'#c9a24a'], ['box',[.012,.6,.025],[0,.2,0],0,'#7fd3ff','g']] },
+  knife: { spin: true, p: [
+    ['box',[.06,.32,.012],[0,.12,0],0,'#d9dee6'], ['cone',[.03,.08,.01],[0,.32,0],0,'#d9dee6'], ['box',[.14,.03,.04],[0,-.05,0],0,'#555b63'], ['box',[.05,.2,.04],[0,-.17,0],0,'#1b1b1b']] },
+  axe: { spin: true, p: [
+    ['cylinder',[.035,.75,.035],[0,0,0],0,'#7a4a2a'], ['box',[.26,.2,.05],[.11,.28,0],0,'#8a929c'], ['cylinder',[.14,.055,.14],[.24,.28,0],[1.57,0,0],'#d9dee6'], ['box',[.08,.08,.06],[-.05,.28,0],0,'#555b63']] },
+  hammer: { spin: true, p: [
+    ['cylinder',[.04,.62,.04],[0,0,0],0,'#7a4a2a'], ['box',[.34,.17,.17],[0,.33,0],0,'#6a727c'], ['box',[.06,.19,.19],[.17,.33,0],0,'#9aa3ad'], ['box',[.06,.19,.19],[-.17,.33,0],0,'#9aa3ad']] },
+  shuriken: { spin: true, axis: 'y', p: [
+    ['cylinder',[.08,.03,.08],[0,0,0],0,'#555b63'], ['cone',[.015,.3,.06],[.18,0,0],[0,0,-1.57],'#c8ced8'], ['cone',[.015,.3,.06],[-.18,0,0],[0,0,1.57],'#c8ced8'],
+    ['cone',[.06,.3,.015],[0,0,.18],[1.57,0,0],'#c8ced8'], ['cone',[.06,.3,.015],[0,0,-.18],[-1.57,0,0],'#c8ced8'], ['cylinder',[.03,.035,.03],[0,0,0],0,'#1b1b1b']] },
+  lightning: { spin: false, p: [
+    ['box',[.08,.32,.07],[.05,.25,0],[0,0,.5],'#ffe14d','g'], ['box',[.08,.3,.07],[-.03,.02,0],[0,0,-.55],'#ffe14d','g'], ['box',[.08,.32,.07],[.05,-.22,0],[0,0,.5],'#ffe14d','g'], ['octcone',[.07,.16,.06],[0,-.43,0],[3.14,0,0],'#fff6a0','g']] },
+  rock: { spin: true, p: [ ['rock',[.28,.24,.26],[0,0,0],[.3,.5,0],'#7a7470'], ['rock',[.12,.1,.12],[.17,.1,.1],[.5,0,.3],'#8a847c'], ['rock',[.1,.08,.1],[-.15,-.1,.08],0,'#6a645f']] },
+  brick: { spin: true, p: [ ['box',[.42,.18,.2],[0,0,0],0,'#b5523a'], ['box',[.43,.02,.21],[0,0,0],0,'#8e3c28'], ['box',[.02,.19,.21],[.07,0,0],0,'#8e3c28']] },
+  coin: { spin: true, p: [ ['cylinder',[.25,.04,.25],[0,0,0],[1.57,0,0],'#f2c230'], ['cylinder',[.2,.046,.2],[0,0,0],[1.57,0,0],'#ffd95a'], ['box',[.06,.16,.05],[0,0,0],0,'#d9a520']] },
+  diamond: { spin: true, axis: 'y', p: [ ['octcone',[.3,.32,.3],[0,-.12,0],[3.14,0,0],'#7fe6ff','g'], ['oct',[.3,.08,.3],[0,.08,0],0,'#a8f0ff','g'], ['octcone',[.3,.08,.3],[0,.16,0],0,'#c8f6ff']] },
+  soccer: { spin: true, p: [ ['sphere',[.26,.26,.26],[0,0,0],0,'#f4f4f4'], ['sphere',[.09,.04,.09],[0,.235,0],0,'#1b1b1b'], ['sphere',[.09,.04,.09],[0,-.235,0],0,'#1b1b1b'], ['sphere',[.04,.09,.09],[.235,0,0],0,'#1b1b1b','m'], ['sphere',[.09,.09,.04],[0,0,.235],0,'#1b1b1b'], ['sphere',[.09,.09,.04],[0,0,-.235],0,'#1b1b1b']] },
+  basketball: { spin: true, p: [ ['sphere',[.26,.26,.26],[0,0,0],0,'#e8762a'], ['ring',[.262,.262,.262],[0,0,0],0,'#1b1b1b'], ['ring',[.262,.262,.262],[0,0,0],[0,1.57,0],'#1b1b1b'], ['ring',[.262,.262,.262],[0,0,0],[1.57,0,0],'#1b1b1b']] },
+  snowball: { spin: true, p: [ ['sphere',[.24,.24,.24],[0,0,0],0,'#f4f8ff'], ['sphere',[.08,.06,.07],[.15,.12,.1],0,'#dfe9f7'], ['sphere',[.07,.06,.07],[-.12,-.1,.15],0,'#dfe9f7']] },
+  egg: { spin: true, p: [ ['sphere',[.2,.27,.2],[0,0,0],0,'#f6efe0'], ['sphere',[.03,.02,.02],[.08,.12,.15],0,'#e0d3b8']] },
+  carrot: { spin: false, p: [ ['cone',[.11,.48,.11],[0,0,.06],[1.57,0,0],'#f08a24'], ['cone',[.04,.2,.04],[.04,.04,-.25],[-2,0,.3],'#3e9b3a','m'], ['cone',[.04,.2,.04],[0,.07,-.26],[-1.8,0,0],'#3e9b3a']] },
+  icecream: { spin: true, p: [ ['cone',[.13,.36,.13],[0,-.2,0],[3.14,0,0],'#d9a35a'], ['sphere',[.15,.15,.15],[0,.06,0],0,'#ffb3c7'], ['sphere',[.13,.13,.13],[0,.22,0],0,'#fff4d6'], ['sphere',[.04,.04,.04],[0,.36,0],0,'#d7262e']] },
+  cake: { spin: true, p: [ ['cylinder',[.28,.25,.28],[0,0,0],0,'#f6d9a8'], ['cylinder',[.29,.06,.29],[0,.14,0],0,'#ff9ac0'], ['cylinder',[.02,.15,.02],[0,.24,0],0,'#4cc3ff'], ['sphere',[.03,.05,.03],[0,.34,0],0,'#ffb347','g'], ['sphere',[.04,.04,.04],[.18,.18,.1],0,'#d7262e','m']] },
+  hotdog: { spin: false, p: [ ['sphere',[.17,.1,.38],[0,-.04,0],0,'#e0a552'], ['cylinder',[.07,.72,.07],[0,.05,0],[1.57,0,0],'#c0533a'], ['box',[.03,.02,.52],[0,.12,0],[0,.15,0],'#ffd23f']] },
+  cheese: { spin: true, p: [ ['tri',[.35,.22,.35],[0,0,0],0,'#ffc93c'], ['sphere',[.05,.05,.05],[.1,.06,.12],0,'#e0a520'], ['sphere',[.04,.04,.04],[-.08,.11,-.05],0,'#e0a520'], ['sphere',[.03,.03,.03],[.05,-.05,-.1],0,'#e0a520']] },
+  shoe: { spin: true, p: [ ['box',[.2,.05,.52],[0,-.1,0],0,'#f4f4f4'], ['sphere',[.17,.14,.26],[0,.0,-.04],0,'#d6332a'], ['box',[.15,.05,.2],[0,.11,.06],0,'#f4f4f4']] },
+  toilet: { spin: true, p: [ ['cylinder',[.2,.25,.25],[0,-.05,.05],0,'#f4f4f4'], ['ring',[.2,.2,.2],[0,.08,.05],[1.57,0,0],'#ffffff'], ['box',[.36,.35,.14],[0,.12,-.2],0,'#f4f4f4'], ['cylinder',[.17,.02,.2],[0,.09,.05],0,'#7fd3ff'], ['box',[.06,.03,.03],[.12,.26,-.2],0,'#c8ced8']] },
+  tv: { spin: false, p: [ ['box',[.62,.42,.14],[0,0,0],0,'#2a2e35'], ['box',[.52,.33,.02],[0,0,.07],0,'#4cc3ff','g'], ['cylinder',[.01,.3,.01],[.1,.33,0],[0,0,-.4],'#c8ced8','m'], ['box',[.2,.04,.12],[0,-.24,0],0,'#1b1b1b']] },
+  phone: { spin: true, p: [ ['box',[.26,.5,.04],[0,0,0],0,'#1b1d22'], ['box',[.22,.43,.01],[0,0,.022],0,'#7fd3ff','g'], ['sphere',[.02,.02,.01],[0,.22,-.022],0,'#555b63']] },
+  guitar: { spin: true, p: [ ['sphere',[.22,.22,.07],[0,-.18,0],0,'#c0533a'], ['sphere',[.17,.17,.07],[0,.08,0],0,'#c0533a'], ['cylinder',[.06,.02,.06],[0,-.06,.07],[1.57,0,0],'#1b1b1b'], ['box',[.05,.48,.03],[0,.4,0],0,'#5a3b1a'], ['box',[.08,.12,.03],[0,.68,0],0,'#3a2716']] },
+  bulb: { spin: true, p: [ ['sphere',[.2,.22,.2],[0,.08,0],0,'#fff3b0','g'], ['cylinder',[.09,.16,.09],[0,-.18,0],0,'#9aa3ad'], ['ring',[.095,.095,.095],[0,-.14,0],[1.57,0,0],'#6a727c'], ['ring',[.095,.095,.095],[0,-.2,0],[1.57,0,0],'#6a727c']] },
+  plane: { spin: false, p: [ ['cylinder',[.1,.8,.1],[0,0,0],[1.57,0,0],'#e8e8f0'], ['cone',[.1,.18,.1],[0,0,.49],[1.57,0,0],'#e8e8f0'], ['box',[.95,.03,.18],[0,0,.02],0,'#d6332a'], ['box',[.02,.2,.13],[0,.12,-.36],0,'#d6332a'], ['box',[.32,.02,.1],[0,.02,-.36],0,'#e8e8f0'], ['box',[.11,.04,.25],[0,.05,.15],0,'#4cc3ff']] },
+  ufo: { spin: true, axis: 'y', p: [ ['sphere',[.42,.1,.42],[0,0,0],0,'#9aa3ad'], ['sphere',[.18,.15,.18],[0,.08,0],0,'#7fe6ff','g'], ['sphere',[.04,.04,.04],[.33,-.02,0],0,'#ffe14d','gm'], ['sphere',[.04,.04,.04],[0,-.02,.33],0,'#ffe14d','g'], ['sphere',[.04,.04,.04],[0,-.02,-.33],0,'#ffe14d','g'], ['cylinder',[.15,.04,.15],[0,-.09,0],0,'#6fe0ff','g']] },
+  anchor: { spin: true, p: [ ['cylinder',[.04,.6,.04],[0,0,0],0,'#555b63'], ['box',[.32,.05,.05],[0,.2,0],0,'#555b63'], ['ring',[.07,.07,.07],[0,.36,0],0,'#555b63'], ['ring',[.26,.26,.4],[0,-.12,0],0,'#555b63'], ['cone',[.05,.1,.05],[.25,-.18,0],[0,0,.6],'#555b63','m']] },
+  crown: { spin: true, axis: 'y', p: [ ['cylinder',[.25,.16,.25],[0,0,0],0,'#f2c230'], ['cone',[.06,.16,.06],[.22,.15,0],0,'#f2c230','m'], ['cone',[.06,.16,.06],[0,.15,.22],0,'#f2c230'], ['cone',[.06,.16,.06],[0,.15,-.22],0,'#f2c230'], ['sphere',[.04,.04,.03],[0,0,.25],0,'#d7262e','g'], ['sphere',[.04,.04,.03],[.25,0,0],0,'#4cc3ff','gm']] },
+  moon: { spin: true, p: [ ['sphere',[.28,.28,.28],[0,0,0],0,'#efe8c4'], ['sphere',[.06,.03,.06],[.12,.18,.15],0,'#cfc6a0'], ['sphere',[.08,.03,.08],[-.1,-.05,.24],0,'#cfc6a0'], ['sphere',[.05,.03,.05],[.2,-.12,.1],0,'#cfc6a0']] },
+  sun: { spin: true, axis: 'z', p: [ ['sphere',[.22,.22,.12],[0,0,0],0,'#ffd23f','g'], ['octcone',[.06,.16,.04],[0,.32,0],0,'#ffb030','g'], ['octcone',[.06,.16,.04],[0,-.32,0],[0,0,3.14],'#ffb030','g'], ['octcone',[.06,.16,.04],[.32,0,0],[0,0,-1.57],'#ffb030','g'], ['octcone',[.06,.16,.04],[-.32,0,0],[0,0,1.57],'#ffb030','g'],
+    ['octcone',[.05,.14,.04],[.23,.23,0],[0,0,-.785],'#ffb030','g'], ['octcone',[.05,.14,.04],[-.23,.23,0],[0,0,.785],'#ffb030','g'], ['octcone',[.05,.14,.04],[.23,-.23,0],[0,0,-2.36],'#ffb030','g'], ['octcone',[.05,.14,.04],[-.23,-.23,0],[0,0,2.36],'#ffb030','g']] },
+  planet: { spin: true, axis: 'y', p: [ ['sphere',[.25,.25,.25],[0,0,0],0,'#d9a35a'], ['ring',[.46,.46,.46],[0,0,0],[1.2,0,0],'#e8d7a8'], ['ring',[.4,.4,.4],[0,0,0],[1.2,0,0],'#c8b088']] },
+  mushroom: { spin: true, p: [ ['cylinder',[.1,.26,.1],[0,-.12,0],0,'#f4efe0'], ['sphere',[.3,.18,.3],[0,.08,0],0,'#d7262e'], ['sphere',[.05,.03,.05],[.15,.2,.05],0,'#ffffff','m'], ['sphere',[.05,.03,.05],[0,.24,-.1],0,'#ffffff'], ['sphere',[.04,.03,.04],[0,.18,.2],0,'#ffffff']] },
+  cactus: { spin: true, p: [ ['cylinder',[.12,.6,.12],[0,0,0],0,'#3e9b3a'], ['cylinder',[.06,.2,.06],[.16,.05,0],[0,0,-1.2],'#3e9b3a'], ['cylinder',[.06,.18,.06],[.22,.18,0],0,'#3e9b3a'], ['cylinder',[.06,.16,.06],[-.15,-.05,0],[0,0,1.2],'#3e9b3a'], ['cylinder',[.06,.16,.06],[-.21,.06,0],0,'#3e9b3a'], ['sphere',[.05,.04,.05],[0,.32,0],0,'#ff7eb6']] },
+  bone: { spin: true, p: [ ['cylinder',[.055,.6,.055],[0,0,0],[0,0,1.57],'#f2ecd8'], ['sphere',[.08,.08,.08],[.32,.06,0],0,'#f2ecd8','m'], ['sphere',[.08,.08,.08],[.32,-.06,0],0,'#f2ecd8','m']] },
+  fist: { spin: false, p: [ ['box',[.28,.24,.22],[0,0,.08],0,'#e9c9a6'], ['cylinder',[.045,.24,.045],[-.09,.07,.2],[0,0,1.57],'#e9c9a6'], ['cylinder',[.045,.24,.045],[-.09,-.01,.2],[0,0,1.57],'#e9c9a6'], ['cylinder',[.045,.24,.045],[-.09,-.09,.2],[0,0,1.57],'#e9c9a6'],
+    ['cylinder',[.05,.14,.05],[.14,-.02,.12],[.3,0,.5],'#e9c9a6'], ['cylinder',[.14,.3,.13],[0,0,-.18],[1.57,0,0],'#d6332a'], ['cylinder',[.15,.06,.14],[0,0,-.04],[1.57,0,0],'#f4f4f4']] },
+  turtle: { spin: false, p: [ ['sphere',[.32,.17,.38],[0,.03,0],0,'#3f8f4a'], ['sphere',[.12,.06,.12],[0,.16,0],0,'#2f6f3a'], ['sphere',[.08,.05,.08],[.14,.12,.12],0,'#2f6f3a','m'], ['sphere',[.08,.05,.08],[.14,.12,-.12],0,'#2f6f3a','m'],
+    ['sphere',[.1,.1,.11],[0,.02,.43],0,'#8bc47a'], ['sphere',[.02,.02,.02],[.05,.06,.52],0,'#111111','m'], ['sphere',[.07,.04,.09],[.25,-.1,.22],0,'#8bc47a','m'], ['sphere',[.07,.04,.09],[.25,-.1,-.22],0,'#8bc47a','m']] },
+  rabbit: { spin: false, p: [ ['sphere',[.22,.22,.28],[0,0,0],0,'#f4f4f4'], ['sphere',[.15,.15,.15],[0,.18,.22],0,'#f4f4f4'], ['sphere',[.04,.2,.06],[.06,.42,.2],[0,0,-.15],'#f4f4f4','m'], ['sphere',[.025,.15,.03],[.06,.42,.24],[0,0,-.15],'#ffb3c7','m'],
+    ['sphere',[.025,.025,.02],[.06,.22,.36],0,'#111111','m'], ['sphere',[.02,.015,.015],[0,.17,.37],0,'#ff8fa3'], ['sphere',[.07,.07,.07],[0,.05,-.3],0,'#ffffff'], ['sphere',[.08,.05,.13],[.12,-.2,.08],0,'#f4f4f4','m']] },
+  frog: { spin: false, p: [ ['sphere',[.26,.17,.28],[0,0,0],0,'#4caf50'], ['sphere',[.08,.08,.08],[.11,.17,.16],0,'#4caf50','m'], ['sphere',[.06,.06,.04],[.11,.19,.21],0,'#ffffff','m'], ['sphere',[.03,.03,.02],[.11,.19,.245],0,'#111111','m'],
+    ['box',[.24,.02,.02],[0,-.02,.27],0,'#2e7d32'], ['sphere',[.08,.06,.16],[.22,-.1,-.12],0,'#43a047','m'], ['sphere',[.05,.04,.08],[.15,-.13,.18],0,'#43a047','m']] },
+  snake: { spin: false, p: [ ['sphere',[.12,.1,.14],[0,0,.4],0,'#4caf50'], ['sphere',[.02,.02,.02],[.06,.05,.5],0,'#ffd23f','m'], ['box',[.02,.01,.1],[0,-.02,.57],0,'#d7262e'],
+    ['sphere',[.09,.09,.09],[.08,0,.26],0,'#43a047'], ['sphere',[.09,.09,.09],[.1,0,.12],0,'#4caf50'], ['sphere',[.09,.09,.09],[.04,0,0],0,'#43a047'], ['sphere',[.085,.085,.085],[-.05,0,-.12],0,'#4caf50'], ['sphere',[.08,.08,.08],[-.08,0,-.25],0,'#43a047'], ['sphere',[.07,.07,.07],[-.03,0,-.37],0,'#4caf50'], ['sphere',[.05,.05,.05],[.04,0,-.47],0,'#43a047']] },
+  spider: { spin: false, p: [ ['sphere',[.2,.16,.24],[0,0,-.12],0,'#1d1d22'], ['sphere',[.12,.11,.12],[0,0,.15],0,'#2a2a30'], ['sphere',[.025,.025,.02],[.04,.05,.26],0,'#ff2a4a','gm'],
+    ['cylinder',[.02,.4,.02],[.25,.05,.15],[0,.5,-1.1],'#1d1d22','m'], ['cylinder',[.02,.4,.02],[.27,.05,.04],[0,.15,-1.1],'#1d1d22','m'], ['cylinder',[.02,.4,.02],[.27,.05,-.08],[0,-.15,-1.1],'#1d1d22','m'], ['cylinder',[.02,.4,.02],[.25,.05,-.2],[0,-.5,-1.1],'#1d1d22','m'], ['sphere',[.08,.06,.08],[0,.1,-.15],0,'#d7262e']] },
+  octopus: { spin: false, p: [ ['sphere',[.26,.3,.26],[0,.12,0],0,'#a35bd6'], ['sphere',[.05,.06,.03],[.09,.12,.24],0,'#ffffff','m'], ['sphere',[.025,.03,.02],[.09,.12,.27],0,'#111111','m'],
+    ['cone',[.06,.35,.06],[.18,-.25,0],[0,0,3.4],'#9248c4','m'], ['cone',[.06,.35,.06],[0,-.25,.18],[2.9,0,0],'#9248c4'], ['cone',[.06,.35,.06],[0,-.25,-.18],[3.4,0,0],'#9248c4'], ['cone',[.06,.35,.06],[.13,-.25,.13],[2.9,0,.3],'#9248c4','m'], ['cone',[.06,.35,.06],[.13,-.25,-.13],[3.4,0,.3],'#9248c4','m']] },
+  whale: { spin: false, p: [ ['sphere',[.3,.28,.7],[0,0,0],0,'#3a6ea5'], ['sphere',[.25,.16,.55],[0,-.1,.06],0,'#b9d3ea'], ['cone',[.22,.3,.04],[0,.02,-.76],[1.57,0,0],'#3a6ea5'], ['sphere',[.03,.03,.03],[.22,.02,.4],0,'#111111','m'], ['sphere',[.2,.03,.08],[.26,-.12,.15],[0,0,-.5],'#3a6ea5','m'], ['cylinder',[.02,.15,.02],[0,.32,.25],0,'#bfe8ff','g']] },
+  crab: { spin: false, p: [ ['sphere',[.3,.13,.24],[0,0,0],0,'#e0472f'], ['cylinder',[.015,.12,.015],[.07,.14,.15],0,'#e0472f','m'], ['sphere',[.03,.03,.03],[.07,.21,.15],0,'#111111','m'],
+    ['sphere',[.1,.07,.09],[.3,.03,.28],0,'#e0472f','m'], ['box',[.04,.08,.12],[.33,.03,.36],[0,.3,0],'#c43a24','m'], ['cylinder',[.02,.25,.02],[.32,-.08,0],[0,0,-1.2],'#c43a24','m'], ['cylinder',[.02,.25,.02],[.3,-.08,-.12],[0,-.3,-1.2],'#c43a24','m']] },
+  bear: { spin: false, p: [ ['sphere',[.3,.28,.36],[0,0,0],0,'#8a5a32'], ['sphere',[.19,.19,.19],[0,.24,.3],0,'#8a5a32'], ['sphere',[.06,.06,.04],[.13,.4,.28],0,'#6e4423','m'], ['sphere',[.09,.07,.07],[0,.19,.47],0,'#c8935a'],
+    ['sphere',[.03,.025,.02],[0,.22,.54],0,'#111111'], ['sphere',[.025,.025,.02],[.07,.29,.47],0,'#111111','m'], ['cylinder',[.09,.22,.09],[.17,-.26,.18],0,'#7a4e2a','m'], ['cylinder',[.09,.22,.09],[.17,-.26,-.18],0,'#7a4e2a','m']] },
+  panda: { spin: false, p: [ ['sphere',[.3,.28,.36],[0,0,0],0,'#f4f4f4'], ['cylinder',[.31,.16,.3],[0,.04,0],[1.57,0,0],'#1d1d22'], ['sphere',[.19,.19,.19],[0,.24,.3],0,'#f4f4f4'], ['sphere',[.06,.06,.04],[.13,.4,.28],0,'#1d1d22','m'], ['sphere',[.05,.06,.03],[.07,.27,.46],[0,0,.5],'#1d1d22','m'],
+    ['sphere',[.03,.025,.02],[0,.2,.5],0,'#111111'], ['cylinder',[.09,.22,.09],[.17,-.26,.18],0,'#1d1d22','m'], ['cylinder',[.09,.22,.09],[.17,-.26,-.18],0,'#1d1d22','m']] },
+  unicorn: { spin: false, p: [ ['sphere',[.22,.21,.38],[0,0,-.04],0,'#f8f4ff'], ['cylinder',[.09,.32,.09],[0,.2,.26],[.6,0,0],'#f8f4ff'], ['box',[.15,.14,.28],[0,.36,.42],[.3,0,0],'#f8f4ff'], ['octcone',[.03,.24,.03],[0,.53,.4],[-.4,0,0],'#ffd23f','g'],
+    ['box',[.03,.24,.08],[0,.33,.2],[.6,0,0],'#ff7eb6'], ['box',[.03,.16,.08],[0,.18,.12],[.6,0,0],'#7fd3ff'], ['sphere',[.02,.025,.02],[.07,.4,.5],0,'#111111','m'],
+    ['cylinder',[.045,.3,.045],[.12,-.28,.22],0,'#f8f4ff','m'], ['cylinder',[.045,.3,.045],[.12,-.28,-.26],0,'#f8f4ff','m'], ['cylinder',[.05,.3,.05],[0,.03,-.44],[-.8,0,0],'#c38bff']] },
+  dragon: { spin: false, p: [ ['sphere',[.25,.22,.42],[0,0,0],0,'#c0392b'], ['sphere',[.18,.13,.36],[0,-.07,.04],0,'#f2c230'], ['cylinder',[.08,.3,.08],[0,.17,.36],[.7,0,0],'#c0392b'], ['box',[.17,.14,.3],[0,.28,.55],0,'#c0392b'],
+    ['cone',[.03,.12,.03],[.06,.39,.47],[-.5,0,0],'#f2ecd8','m'], ['sphere',[.025,.025,.02],[.07,.32,.66],0,'#ffd23f','gm'], ['box',[.55,.02,.32],[.35,.2,-.02],[0,0,.35],'#8e2a1f','m'],
+    ['cone',[.12,.5,.12],[0,0,-.55],[-1.75,0,0],'#c0392b'], ['cylinder',[.06,.2,.06],[.15,-.22,.15],0,'#a93226','m'], ['cylinder',[.06,.2,.06],[.15,-.22,-.15],0,'#a93226','m']] },
+  mouse: { spin: false, p: [ ['sphere',[.18,.15,.26],[0,0,0],0,'#9aa0a8'], ['cone',[.1,.18,.1],[0,.02,.3],[1.57,0,0],'#9aa0a8'], ['sphere',[.02,.02,.02],[0,.02,.4],0,'#ff8fa3'], ['cylinder',[.1,.02,.1],[.1,.16,.18],[1.57,0,0],'#c8ced8','m'],
+    ['sphere',[.02,.02,.02],[.06,.08,.3],0,'#111111','m'], ['cylinder',[.012,.45,.012],[0,0,-.42],[-1.2,0,0],'#ff8fa3']] },
+  strawberry: { spin: true, p: [ ['cone',[.22,.36,.22],[0,-.08,0],[3.14,0,0],'#e0313f'], ['sphere',[.22,.12,.22],[0,.1,0],0,'#e0313f'], ['cone',[.08,.08,.03],[.08,.2,0],[0,0,-1.2],'#3e9b3a','m'], ['cone',[.08,.08,.03],[0,.2,.08],[1.2,0,0],'#3e9b3a'],
+    ['sphere',[.015,.02,.01],[.1,0,.16],0,'#ffe08a','m'], ['sphere',[.015,.02,.01],[0,-.12,.13],0,'#ffe08a'], ['sphere',[.015,.02,.01],[.16,.05,-.08],0,'#ffe08a','m']] },
+  cookie: { spin: true, p: [ ['cylinder',[.28,.06,.28],[0,0,0],[1.57,0,0],'#d39a5a'], ['sphere',[.04,.04,.03],[.1,.08,.03],0,'#4a2a18','m'], ['sphere',[.04,.04,.03],[0,-.12,.03],0,'#4a2a18'], ['sphere',[.035,.035,.03],[.06,-.03,.03],0,'#4a2a18'], ['sphere',[.04,.04,.03],[-.15,-.1,-.03],0,'#4a2a18']] },
+  coffee: { spin: true, p: [ ['cylinder',[.16,.24,.16],[0,0,0],0,'#f4f4f4'], ['cylinder',[.14,.01,.14],[0,.115,0],0,'#5a3220'], ['ring',[.09,.09,.09],[.17,0,0],0,'#f4f4f4'], ['sphere',[.06,.12,.06],[0,.25,0],0,'#dfe9f7']] },
+  bottle: { spin: true, p: [ ['cylinder',[.12,.36,.12],[0,-.06,0],0,'#3a8f5a'], ['cone',[.12,.12,.12],[0,.18,0],0,'#3a8f5a'], ['cylinder',[.04,.14,.04],[0,.28,0],0,'#3a8f5a'], ['cylinder',[.045,.03,.045],[0,.36,0],0,'#c9a24a'], ['cylinder',[.122,.12,.122],[0,-.06,0],0,'#f2e6c8']] },
+  gift: { spin: true, p: [ ['box',[.4,.32,.4],[0,0,0],0,'#d6332a'], ['box',[.42,.33,.07],[0,0,0],0,'#ffd23f'], ['box',[.07,.33,.42],[0,0,0],0,'#ffd23f'], ['ring',[.08,.08,.12],[.06,.2,0],[0,1.57,.5],'#ffd23f','m']] },
+  book: { spin: true, p: [ ['box',[.4,.07,.52],[0,0,0],0,'#2f5f86'], ['box',[.37,.055,.48],[.02,0,0],0,'#f6efe0'], ['box',[.05,.075,.52],[-.18,0,0],0,'#24496a'], ['box',[.22,.01,.1],[.02,.04,.1],0,'#ffd23f']] },
+  tire: { spin: true, p: [ ['torus',[.28,.28,.28],[0,0,0],[0,1.57,0],'#1b1b1b'], ['cylinder',[.16,.12,.16],[0,0,0],[0,0,1.57],'#9aa3ad'], ['cylinder',[.05,.14,.05],[0,0,0],[0,0,1.57],'#555b63']] },
   cannonball: { spin: true, p: [ ['sphere',[.28,.28,.28],[0,0,0],0,'#2b2f36'], ['sphere',[.08,.06,.05],[-.1,.14,.2],0,'#5a6270']] },
 };
 function toParts(list){
@@ -318,9 +416,26 @@ function toParts(list){
   }
   return out;
 }
-const LIB = {}; for (const k in RAW_LIB) LIB[k] = { parts: toParts(RAW_LIB[k].p), spin: RAW_LIB[k].spin };
-const LIB_LABEL = { elephant:'elefante', shark:'tubarão', pineapple:'abacaxi', banana:'banana', chicken:'galinha', duck:'pato', fish:'peixe', pizza:'pizza', watermelon:'melancia', donut:'rosquinha', star:'estrela', heart:'coração', skull:'caveira', ghost:'fantasma', cat:'gato', dog:'cachorro', dino:'dinossauro', robot:'robô', bomb:'bomba', arrow:'flecha', popcorn:'pipoca', car:'carro', bee:'abelha', penguin:'pinguim', apple:'maçã', cow:'vaca', pig:'porco', burger:'hambúrguer', cannonball:'bala de canhão' };
-const MODEL_WORDS = [[/elefante|elephant/,'elephant'],[/tubara|shark/,'shark'],[/abacaxi|pineapple/,'pineapple'],[/banana/,'banana'],[/galinha|frango|chicken|galo\b/,'chicken'],[/\bpato|patinho|duck/,'duck'],[/peixe|fish/,'fish'],[/pizza/,'pizza'],[/melancia/,'watermelon'],[/rosquinha|donut|sonho\b/,'donut'],[/estrela|star\b/,'star'],[/coracao|amor\b/,'heart'],[/caveira|esqueleto|cranio|skull/,'skull'],[/fantasma|ghost/,'ghost'],[/\bgato|gatinho|\bcat\b/,'cat'],[/cachorro|cachorrinho|\bcao\b|lobo|\bdog\b/,'dog'],[/dinossauro|t-?rex|\bdino/,'dino'],[/robo|robot/,'robot'],[/bala de canhao|cannonball/,'cannonball'],[/bomba|granada|dinamite|\bbomb/,'bomb'],[/flecha|arrow/,'arrow'],[/pipoca|popcorn/,'popcorn'],[/carro|caminhao|\bcar\b/,'car'],[/abelha|\bbee\b/,'bee'],[/pinguim|penguin/,'penguin'],[/\bmaca\b|tomate|apple/,'apple'],[/\bvaca|\bboi\b|\bcow\b/,'cow'],[/porco|leitao|\bpig\b/,'pig'],[/hamburguer|burger|x-?burguer|lanche/,'burger']];
+const LIB = {}; for (const k in RAW_LIB) LIB[k] = { parts: toParts(RAW_LIB[k].p), spin: RAW_LIB[k].spin, axis: RAW_LIB[k].axis || 'x', tracer: !!RAW_LIB[k].tracer };
+const LIB_LABEL = { elephant:'elefante', shark:'tubarão', pineapple:'abacaxi', banana:'banana', chicken:'galinha', duck:'pato', fish:'peixe', pizza:'pizza', watermelon:'melancia', donut:'rosquinha', star:'estrela', heart:'coração', skull:'caveira', ghost:'fantasma', cat:'gato', dog:'cachorro', dino:'dinossauro', robot:'robô', bomb:'bomba', arrow:'flecha', popcorn:'pipoca', car:'carro', bee:'abelha', penguin:'pinguim', apple:'maçã', cow:'vaca', pig:'porco', burger:'hambúrguer', cannonball:'bala de canhão',
+  bullet:'bala', fireball:'bola de fogo', iceshard:'cristal de gelo', goo:'gosma', bat:'morcego', grenade:'granada', sword:'espada', knife:'faca', axe:'machado', hammer:'martelo', shuriken:'shuriken', lightning:'raio', rock:'pedra', brick:'tijolo', coin:'moeda', diamond:'diamante', soccer:'bola de futebol', basketball:'bola de basquete', snowball:'bola de neve', egg:'ovo', carrot:'cenoura', icecream:'sorvete', cake:'bolo', hotdog:'cachorro-quente', cheese:'queijo', shoe:'sapato', toilet:'privada', tv:'televisão', phone:'celular', guitar:'guitarra', bulb:'lâmpada', plane:'avião', ufo:'disco voador', anchor:'âncora', crown:'coroa', moon:'lua', sun:'sol', planet:'planeta', mushroom:'cogumelo', cactus:'cacto', bone:'osso', fist:'soco', turtle:'tartaruga', rabbit:'coelho', frog:'sapo', snake:'cobra', spider:'aranha', octopus:'polvo', whale:'baleia', crab:'caranguejo', bear:'urso', panda:'panda', unicorn:'unicórnio', dragon:'dragão', mouse:'rato', strawberry:'morango', cookie:'biscoito', coffee:'café', bottle:'garrafa', gift:'presente', book:'livro', tire:'pneu', vox:'objeto 3D' };
+const MODEL_WORDS = [
+  [/cachorro.?quente|hot.?dog/,'hotdog'],[/bola de fogo|fireball|meteoro|cometa/,'fireball'],[/bola de neve|snowball/,'snowball'],[/bola de basquete|basquete/,'basketball'],[/bola de futebol|futebol|\bbola\b/,'soccer'],
+  [/bala de canhao|cannonball/,'cannonball'],[/estrela ninja|shuriken/,'shuriken'],[/disco voador|\bovni|\bnave\b|\bdrone/,'ufo'],[/urso panda|\bpanda/,'panda'],[/missil|misseis|foguete/,'missile'],
+  [/elefante|elephant/,'elephant'],[/tubara|shark/,'shark'],[/abacaxi|pineapple/,'pineapple'],[/banana/,'banana'],[/galinha|frango|chicken|\bgalo\b/,'chicken'],[/\bpato|patinho|duck/,'duck'],[/peixe|\bfish/,'fish'],[/pizza/,'pizza'],[/melancia/,'watermelon'],[/rosquinha|donut|\bsonho\b/,'donut'],
+  [/estrela|\bstar\b/,'star'],[/coracao|\bamor\b/,'heart'],[/caveira|esqueleto|cranio|skull/,'skull'],[/fantasma|ghost/,'ghost'],[/\bgato|gatinho|\bcat\b/,'cat'],[/cachorr|\bcao\b|\blobo|\bdog\b/,'dog'],[/dinossauro|t-?rex|\bdino/,'dino'],[/\brobo|robot/,'robot'],
+  [/granada|grenade/,'grenade'],[/bomba|dinamite|\bbomb|\btnt\b/,'bomb'],[/flecha|arrow/,'arrow'],[/pipoca|popcorn/,'popcorn'],[/\bcarro|caminhao|\bcar\b/,'car'],[/abelha|\bbee\b/,'bee'],[/pinguim|penguin/,'penguin'],[/\bmaca\b|tomate|apple/,'apple'],[/\bvaca|\bboi\b|\bcow\b/,'cow'],[/porco|leitao|\bpig\b/,'pig'],[/hamburguer|burger|\blanche/,'burger'],
+  [/\bbala\b|\bbalas\b|projetil|municao|cartucho/,'bullet'],[/\bfogo\b|chamas?\b|labareda|inferno/,'fireball'],[/gelo|congela|cristal de gelo|glacial|\bneve\b/,'iceshard'],[/veneno|gosma|slime|\bacido|toxico|meleca/,'goo'],[/morcego|vampir/,'bat'],
+  [/espada|katana|sabre/,'sword'],[/\bfaca|adaga|punhal/,'knife'],[/machado/,'axe'],[/martelo|marreta/,'hammer'],[/relampago|trovao|\braios?\b(?! ?laser)|eletric|choque/,'lightning'],[/\bpedra|rocha|pedregulho/,'rock'],[/tijolo/,'brick'],[/moeda|dinheiro|\bouro\b/,'coin'],[/diamante|cristal|\bjoia|\bgema/,'diamond'],
+  [/\bovo\b|\bovos\b/,'egg'],[/cenoura/,'carrot'],[/sorvete|picole/,'icecream'],[/\bbolo\b|\bbolos\b/,'cake'],[/queijo/,'cheese'],[/sapato|chinelo|\bbota|tenis/,'shoe'],[/privada|vaso sanitario/,'toilet'],[/televis|\btv\b/,'tv'],[/celular|telefone|iphone|smartphone/,'phone'],[/guitarra|violao/,'guitar'],[/lampada/,'bulb'],
+  [/aviao|\bjato\b|aviaozinho/,'plane'],[/ancora/,'anchor'],[/coroa|\brei\b|rainha/,'crown'],[/\blua\b/,'moon'],[/\bsol\b/,'sun'],[/planeta|saturno|jupiter/,'planet'],[/cogumelo/,'mushroom'],[/cacto/,'cactus'],[/\bosso/,'bone'],[/\bsoco|punho|\bmao\b|maos\b|\bluva/,'fist'],
+  [/tartaruga/,'turtle'],[/coelho/,'rabbit'],[/\bsapo|\bra\b/,'frog'],[/\bcobra|serpente/,'snake'],[/aranha/,'spider'],[/\bpolvo|\blula\b/,'octopus'],[/baleia|golfinho/,'whale'],[/caranguejo|\bsiri\b/,'crab'],[/\burso/,'bear'],[/unicornio/,'unicorn'],[/dragao|dragon/,'dragon'],[/\brato|ratinho|camundongo/,'mouse'],
+  [/morango/,'strawberry'],[/biscoito|cookie|bolacha/,'cookie'],[/\bcafe\b|xicara/,'coffee'],[/garrafa|cerveja|refrigerante/,'bottle'],[/presente/,'gift'],[/\blivro/,'book'],[/\bpneu|\broda\b/,'tire']];
+// Anything else: a word → emoji dictionary; the emoji is turned into a 3D voxel model.
+const EMOJI_DICT = [['leao','🦁'],['tigre','🐯'],['cavalo','🐴'],['girafa','🦒'],['zebra','🦓'],['macaco','🐒'],['gorila','🦍'],['coruja','🦉'],['papagaio','🦜'],['aguia','🦅'],['pavao','🦚'],['flamingo','🦩'],['camelo','🐫'],['canguru','🦘'],['hipopotamo','🦛'],['rinoceronte','🦏'],['raposa','🦊'],['guaxinim','🦝'],['esquilo','🐿️'],['ovelha','🐑'],['cabra','🐐'],['lagosta','🦞'],['camarao','🦐'],['caracol','🐌'],['borboleta','🦋'],['formiga','🐜'],['joaninha','🐞'],['minhoca','🪱'],['escorpiao','🦂'],['mosquito','🦟'],['barata','🪳'],['crocodilo','🐊'],['jacare','🐊'],['lagarto','🦎'],['foca','🦭'],['lhama','🦙'],['preguica','🦥'],['coala','🐨'],['passaro','🐦'],['pombo','🕊️'],['peru','🦃'],['cisne','🦢'],['mamute','🦣'],
+  ['uva','🍇'],['laranja','🍊'],['limao','🍋'],['pera','🍐'],['pessego','🍑'],['cereja','🍒'],['coco','🥥'],['kiwi','🥝'],['abacate','🥑'],['berinjela','🍆'],['batata frita','🍟'],['batata','🥔'],['milho','🌽'],['pimenta','🌶️'],['pepino','🥒'],['brocolis','🥦'],['alho','🧄'],['cebola','🧅'],['pao','🍞'],['croissant','🥐'],['panqueca','🥞'],['bacon','🥓'],['taco','🌮'],['burrito','🌯'],['sushi','🍣'],['ramen','🍜'],['macarrao','🍝'],['espaguete','🍝'],['sanduiche','🥪'],['pretzel','🥨'],['pirulito','🍭'],['chocolate','🍫'],['doce','🍬'],['mel','🍯'],['leite','🥛'],['\\bcha\\b','🍵'],['vinho','🍷'],['pudim','🍮'],['brigadeiro','🟤'],['coxinha','🍗'],['frango assado','🍗'],['coxa','🍗'],['camarao','🍤'],['pastel','🥟'],['empada','🥧'],['torta','🥧'],['salsicha','🌭'],['amendoim','🥜'],['castanha','🌰'],
+  ['saxofone','🎷'],['trompete','🎺'],['violino','🎻'],['tambor','🥁'],['bateria','🥁'],['piano','🎹'],['microfone','🎤'],['camera','📷'],['computador','💻'],['notebook','💻'],['teclado','⌨️'],['mouse de computador','🖱️'],['relogio','⏰'],['bussola','🧭'],['guarda-chuva','☂️'],['guarda chuva','☂️'],['balao','🎈'],['pipa','🪁'],['dado','🎲'],['xadrez','♟️'],['ioio','🪀'],['ursinho','🧸'],['boliche','🎳'],['raquete','🎾'],['trofeu','🏆'],['medalha','🏅'],['chave','🔑'],['cadeado','🔒'],['ima\\b','🧲'],['tesoura','✂️'],['regua','📏'],['lapis','✏️'],['caneta','🖊️'],['pincel','🖌️'],['envelope','✉️'],['carta','✉️'],['caixa','📦'],['pilha','🔋'],['vela','🕯️'],['ampulheta','⏳'],['sino','🔔'],['pena','🪶'],['folha','🍃'],['flor','🌸'],['girassol','🌻'],['rosa','🌹'],['arvore','🌳'],['palmeira','🌴'],['nuvem','☁️'],['arco-iris','🌈'],['arco iris','🌈'],['floco','❄️'],['gota','💧'],['agua','💧'],['vulcao','🌋'],['montanha','⛰️'],['casa','🏠'],['castelo','🏰'],['igreja','⛪'],['onibus','🚌'],['trem','🚂'],['\\bmoto','🏍️'],['bicicleta','🚲'],['skate','🛹'],['barco','⛵'],['navio','🚢'],['helicoptero','🚁'],['ambulancia','🚑'],['bombeiro','🚒'],['trator','🚜'],['patinete','🛴'],['cadeira','🪑'],['\\bcama\\b','🛏️'],['sofa','🛋️'],['banheira','🛁'],['vassoura','🧹'],['balde','🪣'],['sabao','🧼'],['esponja','🧽'],['escova','🪥'],['mascara','🎭'],['palhaco','🤡'],['alien','👽'],['extraterrestre','👽'],['monstro','👾'],['zumbi','🧟'],['bruxa','🧙'],['mago','🧙'],['ninja','🥷'],['pirata','🏴‍☠️'],['mumia','🧟'],['fada','🧚'],['sereia','🧜'],['anjo','👼'],['diabo','😈'],['demonio','😈'],['coco\\b','💩'],['\\bcoco ','💩'],['emoji','😀'],['sorriso','😀'],['olho','👁️'],['cerebro','🧠'],['dente','🦷'],['lingua','👅'],['\\bpe\\b','🦶'],['perna','🦵'],['nariz','👃'],['orelha','👂'],['beijo','💋'],['nota de dinheiro','💵'],['controle','🎮'],['videogame','🎮'],['joystick','🕹️'],['ventilador','🌀'],['furacao','🌪️'],['tornado','🌪️'],['onda','🌊'],['bandeira','🚩'],['chapeu','🎩'],['oculos','🕶️'],['gravata','👔'],['camisa','👕'],['calca','👖'],['vestido','👗'],['meia','🧦'],['luva de boxe','🥊'],['capacete','⛑️'],['mochila','🎒'],['bolsa','👜'],['anel','💍'],['cogumelo','🍄'],['tenis','👟'],['sapo','🐸'],['dragao','🐉'],['cometa','☄️'],['fogos','🎆'],['foguete','🚀'],['satelite','🛰️'],['robo','🤖'],['ovni','🛸']];
+function detectEmoji(t){ for (const [w, e] of EMOJI_DICT){ if (new RegExp(w.includes('\\') ? w : w.replace(/[-\s]/g, m => m === ' ' ? '\\s' : '-?')).test(t)) return e; } return null; }
 const GUN_TYPES = ['pistol','rifle','sniper','shotgun','minigun','bazooka','laser','railgun','flamethrower','launcher','sword','bow'];
 const GUN_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', bazooka:'bazuca', laser:'arma laser', railgun:'railgun', flamethrower:'lança-chamas', launcher:'lançador', sword:'arma branca', bow:'arco' };
 const ARCH_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', rocket:'bazuca', laser:'arma laser', railgun:'railgun', sprayer:'lança-chamas', launcher:'lançador', melee:'arma branca', bow:'arco' };
@@ -335,23 +450,38 @@ function normModel(m){
   return out.length >= 2 ? out : null;
 }
 function archOf(item){ const t = item.gunType; if (!t) return gunArch(item.weapon); return { bazooka: 'rocket', flamethrower: 'sprayer', sword: 'melee' }[t] || t; }
-// Applies what the request literally asks for (weapon type, projectile model) on top of what the forge returned.
+function libMdl(k){ return { parts: LIB[k].parts, spin: LIB[k].spin, axis: LIB[k].axis, tracer: LIB[k].tracer, key: k }; }
+// Applies what the request literally asks for (weapon type, projectile object) on top of what the forge returned.
+// Projectile priority: hand-made 3D model > emoji word turned into 3D voxels > model drawn by Claude > Claude's emoji as voxels > a default that fits the weapon.
 function finalize(it, req){
   const t = strip(req || '');
   if (it.kind === 'weapon' || it.kind === 'turret'){ const gt = detectGun(t); if (gt) it.gunType = gt; }
-  const mk = detectModel(t);
-  if (mk) it.mdl = { parts: LIB[mk].parts, spin: LIB[mk].spin, key: mk };
-  if (!it.mdl && it.gunType === 'bow') it.mdl = { parts: LIB.arrow.parts, spin: false, key: 'arrow' };
-  if (!it.mdl && it.gunType === 'launcher' && /canhao/.test(t)) it.mdl = { parts: LIB.cannonball.parts, spin: true, key: 'cannonball' };
-  const w = it.weapon;
+  const w = it.weapon, g = it.gunType;
   if (w){
-    if (it.mdl && it.kind !== 'minion'){ w.shape = 'model'; w.mdl = it.mdl; w.size = Math.max(w.size, 10); }
-    const g = it.gunType;
-    if (g === 'bazooka' && w.shape !== 'model') w.shape = 'rocket';
-    if ((g === 'laser' || g === 'railgun') && w.shape !== 'model') w.shape = 'laser';
-    if (g === 'flamethrower'){ if (w.shape !== 'model') w.shape = 'orb'; if (w.effect === 'none') w.effect = 'fire'; w.range = Math.min(w.range, 420); }
-    if (g === 'sword'){ w.range = Math.min(w.range, 220); if (w.shape !== 'model') w.shape = 'orb'; }
+    if (g === 'bazooka') w.shape = 'rocket';
+    if (g === 'laser' || g === 'railgun') w.shape = 'laser';
+    if (g === 'flamethrower'){ w.shape = 'orb'; if (w.effect === 'none') w.effect = 'fire'; w.range = Math.min(w.range, 420); }
+    if (g === 'sword'){ w.range = Math.min(w.range, 220); w.shape = 'orb'; }
     w.arch = archOf(it);
+  }
+  const claudeMdl = it.mdl; it.mdl = null;
+  const mk = detectModel(t);
+  const selfMelee = it.gunType === 'sword' && ['sword','knife','axe','hammer'].includes(mk);
+  const sprayer = w && w.arch === 'sprayer' && it.kind !== 'minion';
+  if (mk === 'missile'){ if (w && it.kind !== 'minion' && !sprayer) w.shape = 'rocket'; }
+  else if (mk && !selfMelee && !(sprayer && ['fireball','iceshard','goo'].includes(mk))) it.mdl = libMdl(mk);
+  if (!it.mdl && !selfMelee && !sprayer && mk !== 'missile'){ const em = detectEmoji(t); if (em) it.mdl = { vox: em, spin: true, axis: 'y', key: 'vox' }; }
+  if (!it.mdl && !sprayer && claudeMdl) it.mdl = claudeMdl;
+  if (!it.mdl && w && !sprayer && w.shape === 'emoji' && w.projEmoji) it.mdl = { vox: w.projEmoji, spin: true, axis: 'y', key: 'vox' };
+  if (!it.mdl && it.kind === 'minion') it.mdl = { vox: it.emoji, spin: false, key: 'vox' };
+  if (w && it.kind !== 'minion'){
+    const a = w.arch, fxk = { fire: 'fireball', freeze: 'iceshard', poison: 'goo', lifesteal: 'bat' }[w.effect];
+    if (!it.mdl && !['laser','railgun','rocket','sprayer','melee'].includes(a) && w.shape !== 'rocket'){
+      const dk = a === 'bow' ? 'arrow' : fxk || (a === 'launcher' ? 'grenade' : ['pistol','rifle','sniper','minigun','shotgun'].includes(a) ? 'bullet' : null);
+      if (dk) it.mdl = libMdl(dk);
+    }
+    if (it.mdl){ w.shape = 'model'; w.mdl = it.mdl; if (it.mdl.key !== 'bullet') w.size = Math.max(w.size, 10); }
+    else if (w.shape === 'emoji') w.shape = 'orb';
   }
   return it;
 }
@@ -399,11 +529,12 @@ function normItem(r, req, source){
   return it;
 }
 const BASE_ITEM = normItem({kind:'weapon',name:'Pistola de Fábrica',emoji:'🔫',color:'#d9d4c7',desc:'Munição infinita.',weapon:{damage:7,fireRate:3,speed:700,count:1,spread:2,size:5,range:700,ammo:300,shape:'bullet'}}, '', 'base');
+BASE_ITEM.gunType = 'pistol'; BASE_ITEM.mdl = libMdl('bullet'); Object.assign(BASE_ITEM.weapon, { arch: 'pistol', shape: 'model', mdl: BASE_ITEM.mdl });
 function statLine(it){
   const f = n => (Math.round(n*10)/10).toString().replace('.', ',');
   const w = it.weapon, parts = [];
   if (w && it.kind !== 'minion') parts.push('modelo: ' + ARCH_LABEL[w.arch || gunArch(w)]);
-  if (it.mdl && ['weapon','turret','minion'].includes(it.kind)) parts.push(it.kind === 'minion' ? 'criatura 3D' : 'projétil 3D: ' + (LIB_LABEL[it.mdl.key] || 'feito pela IA'));
+  if (it.mdl && ['weapon','turret','minion'].includes(it.kind)) parts.push(it.kind === 'minion' ? 'criatura 3D' : 'projétil 3D: ' + (it.mdl.vox ? it.mdl.vox + ' em cubinhos' : LIB_LABEL[it.mdl.key] || 'feito pela IA'));
   if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, `alcance ${Math.round(w.range*S)} m`);
     if (it.kind === 'weapon') parts.push(`munição ${w.ammo}`);
     if (w.explosion) parts.push('explode'); if (w.homing > .2) parts.push('teleguiado'); if (w.pierce) parts.push('atravessa');
@@ -442,7 +573,7 @@ Campos extras:
 - "gunType" (weapon e turret): o tipo de arma que o personagem segura: pistol|rifle|sniper|shotgun|minigun|bazooka|laser|railgun|flamethrower|launcher|sword|bow. Se o pedido diz o tipo (pistola, rifle, bazuca...), use esse.
 - "model": modelo 3D do projétil (weapon/turret) ou da criatura (minion), feito de 4 a 20 peças. Peça: {"shape":"sphere|box|cylinder|cone|torus","size":[x,y,z],"pos":[x,y,z],"rot":[x,y,z],"color":"#rrggbb","glow":false}. O objeto cabe num cubo 1x1x1 centrado na origem, frente para +z, y para cima. size é a escala: esfera = raios; caixa = largura/altura/profundidade; cilindro e cone = [raio, altura, raio] com eixo em y; rot em radianos. Ex.: um elefante tem corpo (esfera), cabeça (esfera), tromba (cilindros), orelhas (esferas achatadas), presas (cones) e 4 pernas (cilindros).
 - "spin": true se o projétil gira no ar (bolas, frutas), false se voa de frente (animais, veículos).
-Não use emoji como projétil: descreva o objeto em "model".
+Não use bolinhas genéricas: o projétil deve ser exatamente o objeto pedido, descrito em "model" (uma bala de verdade se for arma de fogo comum). Em "weapon.projEmoji" coloque também um emoji que represente o projétil.
 Unidades: 20 = 1 metro; a arena tem 60x36 metros e os jogadores têm 100 de vida. Seja equilibrado: arma muito forte deve ter pouca munição ou cadência baixa.
 Responda SOMENTE com um objeto JSON, sem texto fora dele, assim:
 {"kind":"weapon","name":"Lança-Tubarões","emoji":"🦈","color":"#3fa9f5","desc":"Tubarões famintos com mira de cobrador.","weapon":{"damage":14,"fireRate":1.5,"speed":480,"count":1,"spread":6,"size":12,"range":700,"homing":0.4,"bounce":0,"explosion":0,"pierce":false,"effect":"knockback","ammo":30,"shape":"bullet"},"gunType":"bazooka","model":[{"shape":"sphere","size":[0.25,0.24,0.72],"pos":[0,0,0],"rot":[0,0,0],"color":"#6f8aa3"},{"shape":"sphere","size":[0.21,0.16,0.6],"pos":[0,-0.08,0.06],"rot":[0,0,0],"color":"#e9eef2"},{"shape":"cone","size":[0.06,0.3,0.16],"pos":[0,0.3,-0.05],"rot":[-0.35,0,0],"color":"#6f8aa3"},{"shape":"cone","size":[0.04,0.32,0.12],"pos":[0,0.17,-0.78],"rot":[-0.9,0,0],"color":"#6f8aa3"},{"shape":"sphere","size":[0.035,0.035,0.035],"pos":[0.16,0.08,0.5],"rot":[0,0,0],"color":"#111111"},{"shape":"sphere","size":[0.035,0.035,0.035],"pos":[-0.16,0.08,0.5],"rot":[0,0,0],"color":"#111111"}],"spin":false}
@@ -502,7 +633,7 @@ function localForge(req){
       ? { emoji: '🎯', color: hslHex(h % 360), desc: 'Preciso e de longo alcance.', weapon: { damage: 12, fireRate: 4, speed: 1000, size: 5, range: 900, ammo: 60, shape: 'bullet' } }
       : { emoji: '🔫', color: hslHex(h % 360), desc: 'Compacta, rápida e cheia de personalidade.', weapon: { damage: 9, fireRate: 3, speed: 750, size: 6, range: 650, ammo: 60, shape: 'bullet' } });
     r2.kind = 'weapon';
-    const eff = /fogo|fire|chama|lava|pimenta/.test(t) ? 'fire' : /gelo|ice|congel|neve/.test(t) ? 'freeze' : /veneno|toxic|acid/.test(t) ? 'poison' : /vampir|sangue/.test(t) ? 'lifesteal' : null;
+    const eff = /veneno|toxic|acid|gosma/.test(t) ? 'poison' : /gelo|\bice\b|congel|neve/.test(t) ? 'freeze' : /vampir|sangue/.test(t) ? 'lifesteal' : /fogo|fire|chama|lava|pimenta/.test(t) ? 'fire' : null;
     if (eff) r2.weapon.effect = eff;
     r2.name = titleCase(req);
     return finalize(normItem(r2, req, 'local'), req);
@@ -704,6 +835,7 @@ const FXT = {
   flash: canvasTex(128, 128, (x) => { x.translate(64, 64); for (let k = 0; k < 7; k++){ x.rotate(Math.PI * 2 / 7); const g = x.createLinearGradient(0, 0, 60, 0); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(0, -7); x.lineTo(60 - (k % 2) * 22, 0); x.lineTo(0, 7); x.fill(); }
     const r = x.createRadialGradient(0, 0, 0, 0, 0, 30); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = r; x.fillRect(-30, -30, 60, 60); }),
   smoke: canvasTex(64, 64, (x) => { for (let k = 0; k < 9; k++){ const cx = 32 + rand(-10, 10), cy = 32 + rand(-10, 10), r = rand(12, 22); const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); } }),
+  flame: canvasTex(64, 64, (x) => { const g = x.createRadialGradient(32, 40, 2, 32, 34, 30); g.addColorStop(0, 'rgba(255,255,240,1)'); g.addColorStop(.3, 'rgba(255,220,120,.9)'); g.addColorStop(.7, 'rgba(255,120,40,.35)'); g.addColorStop(1, 'rgba(255,60,0,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(32, 2); x.bezierCurveTo(54, 26, 60, 46, 32, 62); x.bezierCurveTo(4, 46, 10, 26, 32, 2); x.fill(); }),
   scorch: canvasTex(64, 64, (x) => { const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(10,8,8,.9)'); g.addColorStop(.6, 'rgba(20,14,12,.55)'); g.addColorStop(1, 'rgba(20,14,12,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }),
 };
 const glowMatCache = new Map();
@@ -712,12 +844,41 @@ function glowSprite(color, size, opacity){ const s = new THREE.Sprite(glowMat(co
 function addMat(color, opacity){ return basic(color, { transparent: true, opacity: opacity ?? .8, blending: THREE.AdditiveBlending, depthWrite: false }); }
 
 /* --- weapon archetypes --- */
-const MG = { sphere: G.sph, box: G.box, cylinder: G.cyl, cone: G.cone, torus: new THREE.TorusGeometry(1, .35, 10, 24), tri: new THREE.CylinderGeometry(1, 1, 1, 3), half: new THREE.CylinderGeometry(1, 1, 1, 16, 1, false, 0, Math.PI) };
+const MG = { sphere: G.sph, box: G.box, cylinder: G.cyl, cone: G.cone, torus: new THREE.TorusGeometry(1, .35, 10, 24), tri: new THREE.CylinderGeometry(1, 1, 1, 3), half: new THREE.CylinderGeometry(1, 1, 1, 16, 1, false, 0, Math.PI), rock: new THREE.DodecahedronGeometry(1, 0), ring: G.torus, oct: new THREE.CylinderGeometry(1, 1, 1, 8), octcone: new THREE.ConeGeometry(1, 1, 8) };
 function buildModel(parts, shadow){
   const g = new THREE.Group();
   for (const p of parts){ const m = new THREE.Mesh(MG[p.s] || G.sph, p.glow ? basic(p.c) : std(p.c, { roughness: .55, metalness: .05 })); m.scale.set(p.sz[0], p.sz[1], p.sz[2]); m.position.set(p.pos[0], p.pos[1], p.pos[2]); m.rotation.set(p.rot[0], p.rot[1], p.rot[2]); if (shadow) m.castShadow = true; g.add(m); }
   return g;
 }
+const voxCache = new Map(), voxMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .55, metalness: .05 });
+function voxTemplate(e){
+  if (voxCache.has(e)) return voxCache.get(e);
+  let tpl = null;
+  try {
+    const N = 22, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d');
+    x.font = `${Math.round(N * .86)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, N / 2, N / 2 + N * .06);
+    const d = x.getImageData(0, 0, N, N).data, solid = (i, j) => i >= 0 && j >= 0 && i < N && j < N && d[(j * N + i) * 4 + 3] > 110;
+    const L = new Array(N * N).fill(-1); let count = 0;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (solid(i, j)){
+      let r = 1; outer: for (; r < 4; r++){ for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) if (!solid(i + di, j + dj)) break outer; }
+      L[j * N + i] = r - 1; count += 2 * (r - 1) + 1; }
+    if (count > 20){
+      const im = new THREE.InstancedMesh(G.box, voxMat, count), m4 = new THREE.Matrix4(), col = new THREE.Color(), s = 1 / N; let k = 0;
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){ const l = L[j * N + i]; if (l < 0) continue; const p = (j * N + i) * 4;
+        col.setRGB(d[p] / 255, d[p + 1] / 255, d[p + 2] / 255).convertSRGBToLinear();
+        for (let z = -l; z <= l; z++){ m4.makeScale(s * 1.02, s * 1.02, s * 1.02).setPosition((i - N / 2 + .5) * s, (N / 2 - j - .5) * s, z * s); im.setMatrixAt(k, m4); im.setColorAt(k, col); k++; } }
+      tpl = { im, count };
+    }
+  } catch(err){ tpl = null; }
+  voxCache.set(e, tpl); return tpl;
+}
+function voxelModel(e){
+  const t = voxTemplate(e), g = new THREE.Group();
+  if (!t){ g.add(buildModel(LIB.star.parts)); return g; }
+  const m = new THREE.InstancedMesh(G.box, voxMat, t.count); m.instanceMatrix = t.im.instanceMatrix; m.instanceColor = t.im.instanceColor; m.frustumCulled = false; g.add(m);
+  return g;
+}
+function buildMdl(mdl, shadow){ return mdl.vox ? voxelModel(mdl.vox) : buildModel(mdl.parts, shadow); }
 function gunArch(w){
   if (w.range <= 260) return 'melee';
   if (w.shape === 'rocket' || (w.explosion > 0 && w.homing > .3)) return 'rocket';
@@ -769,7 +930,7 @@ function buildGun(item){
       const str = basic('#eeeeee'); limb(g, [0, .62, .02], [0, 0, -.1], .006, str); limb(g, [0, -.62, .02], [0, 0, -.1], .006, str);
       const nock = new THREE.Group(); g.add(nock); limb(nock, [0, 0, -.1], [0, 0, .55], .012, wood); const hd = mesh(G.cone, chrome, .03, .08, .03, 0, 0, .59); hd.rotation.x = Math.PI / 2; nock.add(hd);
       [0, 2.1, 4.2].forEach(a => { const fl = mesh(G.box, std('#e0312f'), .005, .05, .1, Math.cos(a) * .025, Math.sin(a) * .025, -.04); fl.rotation.z = a; nock.add(fl); });
-      if (w.mdl && w.mdl.key !== 'arrow'){ const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.14); mm.position.set(0, 0, .66); nock.add(mm); }
+      if (w.mdl && w.mdl.key !== 'arrow'){ const mm = buildMdl(w.mdl); mm.scale.setScalar(.14); mm.position.set(0, 0, .66); nock.add(mm); }
       ticks.push((dt, f) => { nock.visible = !(f.recoil > .3); });
       end = .62; break; }
     case 'railgun':
@@ -812,7 +973,7 @@ function buildGun(item){
       ring(.135, 0, .07, .2, std('#e8b231', { roughness: .5 }));
       P(G.box, dark, .05, .1, .16, -.16, .16, .05); P(G.sph, glow, .025, .025, .01, -.16, .17, .135, 0, 0, 0, false);
       grip(-.1); P(G.box, dark, .07, .17, .09, 0, -.12, .3, .2);
-      if (w.mdl){ war.visible = false; const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.24); mm.position.set(0, .07, .7); g.add(mm); ticks.push((dt, f) => { mm.visible = !(f.recoil > .3); }); }
+      if (w.mdl){ war.visible = false; const mm = buildMdl(w.mdl); mm.scale.setScalar(.24); mm.position.set(0, .07, .7); g.add(mm); ticks.push((dt, f) => { mm.visible = !(f.recoil > .3); }); }
       else if (w.shape === 'emoji'){ war.visible = false; const em = emojiSprite(w.projEmoji, .22); em.position.set(0, .07, .66); g.add(em); ticks.push((dt, f) => { em.visible = !(f.recoil > .3); }); }
       else ticks.push((dt, f) => { war.visible = !(f.recoil > .3); });
       end = .8; break; }
@@ -831,7 +992,7 @@ function buildGun(item){
       const drum = mesh(G.cyl, dark, .16, .14, .16, 0, -.05, -.12); drum.rotation.z = Math.PI / 2; g.add(drum);
       for (let k = 0; k < 6; k++){ const a = k / 6 * 6.28; P(G.sph, chrome, .025, .025, .025, .08, -.05 + Math.cos(a) * .1, -.12 + Math.sin(a) * .1); }
       P(G.box, dark, .16, .12, .2, 0, .17, -.05);
-      const mk = (sz) => { if (w.mdl){ const mm = buildModel(w.mdl.parts); mm.scale.setScalar(sz); return mm; } return emojiSprite(w.projEmoji || item.emoji, sz * 1.1); };
+      const mk = (sz) => { if (w.mdl){ const mm = buildMdl(w.mdl); mm.scale.setScalar(sz); return mm; } return emojiSprite(w.projEmoji || item.emoji, sz * 1.1); };
       const peek = mk(.18); peek.position.set(0, .3, -.05); g.add(peek); ticks.push((dt, f, t) => { peek.position.y = .29 + Math.abs(Math.sin(t * 3)) * .04; });
       const inMuzzle = mk(.16); inMuzzle.position.set(0, .03, .64); g.add(inMuzzle); ticks.push((dt, f) => { inMuzzle.visible = !(f.recoil > .3); });
       grip(-.15); P(G.box, dark, .07, .16, .08, 0, -.12, .3, .2); end = .66; break; }
@@ -850,7 +1011,7 @@ function buildGun(item){
   if (w.effect === 'knockback' && arch !== 'melee') ring(.075, 0, .02, end - .02, chrome);
   if (w.effect === 'fire' && arch !== 'sprayer'){ const pf = emojiSprite('🔥', .14); pf.position.set(0, .05, end); g.add(pf); ticks.push((dt, f, t) => pf.scale.setScalar(.1 + .04 * Math.sin(t * 20))); }
   if (w.homing > .25 && arch !== 'melee'){ const dish = mesh(G.sph, chrome, .05, .05, .02, -.08, .12, .05); g.add(dish); P(G.sph, addMat('#ff3030', .9), .015, .015, .015, -.08, .17, .05, 0, 0, 0, false); }
-  const badge = w.mdl ? (() => { const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
+  const badge = w.mdl ? (() => { const mm = buildMdl(w.mdl); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, arch === 'rocket' ? .07 : arch === 'sprayer' || arch === 'laser' || arch === 'melee' ? 0 : .02, end + .04); g.add(muzzle);
   g.userData.muzzle = muzzle; g.userData.arch = arch;
   g.userData.tick = (dt, f, t) => { for (const fn of ticks) fn(dt, f, t); };
@@ -869,8 +1030,8 @@ function itemPreview(it){
       pv = { r, sc, cam };
     }
     let obj, size;
-    if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildModel(it.mdl.parts); mm.scale.setScalar(.42); mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
-    else if (it.kind === 'minion'){ obj = buildModel(it.mdl.parts); obj.rotation.y = .7; }
+    if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildMdl(it.mdl); mm.scale.setScalar(.42); if (it.mdl.vox) mm.rotation.y = Math.PI / 2 - .45; mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
+    else if (it.kind === 'minion'){ obj = buildMdl(it.mdl); obj.rotation.y = .7; }
     else { obj = makeTurretModel(0, it); obj.rotation.y = .6; }
     obj.traverse(o => { if (o.isSprite) o.visible = o.scale.x < .21; });
     pv.sc.add(obj); obj.updateMatrixWorld(true);
@@ -1239,7 +1400,7 @@ function casing(pos, side){
   parts.push({ mesh: m, v, life: 1.2, max: 1.2, size: 0, g: 18, drag: 1, casing: true, spinR: rand(10, 20) });
 }
 const _zAxis = new THREE.Vector3(0, 0, 1);
-function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; return w.shape; }
+function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; if (w.arch === 'sprayer') return 'cloud'; return w.shape; }
 const ARC = new THREE.TorusGeometry(1, .08, 6, 20, Math.PI);
 function bulletMesh(w, color){
   const s = Math.max(.1, w.size * .028), vis = projVisual(w), m = new THREE.Group();
@@ -1255,6 +1416,7 @@ function bulletMesh(w, color){
     m.add(mesh(G.sph, basic('#ffffff'), s * .5, s * .5, s * .5, 0, 0, 0, false));
     m.add(mesh(G.sph, addMat(color, .55), s, s, s, 0, 0, 0, false));
     m.add(glowSprite(color, s * 4.8, .9));
+    const rings2 = []; for (let k = 0; k < 2; k++){ const rg = mesh(G.torus, addMat(color, .85), s * 1.5, s * 1.5, s * 1.5, 0, 0, 0, false); rg.rotation.set(rand(0, 3), rand(0, 3), 0); m.add(rg); rings2.push(rg); } m.userData.rings = rings2;
     const motes = []; for (let k = 0; k < 3; k++){ const mo = mesh(G.sph, basic(color), s * .2, s * .2, s * .2, 0, 0, 0, false); m.add(mo); motes.push(mo); } m.userData.motes = motes; m.userData.r = s * 1.5; }
   else if (vis === 'rocket'){
     const body = mesh(G.cyl, std(color, { metalness: .5, roughness: .35 }), s * .55, s * 4, s * .55, 0, 0, 0, false); m.add(body);
@@ -1263,7 +1425,13 @@ function bulletMesh(w, color){
     for (let k = 0; k < 4; k++){ const fin = mesh(G.box, std('#2a2e35', { metalness: .5 }), s * .08, s * 1, s * .7, 0, -s * 1.6, 0, false); fin.rotation.y = k * Math.PI / 2; fin.position.x = Math.cos(k * Math.PI / 2) * s * .55; fin.position.z = -Math.sin(k * Math.PI / 2) * s * .55; m.add(fin); }
     const flame = mesh(G.cone, addMat('#ffb347', .9), s * .45, s * 2, s * .45, 0, -s * 3, 0, false); flame.rotation.x = Math.PI; m.add(flame); m.userData.flame = flame;
     const g2 = glowSprite('#ff8a3d', s * 4, .9); g2.position.y = -s * 2.6; m.add(g2); }
-  else if (vis === 'model'){ const sc = clamp(w.size * .075, .6, 1.6), inner = buildModel(w.mdl.parts); inner.scale.setScalar(sc); m.add(inner); m.userData.inner = inner; m.userData.spin = w.mdl.spin; m.add(glowSprite(color, sc * 1.1, .22)); }
+  else if (vis === 'model'){ const sc = clamp(w.size * .075, .6, 1.6), inner = buildMdl(w.mdl); inner.scale.setScalar(sc); m.add(inner); m.userData.inner = inner; m.userData.spin = w.mdl.spin; m.userData.axis = w.mdl.axis || 'x';
+    if (w.mdl.tracer){ const len = .6 + w.speed / 1500; const tr = mesh(G.cyl, addMat(color, .55), .025, len, .025, 0, 0, -len / 2 - .05, false); tr.rotation.x = Math.PI / 2; m.add(tr); m.add(glowSprite(color, .35, .7)); }
+    else m.add(glowSprite(color, sc * 1.1, .22)); }
+  else if (vis === 'cloud'){ const fireLike = w.effect !== 'poison' && w.effect !== 'freeze'; const cols = w.effect === 'poison' ? ['#8cff4a', '#4fae2a'] : w.effect === 'freeze' ? ['#e8f8ff', '#9fdfff'] : ['#ffd060', '#ff5a1a'];
+    for (let k = 0; k < 3; k++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireLike ? FXT.flame : FXT.smoke, color: lin(cols[k % 2]), transparent: true, opacity: .9, blending: fireLike ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: false }));
+      sp.material.rotation = rand(0, 6.28); sp.scale.setScalar(s * 3); sp.position.set(rand(-.12, .12), rand(-.12, .12), rand(-.12, .12)); m.add(sp); }
+    m.userData.base = s * 3; m.userData.cloud = true; }
   else if (vis === 'emoji'){ m.add(glowSprite(color, Math.max(.9, s * 5), .5)); const sp = emojiSprite(w.projEmoji, Math.max(.6, s * 3.4)); m.add(sp); m.userData.sp = sp; }
   else if (vis === 'slash'){ const a = new THREE.Mesh(ARC, addMat(color, .85)); a.rotation.x = Math.PI / 2; m.add(a); const c = new THREE.Mesh(ARC, addMat('#ffffff', .9)); c.rotation.x = Math.PI / 2; c.scale.set(.93, .93, .5); m.add(c); m.userData.base = Math.max(.7, s * 4.5); m.scale.setScalar(m.userData.base * .5); }
   m.userData.vis = vis; dynamic.add(m); return m;
@@ -1272,7 +1440,9 @@ function bulletTrail(b, prev, dt){
   const u = b.mesh.userData, w = b.w; b.trailT = (b.trailT || 0) - dt;
   if (u.vis === 'rocket'){ u.flame.scale.y = (Math.max(.1, w.size * .028) * 2) * rand(.7, 1.3);
     if (b.trailT <= 0){ b.trailT = .025; fx(prev, { tex: 'smoke', color: '#8f8a84', size: .35, grow: 3, life: .8, alpha: .5, vel: [rand(-.3, .3), .5, rand(-.3, .3)], drag: .3 }); fx(prev, { color: '#ffb347', size: .55, life: .12, add: true }); } }
-  else if (u.vis === 'orb'){ const t = performance.now() / 160; u.motes.forEach((mo, k) => mo.position.set(Math.cos(t + k * 2.1) * u.r, Math.sin(t * 1.3 + k) * u.r * .5, Math.sin(t + k * 2.1) * u.r));
+  else if (u.vis === 'cloud'){ const k = 1 - b.life / b.max; b.mesh.children.forEach((c, i) => { c.scale.setScalar(u.base * (1 + k * 2.4)); c.material.opacity = .9 * (1 - k * .85); c.material.rotation += dt * (i % 2 ? 3 : -3); });
+    if (b.trailT <= 0){ b.trailT = .05; const fireLike = w.effect !== 'poison' && w.effect !== 'freeze'; fx(prev, fireLike ? { tex: 'flame', color: '#ff8a2a', size: u.base * 1.4, life: .3, add: true, vel: [0, 1, 0] } : { tex: 'smoke', color: w.effect === 'poison' ? '#7ad83a' : '#e8f8ff', size: u.base * 1.4, grow: 1.5, life: .5, alpha: .5 }); } }
+  else if (u.vis === 'orb'){ if (u.rings) u.rings.forEach((rg, i) => { rg.rotation.x += dt * (4 + i * 3); rg.rotation.y += dt * (3 - i * 5); }); const t = performance.now() / 160; u.motes.forEach((mo, k) => mo.position.set(Math.cos(t + k * 2.1) * u.r, Math.sin(t * 1.3 + k) * u.r * .5, Math.sin(t + k * 2.1) * u.r));
     if (b.trailT <= 0){ b.trailT = .03; fx(prev, { color: b.color, size: b.r * 4, life: .25, add: true, alpha: .7 }); } }
   else if (u.vis === 'model'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { tex: 'smoke', color: '#ffffff', size: .4, grow: 1.5, life: .35, alpha: .22, drag: .3 }); } }
   else if (u.vis === 'emoji'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { color: b.color, size: .5, life: .3, add: true, alpha: .55 }); } }
@@ -1433,7 +1603,7 @@ function makeMinion(owner, it, x, z, y){
   const blob = new THREE.Mesh(G.disc, basic('#000000', { transparent: true, opacity: .35, side: THREE.DoubleSide, depthWrite: false })); blob.rotation.x = -Math.PI / 2; blob.position.y = .03; blob.scale.setScalar(.7); g.add(blob);
   const ring = new THREE.Mesh(G.ring, basic(PCOL[owner], { transparent: true, opacity: .8, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; ring.scale.setScalar(.8); g.add(ring);
   let sp;
-  if (it.mdl){ sp = buildModel(it.mdl.parts, true); sp.scale.setScalar(1.5); const bx = new THREE.Box3().setFromObject(sp); sp.userData.base = -bx.min.y; sp.position.y = sp.userData.base; }
+  if (it.mdl){ sp = buildMdl(it.mdl, true); sp.scale.setScalar(1.5); const bx = new THREE.Box3().setFromObject(sp); sp.userData.base = -bx.min.y; sp.position.y = sp.userData.base; }
   else { sp = emojiSprite(it.emoji, 1.7); sp.userData.base = .95; sp.position.y = .95; }
   g.add(sp);
   dynamic.add(g);
@@ -1641,12 +1811,12 @@ function update(dt){
     }
   }
   for (const b of bullets){
-    if (b.dead){ dynamic.remove(b.mesh); continue; }
+    if (b.dead){ dynamic.remove(b.mesh); if (b.mesh.userData.cloud) b.mesh.children.forEach(c => c.material.dispose()); continue; }
     b.mesh.position.copy(b.pos);
     const vis = b.mesh.userData.vis;
     if (vis === 'laser' || vis === 'rocket' || vis === 'bullet'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_up, _v); }
     else if (vis === 'slash') b.mesh.rotation.y = Math.atan2(b.vel.x, b.vel.z);
-    else if (vis === 'model'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_zAxis, _v); const inn = b.mesh.userData.inner; if (b.mesh.userData.spin) inn.rotation.x = b.spin * .7; else { inn.rotation.z = Math.sin(b.spin * 1.6) * .3; inn.rotation.x = Math.sin(b.spin) * .12; } }
+    else if (vis === 'model'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_zAxis, _v); const inn = b.mesh.userData.inner, ax = b.mesh.userData.axis; if (b.mesh.userData.spin) inn.rotation[ax] = b.spin * (ax === 'y' ? 1.1 : .7); else { inn.rotation.z = Math.sin(b.spin * 1.6) * .3; inn.rotation.x = Math.sin(b.spin) * .12; } }
     else if (vis === 'emoji') b.mesh.userData.sp.material.rotation = b.spin;
   }
   bullets = bullets.filter(b => !b.dead);
