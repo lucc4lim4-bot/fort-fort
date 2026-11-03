@@ -95,7 +95,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .fcol h3{margin:0;font-family:var(--display);font-weight:400;font-size:22px;color:var(--pc);display:flex;justify-content:space-between;gap:8px}
 .fcol h3 small{font-family:var(--body);font-size:13px;color:var(--muted);align-self:center}
 .fform{display:flex;gap:8px}
-.fform input{flex:1;min-width:0;font-family:var(--body);font-size:15px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.fform{align-items:flex-start}
+.fform textarea{resize:none;overflow-y:auto;max-height:40vh;line-height:1.4;field-sizing:content;min-height:1.4em}
+.fform textarea{flex:1;min-width:0;font-family:var(--body);font-size:15px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
 .fform button{background:var(--pc);color:#140c04;border-color:var(--pc)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chips button{font-weight:600;font-size:12px;padding:4px 9px;border-radius:999px;color:var(--muted)}
@@ -568,7 +570,7 @@ function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMod
 (async () => { try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; } aiMode = sampleFn ? 'claude' : 'local'; updateBadge(); aiResolve(); })();
 setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); aiResolve(); } }, 12000);
 function buildPrompt(req, research){
-  return `Você é a FORJA de um jogo de tiro 3D em terceira pessoa, 1v1, estilo desenho animado (nada realista). Um jogador pediu: "${req.replace(/"/g,"'").slice(0,120)}".${research ? '\nPesquisa sobre o pedido (siga isto para acertar aparência, cores e poderes): ' + research.replace(/`/g, "'").slice(0, 700) : ''}
+  return `Você é a FORJA de um jogo de tiro 3D em terceira pessoa, 1v1, estilo desenho animado (nada realista). Um jogador pediu: "${req.replace(/"/g,"'").slice(0, 20000)}".${research ? '\nPesquisa sobre o pedido (siga isto para acertar aparência, cores e poderes): ' + research.replace(/`/g, "'").slice(0, 2000) : ''}
 Transforme o pedido em UM item jogável, criativo e fiel ao pedido, mesmo que seja absurdo. Escolha o "kind" que melhor representa o pedido:
 - weapon: arma que o personagem segura e dispara onde mira.
 - turret: torre parada que atira sozinha (usa "weapon" e "hp" 30-120).
@@ -594,6 +596,7 @@ Responda SOMENTE com um objeto JSON, sem texto fora dele, assim:
 "name": curto em português (até 24 letras). "desc": uma frase divertida em português (até 90 letras). "color": hex #rrggbb.`;
 }
 const PERMANENT = ['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','session_expired'];
+const shortReq = r => r.length > 80 ? r.slice(0, 77).trimEnd() + '…' : r;
 async function forgeItem(req, opts){
   opts = opts || {}; const say = opts.status || (() => {});
   await aiReady;
@@ -601,10 +604,10 @@ async function forgeItem(req, opts){
     let research = '';
     try {
       if (opts.research){
-        say(`🔎 Pesquisando “${req}”…`);
-        const r = await sampleFn(`Você é o pesquisador da forja de um jogo 3D. O jogador pediu: "${req.replace(/"/g, "'").slice(0, 120)}".
+        say(`🔎 Pesquisando “${shortReq(req)}”…`);
+        const r = await sampleFn(`Você é o pesquisador da forja de um jogo 3D. O jogador pediu: "${req.replace(/"/g, "'").slice(0, 20000)}".
 Em até 3 frases curtas em português, diga: o que é isso (se vem de um desenho, filme, anime, jogo, série ou da vida real e de qual), como é a aparência (formato, partes e cores exatas) e o que faz ou que poderes tem. Se não reconhecer, diga como imagina pelo nome. Responda só o texto.`, { modelTier: 'quick', onText: ({ text }) => say('🔎 ' + text.slice(-150)) });
-        research = r.text.trim().slice(0, 700);
+        research = r.text.trim().slice(0, 2000);
         say('⚒️ Modelando em 3D…');
       }
       const raw = await sampleFn.json(buildPrompt(req, research), { modelTier: research ? 'default' : 'quick' });
@@ -644,7 +647,7 @@ const G_TPL = [
 ];
 const B_TPL = [/velocidade|speed|bota|tenis|turbo|rapido|jetpack|patins|skate|moto|carro|nitro|cafe|asa/, {kind:'boost',emoji:'⚡',color:'#ffe14d',desc:'Corre que nem quem esqueceu o gás ligado.',speed:1.7,duration:4}];
 function jitter(o){ const c = {}; for (const k in o){ const v = o[k]; c[k] = (typeof v === 'number' && k !== 'count' && k !== 'bounce') ? v * rand(0.88, 1.12) : (v && typeof v === 'object') ? jitter(v) : v; } return c; }
-function titleCase(s){ return s.trim().replace(/\s+/g,' ').split(' ').map(w => w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w).join(' ').slice(0, 34); }
+function titleCase(s){ return s.trim().replace(/\s+/g,' ').split(' ').map(w => w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w).join(' ').replace(/^(.{0,34})(\s.*)?$/s, (m, a, rest) => rest ? a.trimEnd() + '…' : a).slice(0, 35); }
 function hashStr(s){ let h = 2166136261; for (const ch of s){ h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function hslHex(h){ const s=.85,l=.62,k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join(''); }
 function localForge(req){
@@ -1349,12 +1352,15 @@ function openForge(){
     const chips = SUGGEST.slice().sort(() => Math.random() - .5).slice(0, 4);
     col.innerHTML = `<h3>${isCpu ? 'CPU' : 'Seu arsenal'}<small id="left${i}"></small></h3>` +
       (isCpu ? `<div class="fstatus" id="fst${i}">A CPU está pensando no que pedir…</div>` :
-      `<form class="fform" id="ff${i}"><input id="req${i}" maxlength="90" autocomplete="off" placeholder="Peça qualquer coisa…" aria-label="Seu pedido para a forja"><button type="submit">Forjar</button></form>
+      `<form class="fform" id="ff${i}"><textarea id="req${i}" rows="1" autocomplete="off" placeholder="Peça qualquer coisa, do tamanho que quiser… (Shift+Enter quebra a linha)" aria-label="Seu pedido para a forja"></textarea><button type="submit">Forjar</button></form>
        <div class="chips">${chips.map(c => `<button type="button" data-s="${c}">${c}</button>`).join('')}</div><div class="fstatus" id="fst${i}"></div>`) +
       `<ul class="inv" id="inv${i}"></ul><div class="readyrow"><small>${isCpu ? '' : 'Itens recarregam a cada rodada'}</small>${isCpu ? '' : `<button type="button" class="rd" id="rd${i}">Entrar na arena</button>`}</div>`;
     cols.appendChild(col);
     if (!isCpu){
-      col.querySelector('form').addEventListener('submit', e => { e.preventDefault(); const inp = $('#req' + i); const v = inp.value.trim(); if (v){ inp.value = ''; requestForge(i, v); } });
+      const ta = $('#req' + i);
+      ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); col.querySelector('form').requestSubmit(); } });
+      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, innerHeight * .4) + 'px'; });
+      col.querySelector('form').addEventListener('submit', e => { e.preventDefault(); const inp = $('#req' + i); const v = inp.value.trim(); if (v){ inp.value = ''; inp.style.height = ''; requestForge(i, v); } });
       col.querySelectorAll('.chips button').forEach(b => b.onclick = () => { $('#req' + i).value = b.dataset.s; $('#req' + i).focus(); });
       $('#rd' + i).onclick = () => { if (p.pending) return; p.ready = !p.ready; renderForge(); checkReady(); };
     }
@@ -1379,14 +1385,14 @@ function renderForge(){
       ul.appendChild(li);
     });
     for (let k = 0; k < p.pending; k++){ const li = document.createElement('li'); li.className = 'card pending'; li.style.setProperty('--ic', p.color); li.innerHTML = `<div class="em">⚒️</div><div><div class="nm">Forjando…</div><div class="ds">A IA está martelando o pedido.</div></div><span></span>`; ul.appendChild(li); }
-    const form = $('#ff' + i); if (form){ const dis = p.forgesLeft <= 0 || p.ready; form.querySelector('input').disabled = dis; form.querySelector('button').disabled = dis; }
+    const form = $('#ff' + i); if (form){ const dis = p.forgesLeft <= 0 || p.ready; form.querySelector('textarea').disabled = dis; form.querySelector('button').disabled = dis; }
     const rd = $('#rd' + i); if (rd){ rd.classList.toggle('on', p.ready); rd.textContent = p.ready ? 'Pronto ✓' : 'Entrar na arena'; rd.disabled = !!p.pending; }
   });
 }
 async function requestForge(i, req){
   const p = fighters[i]; if (p.forgesLeft <= 0 || p.ready || phase !== 'forge') return;
   p.forgesLeft--; p.pending++; renderForge();
-  const st = $('#fst' + i); if (st) st.textContent = `Forjando “${req}”…`;
+  const st = $('#fst' + i); if (st) st.textContent = `Forjando “${shortReq(req)}”…`;
   const myRound = round; let it;
   try { it = await forgeItem(req, { research: i === 0, status: m => { if (st && phase === 'forge') st.textContent = m; } }); } catch(e){ it = localForge(req); }
   if (phase !== 'forge' || round !== myRound || !fighters.includes(p)) return;
@@ -1451,7 +1457,7 @@ const zooming = () => locked && rightDown && phase === 'fight';
 document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === cv; if (!locked){ mouseDown = false; rightDown = false; } });
 document.addEventListener('pointerlockerror', () => { lockFailed = true; });
 addEventListener('keydown', e => {
-  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
   if (phase === 'fight' && ['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(e.code)) e.preventDefault();
   if (!keys[e.code]) edges.add(e.code); keys[e.code] = true; initAudio();
   if (e.code === 'KeyV' && phase === 'fight') camSide *= -1;
