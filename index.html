@@ -205,6 +205,157 @@ const S = 1 / 20;              // item units (px) -> world units
 const AW = 30, AD = 18;        // arena half extents
 const PSPEED = 8.5, GRAV = 26, JUMP = 9.5;
 
+/* ================= 3D model library (projectiles & creatures) =================
+   Each entry: [shape, size, pos, rot, color, flags]  flags: 'm' mirror on x, 'g' glow.
+   Space: about 1x1x1 centred on the origin, front facing +z, y up.
+   size is the scale: sphere = radii, box = width/height/depth, cylinder & cone = [radius, height, radius]. */
+const PART_SHAPES = ['sphere','box','cylinder','cone','torus','tri','half'];
+const RAW_LIB = {
+  elephant: { spin: false, p: [
+    ['sphere',[.42,.36,.55],[0,.05,-.05],0,'#8f96a0'], ['sphere',[.29,.28,.28],[0,.22,.45],0,'#979ea8'],
+    ['cylinder',[.075,.3,.075],[0,.02,.7],[.5,0,0],'#8f96a0'], ['cylinder',[.06,.24,.06],[0,-.18,.8],[.15,0,0],'#8f96a0'],
+    ['sphere',[.05,.26,.22],[.3,.25,.36],[0,.3,0],'#a9a1a8','m'], ['cone',[.035,.22,.035],[.11,.04,.66],[1.35,0,0],'#f5efe0','m'],
+    ['sphere',[.035,.04,.035],[.13,.31,.68],0,'#111111','m'], ['cylinder',[.11,.34,.11],[.2,-.3,.25],0,'#868c96','m'], ['cylinder',[.11,.34,.11],[.2,-.3,-.3],0,'#868c96','m'],
+    ['cylinder',[.025,.25,.025],[0,.05,-.62],[-.7,0,0],'#868c96']] },
+  shark: { spin: false, p: [
+    ['sphere',[.25,.24,.72],[0,0,0],0,'#6f8aa3'], ['sphere',[.21,.16,.6],[0,-.08,.06],0,'#e9eef2'],
+    ['cone',[.06,.3,.16],[0,.3,-.05],[-.35,0,0],'#6f8aa3'], ['cone',[.04,.32,.12],[0,.17,-.78],[-.9,0,0],'#6f8aa3'], ['cone',[.04,.22,.1],[0,-.1,-.74],[-2.3,0,0],'#6f8aa3'],
+    ['sphere',[.25,.03,.1],[.25,-.12,.15],[0,0,-.4],'#6f8aa3','m'], ['sphere',[.035,.035,.035],[.16,.08,.5],0,'#111111','m'],
+    ['box',[.18,.025,.05],[0,-.1,.62],0,'#5a1a1a'], ['box',[.16,.02,.02],[0,-.085,.645],0,'#ffffff']] },
+  pineapple: { spin: true, p: [
+    ['sphere',[.27,.36,.27],[0,0,0],0,'#e2a62a'], ['sphere',[.04,.04,.04],[.2,.1,.17],0,'#9c6a17','m'], ['sphere',[.04,.04,.04],[.22,-.12,-.1],0,'#9c6a17','m'], ['sphere',[.04,.04,.04],[0,.2,.24],0,'#9c6a17'],
+    ['cone',[.06,.32,.06],[0,.5,0],0,'#3e9b3a'], ['cone',[.05,.26,.05],[.08,.43,0],[0,0,-.5],'#3e9b3a','m'], ['cone',[.05,.26,.05],[0,.43,.08],[.5,0,0],'#3e9b3a'], ['cone',[.05,.26,.05],[0,.43,-.08],[-.5,0,0],'#3e9b3a']] },
+  banana: { spin: true, p: [
+    ['cylinder',[.085,.36,.085],[0,0,0],[1.57,0,0],'#f4d03f'], ['cylinder',[.075,.26,.075],[0,.07,.28],[1.1,0,0],'#f4d03f'], ['cylinder',[.075,.26,.075],[0,.07,-.28],[2.04,0,0],'#f4d03f'],
+    ['cylinder',[.03,.07,.03],[0,.14,.4],[1.1,0,0],'#5a3b1a'], ['cylinder',[.03,.07,.03],[0,.14,-.4],[2.04,0,0],'#5a3b1a']] },
+  chicken: { spin: false, p: [
+    ['sphere',[.27,.25,.33],[0,0,0],0,'#f5f1e8'], ['sphere',[.15,.16,.15],[0,.24,.24],0,'#f5f1e8'], ['cone',[.045,.1,.045],[0,.23,.4],[1.57,0,0],'#f2a13a'],
+    ['box',[.035,.09,.13],[0,.41,.23],0,'#e0312f'], ['sphere',[.035,.05,.035],[0,.14,.35],0,'#e0312f'], ['sphere',[.06,.16,.22],[.26,.02,-.02],0,'#e9e3d6','m'],
+    ['cylinder',[.022,.22,.022],[.09,-.32,.02],0,'#f2a13a','m'], ['sphere',[.08,.18,.1],[0,.17,-.3],[-.4,0,0],'#ece6d8'], ['sphere',[.025,.025,.025],[.08,.28,.36],0,'#111111','m']] },
+  duck: { spin: false, p: [
+    ['sphere',[.27,.23,.32],[0,0,0],0,'#ffd43b'], ['sphere',[.15,.15,.15],[0,.24,.22],0,'#ffd43b'], ['box',[.13,.04,.15],[0,.21,.41],0,'#f08a24'],
+    ['sphere',[.06,.14,.2],[.25,.03,-.02],0,'#f2c230','m'], ['sphere',[.025,.025,.025],[.08,.28,.34],0,'#111111','m'], ['sphere',[.07,.1,.08],[0,.12,-.3],[-.5,0,0],'#f2c230']] },
+  fish: { spin: false, p: [
+    ['sphere',[.12,.24,.38],[0,0,0],0,'#ff8a3d'], ['cone',[.03,.24,.2],[0,0,-.48],[1.57,0,0],'#ff6a1a'], ['cone',[.02,.15,.12],[0,.24,0],0,'#ff6a1a'],
+    ['sphere',[.045,.045,.03],[.1,.06,.24],0,'#ffffff','m'], ['sphere',[.022,.022,.02],[.12,.06,.26],0,'#111111','m']] },
+  pizza: { spin: true, p: [
+    ['tri',[.45,.05,.45],[0,0,0],0,'#f3c45a'], ['box',[.78,.08,.1],[0,.01,-.23],0,'#c98a3a'],
+    ['cylinder',[.07,.02,.07],[0,.035,.03],0,'#c0392b'], ['cylinder',[.07,.02,.07],[.13,.035,-.12],0,'#c0392b','m'], ['cylinder',[.04,.02,.04],[0,.035,.22],0,'#c0392b'], ['sphere',[.03,.015,.03],[.07,.035,.1],0,'#3e9b3a','m']] },
+  watermelon: { spin: true, p: [
+    ['half',[.45,.1,.45],[0,0,-.2],[0,-1.57,0],'#3a8f3a'], ['half',[.4,.11,.4],[0,0,-.18],[0,-1.57,0],'#f1fff0'], ['half',[.37,.12,.37],[0,0,-.17],[0,-1.57,0],'#e8394a'],
+    ['sphere',[.025,.02,.035],[.1,.06,0],0,'#111111','m'], ['sphere',[.025,.02,.035],[0,.06,.08],0,'#111111'], ['sphere',[.025,.02,.035],[.2,.06,-.08],0,'#111111','m']] },
+  donut: { spin: true, p: [
+    ['torus',[.28,.28,.28],[0,0,0],[1.57,0,0],'#d39a5a'], ['torus',[.28,.28,.2],[0,.05,0],[1.57,0,0],'#ff7eb6'],
+    ['box',[.05,.015,.015],[.2,.15,.05],[0,.6,0],'#4cc3ff'], ['box',[.05,.015,.015],[-.15,.15,-.15],[0,-.3,0],'#ffd23f'], ['box',[.05,.015,.015],[.05,.15,.25],[0,1.2,0],'#6fe08a'], ['box',[.05,.015,.015],[-.22,.15,.12],[0,.2,0],'#ffffff']] },
+  star: { spin: true, p: [
+    ['sphere',[.15,.15,.09],[0,0,0],0,'#ffd23f','g'], ['cone',[.09,.26,.06],[0,.2,0],0,'#ffd23f','g'], ['cone',[.09,.26,.06],[.19,.06,0],[0,0,-1.257],'#ffd23f','g'],
+    ['cone',[.09,.26,.06],[-.19,.06,0],[0,0,1.257],'#ffd23f','g'], ['cone',[.09,.26,.06],[.12,-.16,0],[0,0,-2.513],'#ffd23f','g'], ['cone',[.09,.26,.06],[-.12,-.16,0],[0,0,2.513],'#ffd23f','g']] },
+  heart: { spin: true, p: [
+    ['sphere',[.18,.18,.14],[.12,.08,0],0,'#e8344e','m'], ['cone',[.25,.32,.13],[0,-.17,0],[3.14,0,0],'#e8344e']] },
+  skull: { spin: true, p: [
+    ['sphere',[.26,.25,.27],[0,.05,0],0,'#efe8d8'], ['box',[.3,.1,.22],[0,-.17,.06],0,'#e6dfcf'], ['sphere',[.07,.07,.04],[.1,.06,.23],0,'#111111','m'],
+    ['cone',[.03,.06,.02],[0,-.04,.26],[3.14,0,0],'#111111'], ['box',[.22,.04,.02],[0,-.12,.17],0,'#ffffff']] },
+  ghost: { spin: false, p: [
+    ['sphere',[.28,.28,.26],[0,.15,0],0,'#f4f6fb'], ['cylinder',[.28,.35,.26],[0,-.08,0],0,'#f4f6fb'], ['sphere',[.09,.09,.09],[.19,-.26,0],0,'#f4f6fb','m'], ['sphere',[.09,.09,.09],[0,-.26,.18],0,'#f4f6fb'], ['sphere',[.09,.09,.09],[0,-.26,-.18],0,'#f4f6fb'],
+    ['sphere',[.05,.07,.03],[.09,.18,.24],0,'#1a1a2a','m'], ['sphere',[.05,.06,.03],[0,.03,.25],0,'#1a1a2a']] },
+  cat: { spin: false, p: [
+    ['sphere',[.22,.2,.36],[0,0,-.05],0,'#f29a3a'], ['sphere',[.18,.17,.17],[0,.17,.32],0,'#f29a3a'], ['cone',[.06,.11,.04],[.1,.35,.32],[0,0,-.25],'#f29a3a','m'],
+    ['sphere',[.03,.035,.02],[.07,.2,.47],0,'#2bd96b','m'], ['sphere',[.02,.015,.015],[0,.14,.49],0,'#ff8fa3'], ['cylinder',[.05,.22,.05],[.12,-.2,.18],0,'#f29a3a','m'], ['cylinder',[.05,.22,.05],[.12,-.2,-.25],0,'#f29a3a','m'],
+    ['cylinder',[.035,.4,.035],[0,.12,-.45],[-.6,0,0],'#f29a3a'], ['box',[.3,.03,.05],[0,.12,-.15],0,'#c8701f'], ['box',[.3,.03,.05],[0,.12,.05],0,'#c8701f']] },
+  dog: { spin: false, p: [
+    ['sphere',[.24,.21,.38],[0,0,0],0,'#a8743f'], ['sphere',[.17,.17,.18],[0,.2,.34],0,'#a8743f'], ['box',[.14,.11,.16],[0,.14,.5],0,'#c8935a'], ['sphere',[.035,.03,.03],[0,.17,.58],0,'#111111'],
+    ['box',[.05,.16,.1],[.17,.18,.32],[0,0,.2],'#6e4423','m'], ['sphere',[.025,.025,.02],[.07,.25,.49],0,'#111111','m'], ['cylinder',[.055,.24,.055],[.13,-.22,.2],0,'#a8743f','m'], ['cylinder',[.055,.24,.055],[.13,-.22,-.22],0,'#a8743f','m'],
+    ['cylinder',[.03,.25,.03],[0,.15,-.42],[-.8,0,0],'#a8743f']] },
+  dino: { spin: false, p: [
+    ['sphere',[.25,.3,.38],[0,.05,0],[-.3,0,0],'#5aa84a'], ['sphere',[.18,.24,.3],[0,0,.1],[-.3,0,0],'#a7d68c'], ['box',[.22,.2,.36],[0,.38,.38],0,'#5aa84a'], ['box',[.2,.07,.3],[0,.25,.42],0,'#4a8f3c'],
+    ['box',[.18,.03,.24],[0,.3,.44],0,'#ffffff'], ['sphere',[.03,.03,.03],[.1,.45,.48],0,'#111111','m'], ['cylinder',[.035,.15,.035],[.15,.1,.3],[1,0,0],'#5aa84a','m'],
+    ['cylinder',[.09,.3,.09],[.15,-.28,0],0,'#4a8f3c','m'], ['box',[.12,.06,.2],[.15,-.43,.05],0,'#4a8f3c','m'], ['cone',[.15,.6,.15],[0,0,-.55],[-1.75,0,0],'#5aa84a'],
+    ['cone',[.04,.1,.04],[0,.38,-.05],0,'#3d7a31'], ['cone',[.04,.1,.04],[0,.3,-.22],0,'#3d7a31']] },
+  robot: { spin: false, p: [
+    ['box',[.36,.4,.26],[0,0,0],0,'#9aa3ad'], ['box',[.26,.2,.22],[0,.33,0],0,'#b5bdc6'], ['box',[.2,.06,.02],[0,.34,.115],0,'#4cc3ff','g'],
+    ['cylinder',[.015,.15,.015],[0,.5,0],0,'#555b63'], ['sphere',[.035,.035,.035],[0,.58,0],0,'#ff4d5e','g'], ['cylinder',[.05,.32,.05],[.24,-.02,0],0,'#7c858f','m'],
+    ['box',[.1,.28,.12],[.1,-.34,0],0,'#7c858f','m'], ['sphere',[.05,.05,.02],[0,.05,.135],0,'#ffc94d','g']] },
+  bomb: { spin: true, p: [
+    ['sphere',[.3,.3,.3],[0,0,0],0,'#22252b'], ['cylinder',[.09,.08,.09],[0,.3,0],0,'#555b63'], ['cylinder',[.02,.15,.02],[0,.4,.03],[.4,0,0],'#c9a36b'],
+    ['sphere',[.05,.05,.05],[0,.47,.07],0,'#ffb347','g'], ['sphere',[.07,.05,.04],[-.12,.14,.22],0,'#555b63']] },
+  arrow: { spin: false, p: [
+    ['cylinder',[.02,.9,.02],[0,0,0],[1.57,0,0],'#8a5a2b'], ['cone',[.05,.14,.05],[0,0,.5],[1.57,0,0],'#b8bec7'],
+    ['box',[.01,.08,.16],[0,.045,-.38],0,'#e0312f'], ['box',[.08,.01,.16],[0,0,-.38],0,'#e0312f'], ['box',[.01,.08,.16],[0,-.045,-.38],0,'#e0312f']] },
+  popcorn: { spin: true, p: [
+    ['sphere',[.14,.13,.14],[0,0,0],0,'#fffaf0'], ['sphere',[.11,.11,.1],[.12,.08,.05],0,'#fff4d6'], ['sphere',[.1,.1,.11],[-.11,.06,-.06],0,'#fffaf0'],
+    ['sphere',[.1,.09,.1],[.02,.14,-.1],0,'#f6e3a1'], ['sphere',[.09,.1,.09],[-.05,-.1,.1],0,'#fff4d6'], ['sphere',[.08,.08,.08],[.1,-.08,-.08],0,'#fffaf0']] },
+  car: { spin: false, p: [
+    ['box',[.5,.18,.9],[0,0,0],0,'#d6332a'], ['box',[.42,.18,.42],[0,.17,-.07],0,'#d6332a'], ['box',[.38,.12,.02],[0,.18,.15],[-.3,0,0],'#9fd3ff'],
+    ['box',[.43,.1,.3],[0,.18,-.08],0,'#9fd3ff'], ['cylinder',[.11,.08,.11],[.27,-.1,.28],[0,0,1.57],'#1b1b1b','m'], ['cylinder',[.11,.08,.11],[.27,-.1,-.28],[0,0,1.57],'#1b1b1b','m'],
+    ['sphere',[.04,.04,.02],[.17,.02,.45],0,'#fff6c0','gm'], ['box',[.3,.04,.02],[0,-.04,.455],0,'#c8ced8']] },
+  bee: { spin: false, p: [
+    ['sphere',[.18,.17,.28],[0,0,0],0,'#ffd23f'], ['cylinder',[.185,.05,.175],[0,0,-.06],[1.57,0,0],'#1b1b1b'], ['cylinder',[.17,.05,.16],[0,0,.08],[1.57,0,0],'#1b1b1b'],
+    ['sphere',[.12,.12,.12],[0,.03,.26],0,'#1b1b1b'], ['sphere',[.14,.02,.08],[.14,.18,0],[0,0,.4],'#dff3ff','m'], ['cone',[.03,.1,.03],[0,0,-.32],[-1.57,0,0],'#1b1b1b'], ['sphere',[.03,.03,.02],[.05,.08,.36],0,'#ffffff','m']] },
+  penguin: { spin: false, p: [
+    ['sphere',[.22,.32,.22],[0,0,0],0,'#1d2026'], ['sphere',[.17,.26,.12],[0,-.03,.12],0,'#f4f4f4'], ['sphere',[.15,.15,.15],[0,.32,.03],0,'#1d2026'],
+    ['cone',[.04,.09,.03],[0,.3,.19],[1.57,0,0],'#f2a13a'], ['sphere',[.03,.03,.02],[.06,.35,.15],0,'#ffffff','m'], ['sphere',[.04,.2,.1],[.22,0,0],[0,0,.2],'#1d2026','m'], ['box',[.09,.03,.12],[.08,-.32,.06],0,'#f2a13a','m']] },
+  apple: { spin: true, p: [
+    ['sphere',[.27,.25,.27],[0,0,0],0,'#d7262e'], ['cylinder',[.02,.1,.02],[0,.28,0],0,'#5a3b1a'], ['sphere',[.08,.02,.04],[.06,.3,0],[0,0,.4],'#3e9b3a']] },
+  cow: { spin: false, p: [
+    ['sphere',[.3,.26,.42],[0,0,0],0,'#f4f1ea'], ['sphere',[.12,.1,.12],[.18,.1,.05],0,'#222222'], ['sphere',[.12,.1,.12],[-.15,.05,-.18],0,'#222222'], ['sphere',[.1,.1,.1],[.05,.2,-.2],0,'#222222'],
+    ['box',[.22,.22,.24],[0,.2,.45],0,'#f4f1ea'], ['box',[.2,.12,.08],[0,.13,.6],0,'#f2b8c0'], ['cone',[.03,.12,.03],[.1,.36,.42],[0,0,-.6],'#e8dcc0','m'],
+    ['box',[.1,.04,.06],[.15,.27,.42],0,'#222222','m'], ['cylinder',[.06,.25,.06],[.17,-.3,.25],0,'#f4f1ea','m'], ['cylinder',[.06,.25,.06],[.17,-.3,-.25],0,'#f4f1ea','m'], ['sphere',[.025,.025,.02],[.06,.25,.57],0,'#111111','m']] },
+  pig: { spin: false, p: [
+    ['sphere',[.28,.25,.36],[0,0,0],0,'#f4a6b4'], ['sphere',[.18,.18,.18],[0,.1,.36],0,'#f4a6b4'], ['cylinder',[.08,.06,.07],[0,.07,.53],[1.57,0,0],'#ee8fa0'],
+    ['sphere',[.015,.02,.01],[.03,.07,.565],0,'#7a3a44','m'], ['cone',[.05,.08,.03],[.1,.27,.36],[.4,0,-.3],'#ee8fa0','m'], ['sphere',[.025,.025,.02],[.07,.17,.5],0,'#111111','m'],
+    ['cylinder',[.05,.2,.05],[.14,-.25,.18],0,'#f4a6b4','m'], ['cylinder',[.05,.2,.05],[.14,-.25,-.18],0,'#f4a6b4','m'], ['torus',[.05,.05,.05],[0,.1,-.37],0,'#ee8fa0']] },
+  burger: { spin: true, p: [
+    ['sphere',[.3,.08,.3],[0,-.12,0],0,'#d89a4a'], ['cylinder',[.31,.07,.31],[0,-.04,0],0,'#5a3220'], ['box',[.46,.02,.46],[0,.0,0],[0,.785,0],'#ffc93c'],
+    ['cylinder',[.33,.03,.33],[0,.025,0],0,'#5cb85c'], ['sphere',[.3,.16,.3],[0,.08,0],0,'#e0a552'], ['sphere',[.02,.01,.03],[.1,.22,.05],0,'#fff4d6','m'], ['sphere',[.02,.01,.03],[0,.23,-.1],0,'#fff4d6']] },
+  cannonball: { spin: true, p: [ ['sphere',[.28,.28,.28],[0,0,0],0,'#2b2f36'], ['sphere',[.08,.06,.05],[-.1,.14,.2],0,'#5a6270']] },
+};
+function toParts(list){
+  const out = [];
+  for (const [s, sz, pos, rot, c, fl] of list){
+    const r = rot || [0, 0, 0], f = fl || '';
+    out.push({ s, sz, pos, rot: r, c, glow: f.includes('g') });
+    if (f.includes('m')) out.push({ s, sz, pos: [-pos[0], pos[1], pos[2]], rot: [r[0], -r[1], -r[2]], c, glow: f.includes('g') });
+  }
+  return out;
+}
+const LIB = {}; for (const k in RAW_LIB) LIB[k] = { parts: toParts(RAW_LIB[k].p), spin: RAW_LIB[k].spin };
+const LIB_LABEL = { elephant:'elefante', shark:'tubarão', pineapple:'abacaxi', banana:'banana', chicken:'galinha', duck:'pato', fish:'peixe', pizza:'pizza', watermelon:'melancia', donut:'rosquinha', star:'estrela', heart:'coração', skull:'caveira', ghost:'fantasma', cat:'gato', dog:'cachorro', dino:'dinossauro', robot:'robô', bomb:'bomba', arrow:'flecha', popcorn:'pipoca', car:'carro', bee:'abelha', penguin:'pinguim', apple:'maçã', cow:'vaca', pig:'porco', burger:'hambúrguer', cannonball:'bala de canhão' };
+const MODEL_WORDS = [[/elefante|elephant/,'elephant'],[/tubara|shark/,'shark'],[/abacaxi|pineapple/,'pineapple'],[/banana/,'banana'],[/galinha|frango|chicken|galo\b/,'chicken'],[/\bpato|patinho|duck/,'duck'],[/peixe|fish/,'fish'],[/pizza/,'pizza'],[/melancia/,'watermelon'],[/rosquinha|donut|sonho\b/,'donut'],[/estrela|star\b/,'star'],[/coracao|amor\b/,'heart'],[/caveira|esqueleto|cranio|skull/,'skull'],[/fantasma|ghost/,'ghost'],[/\bgato|gatinho|\bcat\b/,'cat'],[/cachorro|cachorrinho|\bcao\b|lobo|\bdog\b/,'dog'],[/dinossauro|t-?rex|\bdino/,'dino'],[/robo|robot/,'robot'],[/bala de canhao|cannonball/,'cannonball'],[/bomba|granada|dinamite|\bbomb/,'bomb'],[/flecha|arrow/,'arrow'],[/pipoca|popcorn/,'popcorn'],[/carro|caminhao|\bcar\b/,'car'],[/abelha|\bbee\b/,'bee'],[/pinguim|penguin/,'penguin'],[/\bmaca\b|tomate|apple/,'apple'],[/\bvaca|\bboi\b|\bcow\b/,'cow'],[/porco|leitao|\bpig\b/,'pig'],[/hamburguer|burger|x-?burguer|lanche/,'burger']];
+const GUN_TYPES = ['pistol','rifle','sniper','shotgun','minigun','bazooka','laser','railgun','flamethrower','launcher','sword','bow'];
+const GUN_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', bazooka:'bazuca', laser:'arma laser', railgun:'railgun', flamethrower:'lança-chamas', launcher:'lançador', sword:'arma branca', bow:'arco' };
+const ARCH_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', rocket:'bazuca', laser:'arma laser', railgun:'railgun', sprayer:'lança-chamas', launcher:'lançador', melee:'arma branca', bow:'arco' };
+const GUN_WORDS = [[/bazuca|bazooka|lanca.?(foguete|missil|misseis)|\brpg\b/,'bazooka'],[/sniper|franco.?atirador|rifle de precisao/,'sniper'],[/metralhadora|minigun|gatling/,'minigun'],[/escopeta|espingarda|shotgun|\bdoze\b/,'shotgun'],[/lanca.?chamas|macarico|flamethrower/,'flamethrower'],[/railgun|canhao de plasma|eletromagnetic/,'railgun'],[/pistola|revolver|pistol|garrucha/,'pistol'],[/rifle|fuzil|carabina|\bak\b|\bm4\b/,'rifle'],[/\blaser\b|blaster/,'laser'],[/espada|katana|machado|martelo|faca|adaga|sabre|tridente/,'sword'],[/\barco\b|besta\b|crossbow|\bbow\b/,'bow'],[/canhao|lancador|lanca.?\w|catapulta|estilingue|bodoque|arremessador/,'launcher']];
+function detectGun(t){ for (const [re, k] of GUN_WORDS) if (re.test(t)) return k; return null; }
+function detectModel(t){ for (const [re, k] of MODEL_WORDS) if (re.test(t)) return k; return null; }
+function normModel(m){
+  if (!Array.isArray(m)) return null; const out = [];
+  const v = (a, lo, hi, d) => [0, 1, 2].map(i => num(Array.isArray(a) ? a[i] : undefined, lo, hi, d));
+  for (const p of m.slice(0, 28)){ if (!p || typeof p !== 'object') continue;
+    out.push({ s: PART_SHAPES.includes(p.shape) ? p.shape : 'sphere', sz: v(p.size, .01, 1.2, .2), pos: v(p.pos, -1.2, 1.2, 0), rot: v(p.rot, -6.3, 6.3, 0), c: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#cccccc', glow: !!p.glow }); }
+  return out.length >= 2 ? out : null;
+}
+function archOf(item){ const t = item.gunType; if (!t) return gunArch(item.weapon); return { bazooka: 'rocket', flamethrower: 'sprayer', sword: 'melee' }[t] || t; }
+// Applies what the request literally asks for (weapon type, projectile model) on top of what the forge returned.
+function finalize(it, req){
+  const t = strip(req || '');
+  if (it.kind === 'weapon' || it.kind === 'turret'){ const gt = detectGun(t); if (gt) it.gunType = gt; }
+  const mk = detectModel(t);
+  if (mk) it.mdl = { parts: LIB[mk].parts, spin: LIB[mk].spin, key: mk };
+  if (!it.mdl && it.gunType === 'bow') it.mdl = { parts: LIB.arrow.parts, spin: false, key: 'arrow' };
+  if (!it.mdl && it.gunType === 'launcher' && /canhao/.test(t)) it.mdl = { parts: LIB.cannonball.parts, spin: true, key: 'cannonball' };
+  const w = it.weapon;
+  if (w){
+    if (it.mdl && it.kind !== 'minion'){ w.shape = 'model'; w.mdl = it.mdl; w.size = Math.max(w.size, 10); }
+    const g = it.gunType;
+    if (g === 'bazooka' && w.shape !== 'model') w.shape = 'rocket';
+    if ((g === 'laser' || g === 'railgun') && w.shape !== 'model') w.shape = 'laser';
+    if (g === 'flamethrower'){ if (w.shape !== 'model') w.shape = 'orb'; if (w.effect === 'none') w.effect = 'fire'; w.range = Math.min(w.range, 420); }
+    if (g === 'sword'){ w.range = Math.min(w.range, 220); if (w.shape !== 'model') w.shape = 'orb'; }
+    w.arch = archOf(it);
+  }
+  return it;
+}
+
 /* ================= item model (shared with 2D) ================= */
 const KINDS = ['weapon','turret','minion','wall','shield','heal','boost','mine','strike'];
 const EFFECTS = ['none','fire','freeze','poison','knockback','lifesteal'];
@@ -243,12 +394,16 @@ function normItem(r, req, source){
   else if (kind === 'mine'){ it.count = Math.round(num(r.count,1,5,3)); it.damage = num(r.damage,10,40,22); it.radius = num(r.radius,30,110,60); if (it.count*it.damage > 80){ it.damage = 80/it.count; it.nerfed = true; } }
   else if (kind === 'strike'){ it.count = Math.round(num(r.count,1,8,4)); it.damage = num(r.damage,8,35,18); it.radius = num(r.radius,30,120,60); it.delay = num(r.delay,0.6,2,1.2); if (it.count*it.damage > 70){ it.damage = 70/it.count; it.nerfed = true; } }
   if (it.weapon && it.weapon.nerfed) it.nerfed = true;
+  it.gunType = GUN_TYPES.includes(r.gunType) ? r.gunType : null;
+  const md = normModel(r.model); it.mdl = md ? { parts: md, spin: !!r.spin, key: null } : null;
   return it;
 }
 const BASE_ITEM = normItem({kind:'weapon',name:'Pistola de Fábrica',emoji:'🔫',color:'#d9d4c7',desc:'Munição infinita.',weapon:{damage:7,fireRate:3,speed:700,count:1,spread:2,size:5,range:700,ammo:300,shape:'bullet'}}, '', 'base');
 function statLine(it){
   const f = n => (Math.round(n*10)/10).toString().replace('.', ',');
   const w = it.weapon, parts = [];
+  if (w && it.kind !== 'minion') parts.push('modelo: ' + ARCH_LABEL[w.arch || gunArch(w)]);
+  if (it.mdl && ['weapon','turret','minion'].includes(it.kind)) parts.push(it.kind === 'minion' ? 'criatura 3D' : 'projétil 3D: ' + (LIB_LABEL[it.mdl.key] || 'feito pela IA'));
   if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, `alcance ${Math.round(w.range*S)} m`);
     if (it.kind === 'weapon') parts.push(`munição ${w.ammo}`);
     if (w.explosion) parts.push('explode'); if (w.homing > .2) parts.push('teleguiado'); if (w.pierce) parts.push('atravessa');
@@ -283,16 +438,21 @@ Transforme o pedido em UM item jogável, criativo e fiel ao pedido, mesmo que se
 - mine: minas no chão (count 1-5, damage 10-40, radius 30-110).
 - strike: ataque do céu em volta do inimigo (count 1-8, damage 8-35, radius 30-120, delay 0.6-2).
 Campos de "weapon": damage 1-80, fireRate 0.3-14 (tiros/s), speed 150-1200, count 1-8 (projéteis por tiro), spread 0-80 (graus), size 3-24, range 120-1100, homing 0-1, bounce 0-3, explosion 0-140 (raio), pierce true/false, effect: none|fire|freeze|poison|knockback|lifesteal, ammo 5-300, shape: bullet|laser|orb|rocket|emoji, projEmoji (um emoji, se shape for emoji).
+Campos extras:
+- "gunType" (weapon e turret): o tipo de arma que o personagem segura: pistol|rifle|sniper|shotgun|minigun|bazooka|laser|railgun|flamethrower|launcher|sword|bow. Se o pedido diz o tipo (pistola, rifle, bazuca...), use esse.
+- "model": modelo 3D do projétil (weapon/turret) ou da criatura (minion), feito de 4 a 20 peças. Peça: {"shape":"sphere|box|cylinder|cone|torus","size":[x,y,z],"pos":[x,y,z],"rot":[x,y,z],"color":"#rrggbb","glow":false}. O objeto cabe num cubo 1x1x1 centrado na origem, frente para +z, y para cima. size é a escala: esfera = raios; caixa = largura/altura/profundidade; cilindro e cone = [raio, altura, raio] com eixo em y; rot em radianos. Ex.: um elefante tem corpo (esfera), cabeça (esfera), tromba (cilindros), orelhas (esferas achatadas), presas (cones) e 4 pernas (cilindros).
+- "spin": true se o projétil gira no ar (bolas, frutas), false se voa de frente (animais, veículos).
+Não use emoji como projétil: descreva o objeto em "model".
 Unidades: 20 = 1 metro; a arena tem 60x36 metros e os jogadores têm 100 de vida. Seja equilibrado: arma muito forte deve ter pouca munição ou cadência baixa.
 Responda SOMENTE com um objeto JSON, sem texto fora dele, assim:
-{"kind":"weapon","name":"Lança-Tubarões","emoji":"🦈","color":"#3fa9f5","desc":"Tubarões famintos com mira de cobrador.","weapon":{"damage":14,"fireRate":1.5,"speed":480,"count":1,"spread":6,"size":12,"range":700,"homing":0.4,"bounce":0,"explosion":0,"pierce":false,"effect":"knockback","ammo":30,"shape":"emoji","projEmoji":"🦈"}}
+{"kind":"weapon","name":"Lança-Tubarões","emoji":"🦈","color":"#3fa9f5","desc":"Tubarões famintos com mira de cobrador.","weapon":{"damage":14,"fireRate":1.5,"speed":480,"count":1,"spread":6,"size":12,"range":700,"homing":0.4,"bounce":0,"explosion":0,"pierce":false,"effect":"knockback","ammo":30,"shape":"bullet"},"gunType":"bazooka","model":[{"shape":"sphere","size":[0.25,0.24,0.72],"pos":[0,0,0],"rot":[0,0,0],"color":"#6f8aa3"},{"shape":"sphere","size":[0.21,0.16,0.6],"pos":[0,-0.08,0.06],"rot":[0,0,0],"color":"#e9eef2"},{"shape":"cone","size":[0.06,0.3,0.16],"pos":[0,0.3,-0.05],"rot":[-0.35,0,0],"color":"#6f8aa3"},{"shape":"cone","size":[0.04,0.32,0.12],"pos":[0,0.17,-0.78],"rot":[-0.9,0,0],"color":"#6f8aa3"},{"shape":"sphere","size":[0.035,0.035,0.035],"pos":[0.16,0.08,0.5],"rot":[0,0,0],"color":"#111111"},{"shape":"sphere","size":[0.035,0.035,0.035],"pos":[-0.16,0.08,0.5],"rot":[0,0,0],"color":"#111111"}],"spin":false}
 "name": curto em português (até 24 letras). "desc": uma frase divertida em português (até 90 letras). "color": hex #rrggbb.`;
 }
 const PERMANENT = ['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','session_expired'];
 async function forgeItem(req){
   await aiReady;
   if (sampleFn && aiMode === 'claude'){
-    try { const raw = await sampleFn.json(buildPrompt(req), { modelTier: 'quick' }); return normItem(raw, req, 'claude'); }
+    try { const raw = await sampleFn.json(buildPrompt(req), { modelTier: 'quick' }); return finalize(normItem(raw, req, 'claude'), req); }
     catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); } }
   }
   return localForge(req);
@@ -333,6 +493,20 @@ function hslHex(h){ const s=.85,l=.62,k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>
 function localForge(req){
   const t = strip(req);
   const find = list => { for (const [re, tpl] of list) if (re.test(t)) return tpl; return null; };
+  const gtl = detectGun(t);
+  if (gtl && !/torre|turret|torreta|sentinela/.test(t)){
+    const rep = { bazooka: 'bazuca', sniper: 'sniper', minigun: 'metralhadora', shotgun: 'escopeta', flamethrower: 'lanca-chamas', railgun: 'sniper', laser: 'laser', sword: 'espada', bow: 'arco', launcher: 'granada' }[gtl];
+    const base = rep ? W_TPL.find(([re]) => re.test(rep)) : null;
+    const h = hashStr(t);
+    const r2 = jitter(base ? base[1] : gtl === 'rifle'
+      ? { emoji: '🎯', color: hslHex(h % 360), desc: 'Preciso e de longo alcance.', weapon: { damage: 12, fireRate: 4, speed: 1000, size: 5, range: 900, ammo: 60, shape: 'bullet' } }
+      : { emoji: '🔫', color: hslHex(h % 360), desc: 'Compacta, rápida e cheia de personalidade.', weapon: { damage: 9, fireRate: 3, speed: 750, size: 6, range: 650, ammo: 60, shape: 'bullet' } });
+    r2.kind = 'weapon';
+    const eff = /fogo|fire|chama|lava|pimenta/.test(t) ? 'fire' : /gelo|ice|congel|neve/.test(t) ? 'freeze' : /veneno|toxic|acid/.test(t) ? 'poison' : /vampir|sangue/.test(t) ? 'lifesteal' : null;
+    if (eff) r2.weapon.effect = eff;
+    r2.name = titleCase(req);
+    return finalize(normItem(r2, req, 'local'), req);
+  }
   const wt = find(W_TPL), gt = find(G_TPL), bt = B_TPL[0].test(t) ? B_TPL[1] : null;
   const emo = (() => { for (const [re, e] of EMOJI_WORDS) if (re.test(t)) return e; return null; })();
   let r;
@@ -344,8 +518,9 @@ function localForge(req){
       weapon:{ damage: 6 + (h % 9), fireRate: 1.5 + ((h >>> 4) % 35)/10, speed: 500 + ((h >>> 8) % 500), count: 1 + ((h >>> 12) % 3), spread: 3 + ((h >>> 14) % 12),
         size: 5 + ((h >>> 18) % 8), range: 500 + ((h >>> 20) % 500), effect: pick(EFFECTS, 22), ammo: 60, shape: emo ? 'emoji' : pick(['bullet','orb','laser'], 25), projEmoji: emo || '' } }; }
   r.name = titleCase(req) || 'Coisa Misteriosa';
-  return normItem(r, req, 'local');
+  return finalize(normItem(r, req, 'local'), req);
 }
+
 
 /* ================= sound ================= */
 let actx = null, muted = false, lastShot = 0;
@@ -537,6 +712,12 @@ function glowSprite(color, size, opacity){ const s = new THREE.Sprite(glowMat(co
 function addMat(color, opacity){ return basic(color, { transparent: true, opacity: opacity ?? .8, blending: THREE.AdditiveBlending, depthWrite: false }); }
 
 /* --- weapon archetypes --- */
+const MG = { sphere: G.sph, box: G.box, cylinder: G.cyl, cone: G.cone, torus: new THREE.TorusGeometry(1, .35, 10, 24), tri: new THREE.CylinderGeometry(1, 1, 1, 3), half: new THREE.CylinderGeometry(1, 1, 1, 16, 1, false, 0, Math.PI) };
+function buildModel(parts, shadow){
+  const g = new THREE.Group();
+  for (const p of parts){ const m = new THREE.Mesh(MG[p.s] || G.sph, p.glow ? basic(p.c) : std(p.c, { roughness: .55, metalness: .05 })); m.scale.set(p.sz[0], p.sz[1], p.sz[2]); m.position.set(p.pos[0], p.pos[1], p.pos[2]); m.rotation.set(p.rot[0], p.rot[1], p.rot[2]); if (shadow) m.castShadow = true; g.add(m); }
+  return g;
+}
 function gunArch(w){
   if (w.range <= 260) return 'melee';
   if (w.shape === 'rocket' || (w.explosion > 0 && w.homing > .3)) return 'rocket';
@@ -549,7 +730,7 @@ function gunArch(w){
   return 'pistol';
 }
 function buildGun(item){
-  const w = item.weapon, g = new THREE.Group(), col = item.color, arch = gunArch(w);
+  const w = item.weapon, g = new THREE.Group(), col = item.color, arch = w.arch || archOf(item);
   const main = std(col, { metalness: .55, roughness: .32 }), dark = std('#1a1d23', { metalness: .6, roughness: .42 }), chrome = std('#c8ced8', { metalness: .95, roughness: .18 });
   const wood = std('#6e4326', { roughness: .7 }), glow = basic(col), glass = new THREE.MeshStandardMaterial({ color: lin('#bfe8ff'), transparent: true, opacity: .28, roughness: .05, metalness: .2, depthWrite: false });
   const ticks = [];
@@ -574,6 +755,23 @@ function buildGun(item){
       P(G.box, glow, .124, .025, .4, 0, .06, 0, 0, 0, 0, false);
       [-1, 1].forEach(s => P(G.cyl, dark, .012, .28, .012, s * .03, -.07, .72, Math.PI / 2 + .12, 0, s * .08));
       grip(-.1); end = 1.1; break;
+    case 'sniper':
+      P(G.box, main, .11, .14, .55, 0, 0, 0); tube(.03, .95, 0, .01, .27, dark); tube(.055, .12, 0, .01, 1.22, chrome);
+      P(G.box, dark, .1, .14, .34, 0, -.02, -.42); P(G.box, wood, .08, .2, .14, 0, -.05, -.64); P(G.box, dark, .06, .06, .16, 0, .06, -.55);
+      tube(.065, .5, 0, .17, -.18, dark); [-.2, .3].forEach(z => tube(.08, .05, 0, .17, z, dark)); P(G.sph, glow, .055, .055, .01, 0, .17, .325, 0, 0, 0, false);
+      P(G.cyl, chrome, .015, .12, .015, .09, .05, -.12, 0, 0, Math.PI / 2); P(G.sph, chrome, .03, .03, .03, .15, .05, -.12);
+      P(G.box, dark, .06, .18, .1, 0, -.15, .08, .15); P(G.box, glow, .112, .02, .5, 0, .072, 0, 0, 0, 0, false);
+      [-1, 1].forEach(s => P(G.cyl, dark, .012, .32, .012, s * .035, -.08, .9, Math.PI / 2 + .12, 0, s * .1));
+      grip(-.12); end = 1.34; break;
+    case 'bow': {
+      P(G.box, wood, .06, .32, .09, 0, 0, .25); P(G.box, dark, .075, .12, .1, 0, 0, .25);
+      [1, -1].forEach(s => { limb(g, [0, .15 * s, .25], [0, .48 * s, .14], .03, wood); limb(g, [0, .48 * s, .14], [0, .62 * s, .02], .022, main); g.add(mesh(G.sph, glow, .03, .03, .03, 0, .62 * s, .02, false)); });
+      const str = basic('#eeeeee'); limb(g, [0, .62, .02], [0, 0, -.1], .006, str); limb(g, [0, -.62, .02], [0, 0, -.1], .006, str);
+      const nock = new THREE.Group(); g.add(nock); limb(nock, [0, 0, -.1], [0, 0, .55], .012, wood); const hd = mesh(G.cone, chrome, .03, .08, .03, 0, 0, .59); hd.rotation.x = Math.PI / 2; nock.add(hd);
+      [0, 2.1, 4.2].forEach(a => { const fl = mesh(G.box, std('#e0312f'), .005, .05, .1, Math.cos(a) * .025, Math.sin(a) * .025, -.04); fl.rotation.z = a; nock.add(fl); });
+      if (w.mdl && w.mdl.key !== 'arrow'){ const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.14); mm.position.set(0, 0, .66); nock.add(mm); }
+      ticks.push((dt, f) => { nock.visible = !(f.recoil > .3); });
+      end = .62; break; }
     case 'railgun':
       P(G.box, main, .14, .16, .55, 0, 0, -.02); P(G.box, dark, .1, .12, .3, 0, -.02, -.42);
       [-1, 1].forEach(s => P(G.box, chrome, .035, .05, .75, s * .055, .03, .55));
@@ -614,7 +812,8 @@ function buildGun(item){
       ring(.135, 0, .07, .2, std('#e8b231', { roughness: .5 }));
       P(G.box, dark, .05, .1, .16, -.16, .16, .05); P(G.sph, glow, .025, .025, .01, -.16, .17, .135, 0, 0, 0, false);
       grip(-.1); P(G.box, dark, .07, .17, .09, 0, -.12, .3, .2);
-      if (w.shape === 'emoji'){ war.visible = false; const em = emojiSprite(w.projEmoji, .22); em.position.set(0, .07, .66); g.add(em); ticks.push((dt, f) => { em.visible = !(f.recoil > .3); }); }
+      if (w.mdl){ war.visible = false; const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.24); mm.position.set(0, .07, .7); g.add(mm); ticks.push((dt, f) => { mm.visible = !(f.recoil > .3); }); }
+      else if (w.shape === 'emoji'){ war.visible = false; const em = emojiSprite(w.projEmoji, .22); em.position.set(0, .07, .66); g.add(em); ticks.push((dt, f) => { em.visible = !(f.recoil > .3); }); }
       else ticks.push((dt, f) => { war.visible = !(f.recoil > .3); });
       end = .8; break; }
     case 'sprayer': {
@@ -632,8 +831,9 @@ function buildGun(item){
       const drum = mesh(G.cyl, dark, .16, .14, .16, 0, -.05, -.12); drum.rotation.z = Math.PI / 2; g.add(drum);
       for (let k = 0; k < 6; k++){ const a = k / 6 * 6.28; P(G.sph, chrome, .025, .025, .025, .08, -.05 + Math.cos(a) * .1, -.12 + Math.sin(a) * .1); }
       P(G.box, dark, .16, .12, .2, 0, .17, -.05);
-      const peek = emojiSprite(w.projEmoji || item.emoji, .22); peek.position.set(0, .3, -.05); g.add(peek); ticks.push((dt, f, t) => { peek.position.y = .29 + Math.abs(Math.sin(t * 3)) * .04; });
-      const inMuzzle = emojiSprite(w.projEmoji || item.emoji, .16); inMuzzle.position.set(0, .03, .6); g.add(inMuzzle); ticks.push((dt, f) => { inMuzzle.visible = !(f.recoil > .3); });
+      const mk = (sz) => { if (w.mdl){ const mm = buildModel(w.mdl.parts); mm.scale.setScalar(sz); return mm; } return emojiSprite(w.projEmoji || item.emoji, sz * 1.1); };
+      const peek = mk(.18); peek.position.set(0, .3, -.05); g.add(peek); ticks.push((dt, f, t) => { peek.position.y = .29 + Math.abs(Math.sin(t * 3)) * .04; });
+      const inMuzzle = mk(.16); inMuzzle.position.set(0, .03, .64); g.add(inMuzzle); ticks.push((dt, f) => { inMuzzle.visible = !(f.recoil > .3); });
       grip(-.15); P(G.box, dark, .07, .16, .08, 0, -.12, .3, .2); end = .66; break; }
     case 'melee': {
       tube(.032, .26, 0, 0, -.3, std('#3b2b22', { roughness: .8 })); P(G.sph, chrome, .045, .045, .045, 0, 0, -.31);
@@ -650,7 +850,7 @@ function buildGun(item){
   if (w.effect === 'knockback' && arch !== 'melee') ring(.075, 0, .02, end - .02, chrome);
   if (w.effect === 'fire' && arch !== 'sprayer'){ const pf = emojiSprite('🔥', .14); pf.position.set(0, .05, end); g.add(pf); ticks.push((dt, f, t) => pf.scale.setScalar(.1 + .04 * Math.sin(t * 20))); }
   if (w.homing > .25 && arch !== 'melee'){ const dish = mesh(G.sph, chrome, .05, .05, .02, -.08, .12, .05); g.add(dish); P(G.sph, addMat('#ff3030', .9), .015, .015, .015, -.08, .17, .05, 0, 0, 0, false); }
-  const badge = emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
+  const badge = w.mdl ? (() => { const mm = buildModel(w.mdl.parts); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, arch === 'rocket' ? .07 : arch === 'sprayer' || arch === 'laser' || arch === 'melee' ? 0 : .02, end + .04); g.add(muzzle);
   g.userData.muzzle = muzzle; g.userData.arch = arch;
   g.userData.tick = (dt, f, t) => { for (const fn of ticks) fn(dt, f, t); };
@@ -660,7 +860,7 @@ function buildGun(item){
 let pv = null;
 function itemPreview(it){
   if (it._pv !== undefined) return it._pv;
-  if (it.kind !== 'weapon' && it.kind !== 'turret'){ it._pv = null; return null; }
+  if (it.kind !== 'weapon' && it.kind !== 'turret' && !(it.kind === 'minion' && it.mdl)){ it._pv = null; return null; }
   try {
     if (!pv){
       const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(320, 170, false); r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.4;
@@ -669,7 +869,8 @@ function itemPreview(it){
       pv = { r, sc, cam };
     }
     let obj, size;
-    if (it.kind === 'weapon'){ obj = buildGun(it); obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
+    if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildModel(it.mdl.parts); mm.scale.setScalar(.42); mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
+    else if (it.kind === 'minion'){ obj = buildModel(it.mdl.parts); obj.rotation.y = .7; }
     else { obj = makeTurretModel(0, it); obj.rotation.y = .6; }
     obj.traverse(o => { if (o.isSprite) o.visible = o.scale.x < .21; });
     pv.sc.add(obj); obj.updateMatrixWorld(true);
@@ -803,7 +1004,7 @@ function resetRound(){
 }
 
 /* ================= forge UI ================= */
-const SUGGEST = ['lança-chamas de dragão','torre de mísseis teleguiados','escopeta de gelo','chuva de meteoros','exército de tubarões robôs','minas de casca de banana','escudo de bolha de sabão','metralhadora de pipoca','arco que atira raios','muralha de chocolate','cachorro ninja com laser','bazuca de abacaxi explosivo','poção de cura de café','sniper de plasma','bumerangue de serra elétrica','nuvem de veneno','tênis a jato','vampiro que suga vida'];
+const SUGGEST = ['pistola de elefante','rifle de banana','bazuca de galinha','arco de flechas de fogo','dinossauro aliado','lança-chamas de dragão','torre de mísseis teleguiados','escopeta de gelo','chuva de meteoros','exército de tubarões robôs','minas de casca de banana','escudo de bolha de sabão','metralhadora de pipoca','arco que atira raios','muralha de chocolate','cachorro ninja com laser','bazuca de abacaxi explosivo','poção de cura de café','sniper de plasma','bumerangue de serra elétrica','nuvem de veneno','tênis a jato','vampiro que suga vida'];
 function openForge(){
   phase = 'forge'; releaseMouse();
   fighters.forEach(p => { p.forgesLeft = round === 1 ? 3 : 2; p.ready = false; p.pending = 0; });
@@ -1037,7 +1238,8 @@ function casing(pos, side){
   const v = new THREE.Vector3(side.x * rand(2, 3.5), rand(2, 3.5), side.z * rand(2, 3.5));
   parts.push({ mesh: m, v, life: 1.2, max: 1.2, size: 0, g: 18, drag: 1, casing: true, spinR: rand(10, 20) });
 }
-function projVisual(w){ if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; return w.shape; }
+const _zAxis = new THREE.Vector3(0, 0, 1);
+function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; return w.shape; }
 const ARC = new THREE.TorusGeometry(1, .08, 6, 20, Math.PI);
 function bulletMesh(w, color){
   const s = Math.max(.1, w.size * .028), vis = projVisual(w), m = new THREE.Group();
@@ -1061,6 +1263,7 @@ function bulletMesh(w, color){
     for (let k = 0; k < 4; k++){ const fin = mesh(G.box, std('#2a2e35', { metalness: .5 }), s * .08, s * 1, s * .7, 0, -s * 1.6, 0, false); fin.rotation.y = k * Math.PI / 2; fin.position.x = Math.cos(k * Math.PI / 2) * s * .55; fin.position.z = -Math.sin(k * Math.PI / 2) * s * .55; m.add(fin); }
     const flame = mesh(G.cone, addMat('#ffb347', .9), s * .45, s * 2, s * .45, 0, -s * 3, 0, false); flame.rotation.x = Math.PI; m.add(flame); m.userData.flame = flame;
     const g2 = glowSprite('#ff8a3d', s * 4, .9); g2.position.y = -s * 2.6; m.add(g2); }
+  else if (vis === 'model'){ const sc = clamp(w.size * .075, .6, 1.6), inner = buildModel(w.mdl.parts); inner.scale.setScalar(sc); m.add(inner); m.userData.inner = inner; m.userData.spin = w.mdl.spin; m.add(glowSprite(color, sc * 1.1, .22)); }
   else if (vis === 'emoji'){ m.add(glowSprite(color, Math.max(.9, s * 5), .5)); const sp = emojiSprite(w.projEmoji, Math.max(.6, s * 3.4)); m.add(sp); m.userData.sp = sp; }
   else if (vis === 'slash'){ const a = new THREE.Mesh(ARC, addMat(color, .85)); a.rotation.x = Math.PI / 2; m.add(a); const c = new THREE.Mesh(ARC, addMat('#ffffff', .9)); c.rotation.x = Math.PI / 2; c.scale.set(.93, .93, .5); m.add(c); m.userData.base = Math.max(.7, s * 4.5); m.scale.setScalar(m.userData.base * .5); }
   m.userData.vis = vis; dynamic.add(m); return m;
@@ -1071,6 +1274,7 @@ function bulletTrail(b, prev, dt){
     if (b.trailT <= 0){ b.trailT = .025; fx(prev, { tex: 'smoke', color: '#8f8a84', size: .35, grow: 3, life: .8, alpha: .5, vel: [rand(-.3, .3), .5, rand(-.3, .3)], drag: .3 }); fx(prev, { color: '#ffb347', size: .55, life: .12, add: true }); } }
   else if (u.vis === 'orb'){ const t = performance.now() / 160; u.motes.forEach((mo, k) => mo.position.set(Math.cos(t + k * 2.1) * u.r, Math.sin(t * 1.3 + k) * u.r * .5, Math.sin(t + k * 2.1) * u.r));
     if (b.trailT <= 0){ b.trailT = .03; fx(prev, { color: b.color, size: b.r * 4, life: .25, add: true, alpha: .7 }); } }
+  else if (u.vis === 'model'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { tex: 'smoke', color: '#ffffff', size: .4, grow: 1.5, life: .35, alpha: .22, drag: .3 }); } }
   else if (u.vis === 'emoji'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { color: b.color, size: .5, life: .3, add: true, alpha: .55 }); } }
   else if (u.vis === 'slash'){ const k = 1 - b.life / b.max; b.mesh.scale.setScalar(u.base * (.5 + k * .9)); b.mesh.children.forEach(c => c.material.opacity = .9 * (1 - k * .7)); }
   else if (u.vis === 'bullet' && b.trailT <= 0 && w.size > 9){ b.trailT = .04; fx(prev, { color: b.color, size: b.r * 3, life: .15, add: true, alpha: .5 }); }
@@ -1125,9 +1329,9 @@ function fire(origin, w, owner, color, aimAt){
     d.applyAxisAngle(_yAxis, fan + (Math.random() - .5) * sp * (n > 1 ? .15 : .5));
     d.y += (Math.random() - .5) * sp * .15; d.normalize();
     const spd = w.speed * S * rand(.97, 1.03), life = w.range / w.speed;
-    bullets.push({ pos: origin.clone(), vel: d.multiplyScalar(spd), owner, w, color, life, max: life, bounces: w.bounce, hit: new Set(), mesh: bulletMesh(w, color), r: Math.max(.12, w.size * .028), spin: 0 });
+    bullets.push({ pos: origin.clone(), vel: d.multiplyScalar(spd), owner, w, color, life, max: life, bounces: w.bounce, hit: new Set(), mesh: bulletMesh(w, color), r: w.shape === 'model' && w.mdl ? Math.max(.3, clamp(w.size * .075, .6, 1.6) * .38) : Math.max(.12, w.size * .028), spin: 0 });
   }
-  gunSound(gunArch(w), owner);
+  gunSound(w.arch || gunArch(w), owner);
 }
 function applyDamage(t, dmg, owner, effect, from){
   if (dmg <= 0 || phase !== 'fight') return;
@@ -1228,9 +1432,12 @@ function makeMinion(owner, it, x, z, y){
   const g = new THREE.Group(); g.position.set(x, y, z);
   const blob = new THREE.Mesh(G.disc, basic('#000000', { transparent: true, opacity: .35, side: THREE.DoubleSide, depthWrite: false })); blob.rotation.x = -Math.PI / 2; blob.position.y = .03; blob.scale.setScalar(.7); g.add(blob);
   const ring = new THREE.Mesh(G.ring, basic(PCOL[owner], { transparent: true, opacity: .8, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; ring.scale.setScalar(.8); g.add(ring);
-  const sp = emojiSprite(it.emoji, 1.7); sp.position.y = .95; g.add(sp);
+  let sp;
+  if (it.mdl){ sp = buildModel(it.mdl.parts, true); sp.scale.setScalar(1.5); const bx = new THREE.Box3().setFromObject(sp); sp.userData.base = -bx.min.y; sp.position.y = sp.userData.base; }
+  else { sp = emojiSprite(it.emoji, 1.7); sp.userData.base = .95; sp.position.y = .95; }
+  g.add(sp);
   dynamic.add(g);
-  return { owner, x, y, z, vy: 0, r: .6, h: 1.8, hp: it.hp, maxHp: it.hp, item: it, cool: .8, mesh: g, sprite: sp, flash: 0, wob: rand(0, 6), stuck: 0, lx: x, lz: z };
+  return { owner, x, y, z, vy: 0, r: .6, h: 1.8, hp: it.hp, maxHp: it.hp, item: it, cool: .8, mesh: g, sprite: sp, model: !!it.mdl, flash: 0, wob: rand(0, 6), stuck: 0, lx: x, lz: z };
 }
 function floatText(pos, s, color){ const el = document.createElement('div'); el.className = 'ft'; el.textContent = s; el.style.color = color; $('#labels').appendChild(el); floats.push({ el, pos: pos.clone(), life: 1.1 }); }
 
@@ -1389,7 +1596,8 @@ function update(dt){
     m.vy -= GRAV * dt; m.y += m.vy * dt;
     const gm = collideBoxes(m, rocks); if (m.y <= gm){ m.y = gm; m.vy = 0; m.stuck += dt; if (m.stuck > .6){ if (Math.hypot(m.x - m.lx, m.z - m.lz) < .5 || e.y > m.y + 1) m.vy = 10; m.lx = m.x; m.lz = m.z; m.stuck = 0; } }
     m.x = clamp(m.x, -AW + .6, AW - .6); m.z = clamp(m.z, -AD + .6, AD - .6);
-    m.mesh.position.set(m.x, m.y, m.z); m.sprite.position.y = .95 + Math.abs(Math.sin(m.wob)) * .25;
+    m.mesh.position.set(m.x, m.y, m.z); m.sprite.position.y = m.sprite.userData.base + Math.abs(Math.sin(m.wob)) * (m.model ? .15 : .25);
+    if (m.model){ m.sprite.rotation.y = Math.atan2(e.x - m.x, e.z - m.z); m.sprite.rotation.z = Math.sin(m.wob) * .08; }
     if (d < m.r + e.r + .25 && Math.abs(e.y - m.y) < 1.4) applyDamage(e, it.contactDamage * dt, m.owner, 'none');
     if (it.weapon){ m.cool -= dt; if (m.cool <= 0 && d <= it.weapon.range * S){ fire(new THREE.Vector3(m.x, m.y + 1, m.z), it.weapon, m.owner, it.color, chest(e)); m.cool = 1 / it.weapon.fireRate; } }
   }
@@ -1438,6 +1646,7 @@ function update(dt){
     const vis = b.mesh.userData.vis;
     if (vis === 'laser' || vis === 'rocket' || vis === 'bullet'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_up, _v); }
     else if (vis === 'slash') b.mesh.rotation.y = Math.atan2(b.vel.x, b.vel.z);
+    else if (vis === 'model'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_zAxis, _v); const inn = b.mesh.userData.inner; if (b.mesh.userData.spin) inn.rotation.x = b.spin * .7; else { inn.rotation.z = Math.sin(b.spin * 1.6) * .3; inn.rotation.x = Math.sin(b.spin) * .12; } }
     else if (vis === 'emoji') b.mesh.userData.sp.material.rotation = b.spin;
   }
   bullets = bullets.filter(b => !b.dead);
