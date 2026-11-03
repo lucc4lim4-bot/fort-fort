@@ -487,6 +487,7 @@ function finalize(it, req){
     if (it.mdl){ w.shape = 'model'; w.mdl = it.mdl; if (it.mdl.key !== 'bullet') w.size = Math.max(w.size, 10); }
     else if (w.shape === 'emoji') w.shape = 'orb';
   }
+  applyGunSpec(it, t);
   return it;
 }
 
@@ -503,19 +504,19 @@ function num(v, lo, hi, def){ v = Number(v); if (!isFinite(v)) v = def; return c
 function normWeapon(w, cap){
   w = w && typeof w === 'object' ? w : {};
   const o = { damage:num(w.damage,1,80,10), fireRate:num(w.fireRate,0.3,14,2), speed:num(w.speed,150,1200,600),
-    count:Math.round(num(w.count,1,8,1)), spread:num(w.spread,0,80,5), size:num(w.size,3,24,6), range:num(w.range,120,1100,600),
+    count:Math.round(num(w.count,1,128,1)), spread:num(w.spread,0,80,5), size:num(w.size,3,24,6), range:num(w.range,120,1100,600),
     homing:num(w.homing,0,1,0), bounce:Math.round(num(w.bounce,0,3,0)), explosion:num(w.explosion,0,140,0), pierce:!!w.pierce,
     effect:EFFECTS.includes(w.effect)?w.effect:'none', ammo:Math.round(num(w.ammo,5,300,60)), shape:SHAPES.includes(w.shape)?w.shape:'bullet', projEmoji:glyph(w.projEmoji) };
   if (o.shape === 'emoji' && !o.projEmoji) o.shape = 'orb';
   const mult = 1 + o.explosion/120 + o.homing*0.6 + (o.pierce?0.25:0) + o.bounce*0.12 + (o.effect!=='none'?0.2:0);
   const dps = o.damage * o.count * o.fireRate * mult;
-  if (dps > cap){ o.damage = Math.max(0.4, o.damage * cap / dps); o.nerfed = true; }
+  if (dps > cap){ o.damage = Math.max(o.count > 8 ? .15 : .4, o.damage * cap / dps); o.nerfed = true; }
   return o;
 }
 function normItem(r, req, source){
   r = r && typeof r === 'object' ? r : {};
   const kind = KINDS.includes(r.kind) ? r.kind : 'weapon';
-  const it = { kind, req, source, name: String(r.name || req || 'Coisa Misteriosa').slice(0, 28), emoji: glyph(r.emoji) || KIND_EMOJI[kind],
+  const it = { kind, req, source, name: String(r.name || req || 'Coisa Misteriosa').slice(0, 34), emoji: glyph(r.emoji) || KIND_EMOJI[kind],
     color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#ffb347', desc: String(r.desc || '').slice(0, 130) };
   if (kind === 'weapon') it.weapon = normWeapon(r.weapon, 26);
   else if (kind === 'turret'){ it.weapon = normWeapon(r.weapon, 11); it.hp = num(r.hp,30,120,60); }
@@ -533,6 +534,7 @@ function normItem(r, req, source){
   it.gunType = GUN_TYPES.includes(r.gunType) ? r.gunType : null;
   const md = normModel(r.model); it.mdl = md ? { parts: md, spin: !!r.spin, key: null } : null;
   const hd = normModel(r.heldModel); it.held = hd ? { parts: hd } : null;
+  it.gunSpec = (kind === 'weapon' || kind === 'turret') ? normGunSpec(r.gunSpec) : null;
   return it;
 }
 const BASE_ITEM = normItem({kind:'weapon',name:'Pistola de Fábrica',emoji:'🔫',color:'#d9d4c7',desc:'Munição infinita.',weapon:{damage:7,fireRate:3,speed:700,count:1,spread:2,size:5,range:700,ammo:300,shape:'bullet'}}, '', 'base');
@@ -542,6 +544,7 @@ function statLine(it){
   const w = it.weapon, parts = [];
   if (w && it.kind !== 'minion') parts.push('modelo: ' + ARCH_LABEL[w.arch || gunArch(w)]);
   if (it.mdl && ['weapon','turret','minion','transform'].includes(it.kind)) parts.push(it.kind === 'minion' || it.kind === 'transform' ? 'criatura 3D' : 'projétil 3D: ' + (it.mdl.vox ? it.mdl.vox + ' em cubinhos' : LIB_LABEL[it.mdl.key] || 'feito pela IA'));
+  if (it.gunSpec && it.gunSpec.barrels > 1) parts.push(`${it.gunSpec.barrels} canos`);
   if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, `alcance ${Math.round(w.range*S)} m`);
     if (it.kind === 'weapon') parts.push(`munição ${w.ammo}`);
     if (w.explosion) parts.push('explode'); if (w.homing > .2) parts.push('teleguiado'); if (w.pierce) parts.push('atravessa');
@@ -581,6 +584,7 @@ Campos de "weapon": damage 1-80, fireRate 0.3-14 (tiros/s), speed 150-1200, coun
 Campos extras:
 - "gunType" (weapon e turret): o tipo de arma que o personagem segura: pistol|rifle|sniper|shotgun|minigun|bazooka|laser|railgun|flamethrower|launcher|sword|bow. Se o pedido diz o tipo (pistola, rifle, bazuca...), use esse.
 - "model": modelo 3D do projétil (weapon/turret) ou da criatura (minion), feito de 4 a 30 peças (use mais peças e cores certas para ficar fiel). Peça: {"shape":"sphere|box|cylinder|cone|torus","size":[x,y,z],"pos":[x,y,z],"rot":[x,y,z],"color":"#rrggbb","glow":false}. O objeto cabe num cubo 1x1x1 centrado na origem, frente para +z, y para cima. size é a escala: esfera = raios; caixa = largura/altura/profundidade; cilindro e cone = [raio, altura, raio] com eixo em y; rot em radianos. Ex.: um elefante tem corpo (esfera), cabeça (esfera), tromba (cilindros), orelhas (esferas achatadas), presas (cones) e 4 pernas (cilindros).
+- "gunSpec" (weapon e turret): a receita 3D da arma, criada na hora. Seja MUITO criativo e fiel ao pedido: {"barrels":1-128 (número de canos/bocas; se o jogador pedir 100 bocas, use 100),"layout":"single|row|grid|ring|cluster|fan|stack","barrelLength":0.12-2 (metros),"barrelRadius":0.012-0.15,"bodyLength":0.2-1.2,"bodyHeight":0.08-0.45,"bodyWidth":0.08-0.45,"stock":true/false,"scope":0-2,"magazine":"none|box|drum|belt|tank","handles":0-2,"spikes":0-16,"fins":0-6,"rings":0-8 (bobinas de energia),"muzzle":"plain|brake|flare|cone|crystal","colors":{"main":"#hex","accent":"#hex","metal":"#hex"},"glow":true/false,"rainbow":true/false,"size":0.5-2.5,"extra":[peças decorativas no formato de "model", até 20, ex.: uma caveira no topo, asas, chifres]}. Em "weapon.count" use o mesmo número de canos se todos disparam juntos (até 128).
 - "heldModel" (weapon e turret, opcional): modelo 3D do objeto que o personagem segura ou veste, no mesmo formato de "model", quando o pedido não for uma arma comum (ex.: varinha, luva, relógio, cajado). Frente para +z; a ponta que dispara fica no +z.
 - "spin": true se o projétil gira no ar (bolas, frutas), false se voa de frente (animais, veículos).
 Não use bolinhas genéricas: o projétil deve ser exatamente o objeto pedido, descrito em "model" (uma bala de verdade se for arma de fogo comum). Em "weapon.projEmoji" coloque também um emoji que represente o projétil.
@@ -640,7 +644,7 @@ const G_TPL = [
 ];
 const B_TPL = [/velocidade|speed|bota|tenis|turbo|rapido|jetpack|patins|skate|moto|carro|nitro|cafe|asa/, {kind:'boost',emoji:'⚡',color:'#ffe14d',desc:'Corre que nem quem esqueceu o gás ligado.',speed:1.7,duration:4}];
 function jitter(o){ const c = {}; for (const k in o){ const v = o[k]; c[k] = (typeof v === 'number' && k !== 'count' && k !== 'bounce') ? v * rand(0.88, 1.12) : (v && typeof v === 'object') ? jitter(v) : v; } return c; }
-function titleCase(s){ return s.trim().replace(/\s+/g,' ').split(' ').map(w => w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w).join(' ').slice(0, 26); }
+function titleCase(s){ return s.trim().replace(/\s+/g,' ').split(' ').map(w => w.length > 2 ? w[0].toUpperCase() + w.slice(1) : w).join(' ').slice(0, 34); }
 function hashStr(s){ let h = 2166136261; for (const ch of s){ h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function hslHex(h){ const s=.85,l=.62,k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join(''); }
 function localForge(req){
@@ -901,6 +905,139 @@ function voxelModel(e){
   return g;
 }
 function buildMdl(mdl, shadow){ return mdl.vox ? voxelModel(mdl.vox) : buildModel(mdl.parts, shadow); }
+/* ================= procedural gun generator (any number of barrels, made on the fly) ================= */
+const LAYOUTS = ['single','row','grid','ring','cluster','fan','stack'];
+const NUM_WORDS = { dupla: 2, duplo: 2, tripla: 3, triplo: 3, quadrupla: 4, quadruplo: 4, quintupla: 5, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, doze: 12, quinze: 15, vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cem: 100, cento: 100, duzentos: 128, mil: 128, milhao: 128 };
+function parseBarrels(t){
+  const m = t.match(/(\d+)\s*(canos?|bocas?|barris|tubos|canhoes|saidas|bicos)/); if (m) return clamp(parseInt(m[1], 10), 1, 128);
+  const w = t.match(/\b(dupla|duplo|tripla|triplo|quadrupla|quadruplo|quintupla|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|doze|quinze|vinte|trinta|quarenta|cinquenta|cem|cento|duzentos|mil|milhao)\b(?:\s+de)?\s*(canos?|bocas?|barris|tubos|canhoes|saidas|bicos)?/);
+  if (w && (w[2] || /dupl|tripl|quadrupl|quintupl/.test(w[1]))) return NUM_WORDS[w[1]];
+  if (/infinitos? canos|mil bocas|um monte de canos|muitos canos|muitas bocas/.test(t)) return 64;
+  return 0;
+}
+function gunMods(t){
+  const m = {};
+  if (/gigante|enorme|colossal|gigantesc|mega\b|imensa|titan/.test(t)) m.size = 2;
+  if (/\bmini\b|pequen|minuscul|de bolso|nano\b/.test(t)) m.size = .65;
+  if (/dourad|\bde ouro\b|\bouro\b/.test(t)) Object.assign(m, { main: '#f2c230', metal: '#b8902a', accent: '#fff2a0' });
+  if (/prateada|\bprata\b|cromad/.test(t)) Object.assign(m, { main: '#d9dee6', metal: '#9aa3ad' });
+  if (/madeira/.test(t)) Object.assign(m, { main: '#7a4a2a', metal: '#3a2716' });
+  if (/enferrujad/.test(t)) Object.assign(m, { main: '#8a4a2a', metal: '#5a3220' });
+  if (/arco.?iris|rainbow|colorid/.test(t)) m.rainbow = true;
+  if (/neon|brilh|luminos|radioativ/.test(t)) m.glow = true;
+  if (/espinho|spike|ourico|cravos/.test(t)) m.spikes = 10;
+  if (/\basas?\b|aleta|voador/.test(t)) m.fins = 4;
+  if (/energia|plasma|bobina|eletric|tesla/.test(t)) m.rings = 5;
+  if (/luneta|mira telesc/.test(t)) m.scope = 2;
+  if (/tambor/.test(t)) m.magazine = 'drum';
+  if (/em leque|leque/.test(t)) m.layout = 'fan';
+  if (/em anel|giratori|rotativ/.test(t)) m.layout = 'ring';
+  if (/cristal|diamante/.test(t)) m.muzzle = 'crystal';
+  m.any = Object.keys(m).length > 0;
+  return m;
+}
+function normGunSpec(g){
+  if (!g || typeof g !== 'object') return null;
+  const c = g.colors && typeof g.colors === 'object' ? g.colors : {}, hex = (v, d) => /^#[0-9a-f]{6}$/i.test(v) ? v : d;
+  return { barrels: Math.round(num(g.barrels, 1, 128, 1)), layout: LAYOUTS.includes(g.layout) ? g.layout : 'single', barrelLength: num(g.barrelLength, .12, 2, .5), barrelRadius: num(g.barrelRadius, .012, .15, .035),
+    bodyLength: num(g.bodyLength, .2, 1.2, .5), bodyHeight: num(g.bodyHeight, .08, .45, .16), bodyWidth: num(g.bodyWidth, .08, .45, .13), stock: !!g.stock, scope: Math.round(num(g.scope, 0, 2, 0)),
+    magazine: ['none','box','drum','belt','tank'].includes(g.magazine) ? g.magazine : 'box', handles: Math.round(num(g.handles, 0, 2, 0)), spikes: Math.round(num(g.spikes, 0, 16, 0)), fins: Math.round(num(g.fins, 0, 6, 0)), rings: Math.round(num(g.rings, 0, 8, 0)),
+    muzzle: ['plain','brake','flare','cone','crystal'].includes(g.muzzle) ? g.muzzle : 'plain', main: hex(c.main, null), accent: hex(c.accent, null), metal: hex(c.metal, '#1a1d23'), glow: !!g.glow, rainbow: !!g.rainbow, size: num(g.size, .5, 2.5, 1), extra: normModel(g.extra) };
+}
+function localGunSpec(t, it){
+  const h = hashStr(t), rnd = k => ((h >>> k) & 255) / 255, a = it.weapon.arch;
+  const base = { pistol: [1,'single',.2,.03,.38,.16,.1,false,0,'box'], rifle: [1,'single',.7,.032,.55,.15,.12,true,1,'box'], sniper: [1,'single',1,.03,.6,.14,.11,true,2,'box'], shotgun: [2,'row',.65,.042,.42,.15,.15,true,0,'none'],
+    minigun: [6,'ring',.75,.028,.36,.22,.22,false,0,'belt'], launcher: [1,'single',.6,.09,.42,.2,.17,false,0,'drum'] }[a] || [1,'single',.45,.04,.45,.16,.13,false,0,'box'];
+  return { barrels: base[0], layout: base[1], barrelLength: base[2] * (.85 + rnd(2) * .3), barrelRadius: base[3], bodyLength: base[4], bodyHeight: base[5], bodyWidth: base[6], stock: base[7], scope: base[8], magazine: base[9],
+    handles: a === 'minigun' ? 1 : 0, spikes: rnd(5) > .85 ? 4 : 0, fins: rnd(9) > .88 ? 2 : 0, rings: it.weapon.effect !== 'none' ? 2 : 0, muzzle: ['plain','brake','flare','cone'][(h >>> 13) % 4],
+    main: it.color, accent: hslHex((h >>> 7) % 360), metal: '#1a1d23', glow: false, rainbow: false, size: 1, extra: null };
+}
+function rebalance(w, cap){
+  const mult = 1 + w.explosion / 120 + w.homing * .6 + (w.pierce ? .25 : 0) + w.bounce * .12 + (w.effect !== 'none' ? .2 : 0);
+  const dps = w.damage * w.count * w.fireRate * mult; if (dps > cap){ w.damage = Math.max(w.count > 8 ? .15 : .4, w.damage * cap / dps); w.nerfed = true; }
+}
+function applyGunSpec(it, t){
+  const w = it.weapon; if (!w || (it.kind !== 'weapon' && it.kind !== 'turret')) return;
+  if (['melee','bow','sprayer'].includes(w.arch) && !it.gunSpec) return;
+  const nb = parseBarrels(t), mods = gunMods(t);
+  let spec = it.gunSpec;
+  if (!spec && (nb > 1 || mods.any) && !(it.held && !it.reqGun)) spec = localGunSpec(t, it);
+  if (!spec) return;
+  if (nb) spec.barrels = nb;
+  for (const k of ['size','main','metal','accent','rainbow','glow','spikes','fins','rings','scope','magazine','layout','muzzle']) if (mods[k] !== undefined) spec[k] = mods[k];
+  if (!spec.main) spec.main = it.color;
+  if (spec.barrels > 4 && (spec.layout === 'single' || (spec.layout === 'row' && spec.barrels > 10))) spec.layout = w.arch === 'minigun' ? 'ring' : 'grid';
+  if (spec.barrels > 1 && spec.layout === 'single') spec.layout = 'row';
+  it.gunSpec = spec;
+  if (spec.barrels > 1){
+    if (w.arch === 'minigun' && spec.layout === 'ring') w.fireRate = Math.min(14, w.fireRate * Math.min(3, 1 + spec.barrels / 12));
+    else { w.count = spec.barrels; w.spread = clamp(Math.max(w.spread, 6 + spec.barrels * .55), 6, 80); if (w.count > 30) w.fireRate = Math.min(w.fireRate, 1.1); }
+  }
+  rebalance(w, it.kind === 'turret' ? 11 : 26); if (w.nerfed) it.nerfed = true;
+}
+function barrelLayout(spec){
+  const n = spec.barrels, r = spec.barrelRadius, d = r * 2.35, pts = [];
+  if (spec.layout === 'row') for (let i = 0; i < n; i++) pts.push([(i - (n - 1) / 2) * d, 0, 0]);
+  else if (spec.layout === 'stack') for (let i = 0; i < n; i++) pts.push([0, (i - (n - 1) / 2) * d, 0]);
+  else if (spec.layout === 'grid'){ const cols = Math.ceil(Math.sqrt(n * 1.6)), rows = Math.ceil(n / cols); for (let i = 0; i < n; i++){ const cx = i % cols, cy = Math.floor(i / cols); pts.push([(cx - (cols - 1) / 2) * d, ((rows - 1) / 2 - cy) * d, 0]); } }
+  else if (spec.layout === 'ring' || spec.layout === 'single'){ if (n === 1) pts.push([0, 0, 0]); else { let left = n, k = 1; if (n > 7){ pts.push([0, 0, 0]); left--; } while (left > 0){ const R = k * d * (n <= 7 ? 1.1 : 1), cap = n <= 7 ? left : Math.max(6, Math.floor(2 * Math.PI * R / d)); const m = Math.min(cap, left); for (let i = 0; i < m; i++){ const a = i / m * 6.283 + k * .3; pts.push([Math.cos(a) * R, Math.sin(a) * R, 0]); } left -= m; k++; } } }
+  else if (spec.layout === 'cluster'){ let s = 7; const R = Math.sqrt(n) * r * 1.4; for (let i = 0; i < n; i++){ s = (s * 9301 + 49297) % 233280; const a = s / 233280 * 6.283; s = (s * 9301 + 49297) % 233280; const rr = Math.sqrt(s / 233280) * R; pts.push([Math.cos(a) * rr, Math.sin(a) * rr, 0]); } }
+  else if (spec.layout === 'fan') for (let i = 0; i < n; i++){ const a = n > 1 ? (i / (n - 1) - .5) * 1.4 : 0; pts.push([(i - (n - 1) / 2) * r * .6, 0, a]); }
+  return pts;
+}
+function buildSpecGun(item){
+  const sp = item.gunSpec, w = item.weapon, g = new THREE.Group(), inner = new THREE.Group(); g.add(inner);
+  const main = std(sp.main || item.color, { metalness: .55, roughness: .32 }), metal = std(sp.metal, { metalness: .65, roughness: .38 }), chrome = std('#c8ced8', { metalness: .95, roughness: .18 });
+  const accentC = sp.accent || item.color, accent = sp.glow ? basic(accentC) : std(accentC, { metalness: .4, roughness: .3 }), ticks = [];
+  const P = (geo, mat, sx, sy, sz, x, y, z, rx, ry, rz) => { const m = mesh(geo, mat, sx, sy, sz, x, y, z); if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz; inner.add(m); return m; };
+  const pts = barrelLayout(sp), r = sp.barrelRadius, L = sp.barrelLength;
+  let minX = 0, maxX = 0, minY = 0, maxY = 0; for (const [x, y] of pts){ minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+  const bw = Math.max(sp.bodyWidth, maxX - minX + r * 2.6), bh = Math.max(sp.bodyHeight, maxY - minY + r * 2.6), bl = sp.bodyLength, cy = (minY + maxY) / 2, cx = (minX + maxX) / 2;
+  const z0 = bl / 2;
+  P(G.box, main, bw, bh, bl, cx, cy, 0);
+  P(G.box, accent, Math.min(bw, .06) + .005, .025, bl * .8, cx, cy + bh / 2 + .01, 0);
+  P(G.box, metal, bw + .02, bh + .02, .05, cx, cy, z0 - .02);
+  // barrels (instanced so 100+ stay cheap)
+  const spinner = new THREE.Group(); spinner.position.set(cx, cy, 0); inner.add(spinner);
+  const bar = new THREE.InstancedMesh(G.cyl, sp.rainbow ? new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .5, roughness: .35 }) : metal, pts.length);
+  const tipM = new THREE.InstancedMesh(sp.muzzle === 'crystal' ? MG.octcone : sp.muzzle === 'cone' || sp.muzzle === 'flare' ? G.cone : G.torus, sp.muzzle === 'crystal' ? addMat(accentC, .9) : sp.rainbow ? new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: .8, roughness: .2 }) : chrome, pts.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(), tips = [];
+  pts.forEach(([x, y, fanA], i) => {
+    const dir = new THREE.Vector3(Math.sin(fanA), 0, Math.cos(fanA));
+    q.setFromUnitVectors(_upV, dir);
+    const c = new THREE.Vector3(x - cx, y - cy, z0).addScaledVector(dir, L / 2);
+    m4.compose(c, q, new THREE.Vector3(r, L, r)); bar.setMatrixAt(i, m4);
+    const tip = new THREE.Vector3(x - cx, y - cy, z0).addScaledVector(dir, L);
+    if (sp.muzzle === 'plain' || sp.muzzle === 'brake'){ e.set(0, fanA, 0); q.setFromEuler(e); m4.compose(tip, q, new THREE.Vector3(r * (sp.muzzle === 'brake' ? 1.6 : 1.15), r * (sp.muzzle === 'brake' ? 1.6 : 1.15), r * 1.5)); }
+    else { q.setFromUnitVectors(_upV, sp.muzzle === 'flare' ? dir.clone().negate() : dir); m4.compose(tip.clone().addScaledVector(dir, sp.muzzle === 'flare' ? .02 : r * 1.2), q, new THREE.Vector3(r * (sp.muzzle === 'flare' ? 1.9 : 1.1), r * (sp.muzzle === 'crystal' ? 4 : 2.6), r * (sp.muzzle === 'flare' ? 1.9 : 1.1))); }
+    tipM.setMatrixAt(i, m4);
+    if (sp.rainbow){ col.setHSL(i / pts.length, .85, .55).convertSRGBToLinear(); bar.setColorAt(i, col); tipM.setColorAt(i, col); }
+    tips.push(new THREE.Vector3(x, y, z0).addScaledVector(dir, L + .04));
+  });
+  bar.castShadow = true; bar.frustumCulled = tipM.frustumCulled = false; spinner.add(bar, tipM);
+  if (w.arch === 'minigun' && sp.layout === 'ring'){ let spin = 0; ticks.push((dt, f) => { spin += ((f.firing ? 26 : 0) - spin) * Math.min(1, dt * 4); spinner.rotation.z += spin * dt; }); }
+  for (let k = 0; k < sp.rings; k++){ const rg = mesh(G.torus, addMat(accentC, .9), 1, 1, 1, cx, cy, z0 + (k + .5) * L / (sp.rings + .5)); const R = Math.max(bw, bh) * .55; rg.scale.set(R, R, R); inner.add(rg); ticks.push((dt, f, t) => { const s = R * (1 + .08 * Math.sin(t * 8 - k)); rg.scale.set(s, s, s); }); }
+  // grip, stock, magazine, scope, handles
+  P(G.box, metal, .085, .22, .12, cx, cy - bh / 2 - .09, -bl * .2, .28); P(G.box, metal, .02, .02, .13, cx, cy - bh / 2 - .02, -bl * .2 + .09);
+  if (sp.stock){ P(G.box, metal, Math.min(bw, .11), bh * .9, .28, cx, cy - .02, -z0 - .14); P(G.box, main, Math.min(bw, .1), bh * 1.15, .1, cx, cy - .04, -z0 - .3); }
+  if (sp.magazine === 'box') P(G.box, metal, .07, .2, .11, cx, cy - bh / 2 - .1, bl * .12, .18);
+  if (sp.magazine === 'drum'){ const d = mesh(G.cyl, metal, .14, .1, .14, cx, cy - bh / 2 - .1, bl * .1); d.rotation.z = Math.PI / 2; inner.add(d); }
+  if (sp.magazine === 'belt'){ P(G.box, metal, .14, .18, .2, cx + bw / 2 + .08, cy - .05, 0); for (let k = 0; k < 7; k++) P(G.box, std('#c9a24a', { metalness: .8, roughness: .3 }), .03, .05, .03, cx + bw / 2 + .02 - k * .015, cy - .14 - k * .025, .05 + k * .02); }
+  if (sp.magazine === 'tank'){ P(G.cyl, addMat(accentC, .75), .09, bl * .7, .09, cx, cy + bh / 2 + .1, -.02, Math.PI / 2); P(G.cyl, chrome, .1, .03, .1, cx, cy + bh / 2 + .1, bl * .35, Math.PI / 2); }
+  if (sp.scope){ const sr = sp.scope === 2 ? .06 : .042, sl = sp.scope === 2 ? .5 : .3; P(G.cyl, metal, sr, sl, sr, cx, cy + bh / 2 + sr + .04, -.05, Math.PI / 2); P(G.sph, basic(accentC), sr * .8, sr * .8, .01, cx, cy + bh / 2 + sr + .04, -.05 + sl / 2 + .005); }
+  for (let k = 0; k < sp.handles; k++){ const hd = mesh(G.torus, metal, .09, .09, .09, cx, cy + bh / 2 + .07, -.05 + k * .2); hd.rotation.y = Math.PI / 2; inner.add(hd); }
+  for (let k = 0; k < sp.spikes; k++){ const a = k / sp.spikes * 6.283; const s = mesh(G.cone, chrome, .03, .14, .03, cx + Math.cos(a) * bw * .5, cy + Math.sin(a) * bh * .5, ((k % 3) - 1) * bl * .3); s.rotation.z = a - Math.PI / 2; inner.add(s); }
+  for (let k = 0; k < sp.fins; k++){ const s = k % 2 ? 1 : -1, z = -bl * .1 - Math.floor(k / 2) * .14; const fin = mesh(G.box, accent, .3, .02, .16, cx + s * (bw / 2 + .14), cy + .02, z); fin.rotation.z = s * .35; inner.add(fin); }
+  if (sp.extra){ const ex = buildModel(sp.extra); ex.scale.setScalar(Math.max(bl, bw) * .8); ex.position.set(cx, cy + bh / 2 + .12, 0); inner.add(ex); }
+  // the hand holds the grip: shift so the grip sits at the mount
+  inner.position.set(-cx, -cy + .02, .0);
+  g.scale.setScalar(sp.size);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, .02, z0 + L + .05); g.add(muzzle);
+  g.userData.muzzle = muzzle; g.userData.arch = w.arch || 'pistol'; g.userData.tips = tips.map(v => v.add(new THREE.Vector3(-cx, -cy + .02, 0)));
+  g.userData.tick = (dt, f, t) => { for (const fn of ticks) fn(dt, f, t); };
+  if (tips.length > 128) g.userData.tips.length = 128;
+  return g;
+}
 function gunArch(w){
   if (w.range <= 260) return 'melee';
   if (w.shape === 'rocket' || (w.explosion > 0 && w.homing > .3)) return 'rocket';
@@ -924,6 +1061,7 @@ function buildHeld(item){
 }
 function buildGun(item){
   if (item.held && !item.reqGun) return buildHeld(item);
+  if (item.gunSpec) return buildSpecGun(item);
   const w = item.weapon, g = new THREE.Group(), col = item.color, arch = w.arch || archOf(item);
   const main = std(col, { metalness: .55, roughness: .32 }), dark = std('#1a1d23', { metalness: .6, roughness: .42 }), chrome = std('#c8ced8', { metalness: .95, roughness: .18 });
   const wood = std('#6e4326', { roughness: .7 }), glow = basic(col), glass = new THREE.MeshStandardMaterial({ color: lin('#bfe8ff'), transparent: true, opacity: .28, roughness: .05, metalness: .2, depthWrite: false });
@@ -1438,7 +1576,8 @@ function casing(pos, side){
 const _zAxis = new THREE.Vector3(0, 0, 1);
 function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; if (w.arch === 'sprayer') return 'cloud'; return w.shape; }
 const ARC = new THREE.TorusGeometry(1, .08, 6, 20, Math.PI);
-function bulletMesh(w, color){
+function bulletMesh(w, color, light){
+  if (light){ const s = Math.max(.1, w.size * .028), m = new THREE.Group(); m.add(mesh(G.sph, basic(color), s * .45, s * 1.5, s * .45, 0, 0, 0, false)); m.userData.vis = 'pellet'; dynamic.add(m); return m; }
   const s = Math.max(.1, w.size * .028), vis = projVisual(w), m = new THREE.Group();
   if (vis === 'laser'){ const len = Math.max(.9, s * 8);
     m.add(mesh(G.cyl, basic('#ffffff'), s * .26, len, s * .26, 0, -len / 2, 0, false));
@@ -1525,17 +1664,19 @@ function gunSound(arch, owner){
     default: tone('square', 520, 180, .03 * v, .07);
   }
 }
-function fire(origin, w, owner, color, aimAt){
+function fire(origin, w, owner, color, aimAt, origins){
   const dir = aimAt.clone().sub(origin).normalize();
   const n = w.count, sp = w.spread * Math.PI / 180;
   for (let k = 0; k < n; k++){
-    if (bullets.length > 450) break;
-    const d = dir.clone();
+    if (bullets.length > 700) break;
+    const o = origins && origins.length ? origins[k % origins.length] : origin;
+    const d = origins && origins.length ? aimAt.clone().sub(o).normalize() : dir.clone();
+    const light = n > 12 && (w.shape !== 'model' || k % Math.ceil(n / 12) !== 0);
     const fan = n > 1 ? -sp / 2 + sp * k / (n - 1) : 0;
     d.applyAxisAngle(_yAxis, fan + (Math.random() - .5) * sp * (n > 1 ? .15 : .5));
     d.y += (Math.random() - .5) * sp * .15; d.normalize();
     const spd = w.speed * S * rand(.97, 1.03), life = w.range / w.speed;
-    bullets.push({ pos: origin.clone(), vel: d.multiplyScalar(spd), owner, w, color, life, max: life, bounces: w.bounce, hit: new Set(), mesh: bulletMesh(w, color), r: w.shape === 'model' && w.mdl ? Math.max(.3, clamp(w.size * .075, .6, 1.6) * .38) : Math.max(.12, w.size * .028), spin: 0 });
+    bullets.push({ pos: o.clone(), vel: d.multiplyScalar(spd), owner, w, color, life, max: life, bounces: w.bounce, hit: new Set(), mesh: bulletMesh(w, color, light), r: w.shape === 'model' && w.mdl ? Math.max(.3, clamp(w.size * .075, .6, 1.6) * .38) : Math.max(.12, w.size * .028), spin: 0 });
   }
   gunSound(w.arch || gunArch(w), owner);
 }
@@ -1756,7 +1897,9 @@ function updateFighter(f, inp, dt){
     let target;
     if (f.i === 0) target = aimPoint.clone();
     else { const e = fighters[0]; const err = [1.6, .9, .45][diff] + hdist(f, e) * [.05, .03, .015][diff]; target = chest(e).add(new THREE.Vector3(rand(-err, err), rand(-err, err) * .6, rand(-err, err))); }
-    fire(muzzle, wi.item.weapon, f.i, wi.item.color, target); f.cool = 1 / wi.item.weapon.fireRate; wi.ammo--; f.recoil = 1;
+    let origins = null; const gunObj = (f.i === 0 && fpvActive() && vm.gun) ? vm.gun : f.gun;
+    if (f.transT <= 0 && gunObj && gunObj.userData.tips && wi.item.weapon.count > 1){ gunObj.updateMatrixWorld(true); origins = gunObj.userData.tips.map(v => gunObj.localToWorld(v.clone())); }
+    fire(muzzle, wi.item.weapon, f.i, wi.item.color, target, origins); f.cool = 1 / wi.item.weapon.fireRate; wi.ammo--; f.recoil = 1;
     const W0 = wi.item.weapon, arch = f.gun.userData.arch; muzzleFlash(muzzle, W0, wi.item.color, clamp(W0.damage * W0.count / 30, .2, 1.3));
     if (['pistol','rifle','shotgun','minigun'].includes(arch) && (arch !== 'minigun' || Math.random() < .5)) casing(muzzle.clone().add(new THREE.Vector3(Math.sin(f.yaw), 0, Math.cos(f.yaw)).multiplyScalar(-.45)), new THREE.Vector3(-Math.cos(f.yaw), 0, Math.sin(f.yaw)));
     if (f.i === 0) camShake = Math.max(camShake, Math.min(.18, wi.item.weapon.damage / 120));
@@ -1872,7 +2015,7 @@ function update(dt){
     if (b.dead){ dynamic.remove(b.mesh); if (b.mesh.userData.cloud) b.mesh.children.forEach(c => c.material.dispose()); continue; }
     b.mesh.position.copy(b.pos);
     const vis = b.mesh.userData.vis;
-    if (vis === 'laser' || vis === 'rocket' || vis === 'bullet'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_up, _v); }
+    if (vis === 'laser' || vis === 'rocket' || vis === 'bullet' || vis === 'pellet'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_up, _v); }
     else if (vis === 'slash') b.mesh.rotation.y = Math.atan2(b.vel.x, b.vel.z);
     else if (vis === 'model'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_zAxis, _v); const inn = b.mesh.userData.inner, ax = b.mesh.userData.axis; if (b.mesh.userData.spin) inn.rotation[ax] = b.spin * (ax === 'y' ? 1.1 : .7); else { inn.rotation.z = Math.sin(b.spin * 1.6) * .3; inn.rotation.x = Math.sin(b.spin) * .12; } }
     else if (vis === 'emoji') b.mesh.userData.sp.material.rotation = b.spin;
@@ -1916,7 +2059,7 @@ vmScene.add(vm.root); vm.root.add(vm.holder); vm.holder.position.set(.3, -.3, -.
 function updateViewmodel(dt, t){
   const P = fighters[0]; if (!P) return;
   const wi = P.weapons[P.wi], item = wi ? wi.item : null;
-  if (vm.item !== item){ if (vm.gun) vm.holder.remove(vm.gun); vm.gun = item ? buildGun(item) : null; vm.item = item; if (vm.gun){ vm.gun.rotation.y = Math.PI; vm.gun.scale.setScalar(.8); vm.gun.children.forEach(c => { if (c.userData.badge) c.visible = false; }); vm.holder.add(vm.gun); } }
+  if (vm.item !== item){ if (vm.gun) vm.holder.remove(vm.gun); vm.gun = item ? buildGun(item) : null; vm.item = item; if (vm.gun){ vm.gun.rotation.y = Math.PI; vm.gun.scale.multiplyScalar(.8); { const sz = new THREE.Box3().setFromObject(vm.gun).getSize(new THREE.Vector3()); const k = Math.min(1, .34 / sz.x, .3 / sz.y, .95 / sz.z); if (k < 1) vm.gun.scale.multiplyScalar(k); } vm.gun.children.forEach(c => { if (c.userData.badge) c.visible = false; }); vm.holder.add(vm.gun); } }
   vm.root.position.copy(camera.position); vm.root.quaternion.copy(camera.quaternion);
   const sp = Math.min(1, Math.hypot(P.vx, P.vz) / PSPEED) * (P.onGround ? 1 : .25); vm.bob += dt * sp * 9;
   const zoom = zooming(), k = Math.min(1, dt * 12);
