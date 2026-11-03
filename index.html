@@ -107,6 +107,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .card .nm{font-weight:700;font-size:15px}
 .card .kd{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ic)}
 .card .ds{font-size:13px;color:var(--muted);margin-top:2px}
+.card .rs{font-size:12px;margin-top:6px;color:var(--muted);font-style:italic;line-height:1.45;border-left:2px solid var(--ic);padding-left:8px}
 .card .st{font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
 .card .tag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-left:4px}
 .card .tag.nerf{color:var(--ember)}
@@ -136,7 +137,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div class="center"><div class="sc"><span class="a" id="s1">0</span><span class="b" id="s2">0</span></div><small id="roundLbl">Melhor de 5</small><span class="tm" id="timer">90</span></div>
       <div class="hpbox r"><span class="nm" style="color:var(--p2)" id="n1">CPU</span><div class="hpbar"><i id="hp1"></i><b id="sh1"></b></div><span class="nm" id="hpt1" style="color:var(--muted)">100</span></div>
     </div>
-    <div class="tools"><span class="badge" id="aiBadge">IA: conectando…</span><button class="icon-btn" id="muteBtn" type="button">Som: ligado</button><button class="icon-btn" id="menuBtn" type="button">Menu</button></div>
+    <div class="tools"><span class="badge" id="aiBadge">IA: conectando…</span><button class="icon-btn" id="muteBtn" type="button">Som: ligado</button><button class="icon-btn" id="camBtn" type="button">Câmera: 3ª pessoa</button><button class="icon-btn" id="menuBtn" type="button">Menu</button></div>
     <div id="cross"></div>
     <div id="dash"><i></i></div>
     <div id="msg" hidden></div>
@@ -152,6 +153,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         <button id="tSwap" type="button">Arma</button>
         <button id="tUse" type="button">Usar item</button>
         <button id="tCycle" type="button">Trocar item</button>
+        <button id="tCam" type="button">Câmera</button>
       </div>
     </div>
   </div>
@@ -172,7 +174,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div><b>1 · Forje</b>3 pedidos na primeira rodada e 2 nas seguintes. A IA decide se o pedido vira arma, torre, aliado, muralha, escudo, cura, turbo, minas ou ataque aéreo.</div>
       <div><b>2 · Lute</b>Clique na arena para travar o mouse e mirar. Armas apelonas saem balanceadas. Itens recarregam a cada rodada.</div>
       <div><b>3 · A Fundição</b>Suba na plataforma do caldeirão, nas torres de atirador e na passarela. As plataformas azuis te lançam para o alto. Vence quem levar 3 rodadas.</div>
-      <div><b>Controles</b><kbd>WASD</kbd> andar · <kbd>Mouse</kbd> mirar · <kbd>Clique</kbd> atirar · <kbd>Botão direito</kbd> zoom · <kbd>Espaço</kbd> pular (2× no ar) · <kbd>C</kbd> dash · <kbd>Shift</kbd> correr · <kbd>V</kbd> trocar ombro · <kbd>Q</kbd>/roda/<kbd>1-7</kbd> arma · <kbd>E</kbd> usar item · <kbd>R</kbd> trocar item · <kbd>Esc</kbd> soltar o mouse</div>
+      <div><b>Controles</b><kbd>WASD</kbd> andar · <kbd>Mouse</kbd> mirar · <kbd>Clique</kbd> atirar · <kbd>Botão direito</kbd> zoom · <kbd>Espaço</kbd> pular (2× no ar) · <kbd>C</kbd> dash · <kbd>Shift</kbd> correr · <kbd>V</kbd> trocar ombro · <kbd>T</kbd> 1ª/3ª pessoa · <kbd>Q</kbd>/roda/<kbd>1-7</kbd> arma · <kbd>E</kbd> usar item · <kbd>R</kbd> trocar item · <kbd>Esc</kbd> soltar o mouse</div>
     </div>
   </div>
 </div>
@@ -432,7 +434,7 @@ const MODEL_WORDS = [
   [/tartaruga/,'turtle'],[/coelho/,'rabbit'],[/\bsapo|\bra\b/,'frog'],[/\bcobra|serpente/,'snake'],[/aranha/,'spider'],[/\bpolvo|\blula\b/,'octopus'],[/baleia|golfinho/,'whale'],[/caranguejo|\bsiri\b/,'crab'],[/\burso/,'bear'],[/unicornio/,'unicorn'],[/dragao|dragon/,'dragon'],[/\brato|ratinho|camundongo/,'mouse'],
   [/morango/,'strawberry'],[/biscoito|cookie|bolacha/,'cookie'],[/\bcafe\b|xicara/,'coffee'],[/garrafa|cerveja|refrigerante/,'bottle'],[/presente/,'gift'],[/\blivro/,'book'],[/\bpneu|\broda\b/,'tire']];
 // Anything else: a word → emoji dictionary; the emoji is turned into a 3D voxel model.
-const EMOJI_DICT = [['leao','🦁'],['tigre','🐯'],['cavalo','🐴'],['girafa','🦒'],['zebra','🦓'],['macaco','🐒'],['gorila','🦍'],['coruja','🦉'],['papagaio','🦜'],['aguia','🦅'],['pavao','🦚'],['flamingo','🦩'],['camelo','🐫'],['canguru','🦘'],['hipopotamo','🦛'],['rinoceronte','🦏'],['raposa','🦊'],['guaxinim','🦝'],['esquilo','🐿️'],['ovelha','🐑'],['cabra','🐐'],['lagosta','🦞'],['camarao','🦐'],['caracol','🐌'],['borboleta','🦋'],['formiga','🐜'],['joaninha','🐞'],['minhoca','🪱'],['escorpiao','🦂'],['mosquito','🦟'],['barata','🪳'],['crocodilo','🐊'],['jacare','🐊'],['lagarto','🦎'],['foca','🦭'],['lhama','🦙'],['preguica','🦥'],['coala','🐨'],['passaro','🐦'],['pombo','🕊️'],['peru','🦃'],['cisne','🦢'],['mamute','🦣'],
+const EMOJI_DICT = [['omnitrix','👽'],['hulk','💪'],['lobisomem','🐺'],['leao','🦁'],['tigre','🐯'],['cavalo','🐴'],['girafa','🦒'],['zebra','🦓'],['macaco','🐒'],['gorila','🦍'],['coruja','🦉'],['papagaio','🦜'],['aguia','🦅'],['pavao','🦚'],['flamingo','🦩'],['camelo','🐫'],['canguru','🦘'],['hipopotamo','🦛'],['rinoceronte','🦏'],['raposa','🦊'],['guaxinim','🦝'],['esquilo','🐿️'],['ovelha','🐑'],['cabra','🐐'],['lagosta','🦞'],['camarao','🦐'],['caracol','🐌'],['borboleta','🦋'],['formiga','🐜'],['joaninha','🐞'],['minhoca','🪱'],['escorpiao','🦂'],['mosquito','🦟'],['barata','🪳'],['crocodilo','🐊'],['jacare','🐊'],['lagarto','🦎'],['foca','🦭'],['lhama','🦙'],['preguica','🦥'],['coala','🐨'],['passaro','🐦'],['pombo','🕊️'],['peru','🦃'],['cisne','🦢'],['mamute','🦣'],
   ['uva','🍇'],['laranja','🍊'],['limao','🍋'],['pera','🍐'],['pessego','🍑'],['cereja','🍒'],['coco','🥥'],['kiwi','🥝'],['abacate','🥑'],['berinjela','🍆'],['batata frita','🍟'],['batata','🥔'],['milho','🌽'],['pimenta','🌶️'],['pepino','🥒'],['brocolis','🥦'],['alho','🧄'],['cebola','🧅'],['pao','🍞'],['croissant','🥐'],['panqueca','🥞'],['bacon','🥓'],['taco','🌮'],['burrito','🌯'],['sushi','🍣'],['ramen','🍜'],['macarrao','🍝'],['espaguete','🍝'],['sanduiche','🥪'],['pretzel','🥨'],['pirulito','🍭'],['chocolate','🍫'],['doce','🍬'],['mel','🍯'],['leite','🥛'],['\\bcha\\b','🍵'],['vinho','🍷'],['pudim','🍮'],['brigadeiro','🟤'],['coxinha','🍗'],['frango assado','🍗'],['coxa','🍗'],['camarao','🍤'],['pastel','🥟'],['empada','🥧'],['torta','🥧'],['salsicha','🌭'],['amendoim','🥜'],['castanha','🌰'],
   ['saxofone','🎷'],['trompete','🎺'],['violino','🎻'],['tambor','🥁'],['bateria','🥁'],['piano','🎹'],['microfone','🎤'],['camera','📷'],['computador','💻'],['notebook','💻'],['teclado','⌨️'],['mouse de computador','🖱️'],['relogio','⏰'],['bussola','🧭'],['guarda-chuva','☂️'],['guarda chuva','☂️'],['balao','🎈'],['pipa','🪁'],['dado','🎲'],['xadrez','♟️'],['ioio','🪀'],['ursinho','🧸'],['boliche','🎳'],['raquete','🎾'],['trofeu','🏆'],['medalha','🏅'],['chave','🔑'],['cadeado','🔒'],['ima\\b','🧲'],['tesoura','✂️'],['regua','📏'],['lapis','✏️'],['caneta','🖊️'],['pincel','🖌️'],['envelope','✉️'],['carta','✉️'],['caixa','📦'],['pilha','🔋'],['vela','🕯️'],['ampulheta','⏳'],['sino','🔔'],['pena','🪶'],['folha','🍃'],['flor','🌸'],['girassol','🌻'],['rosa','🌹'],['arvore','🌳'],['palmeira','🌴'],['nuvem','☁️'],['arco-iris','🌈'],['arco iris','🌈'],['floco','❄️'],['gota','💧'],['agua','💧'],['vulcao','🌋'],['montanha','⛰️'],['casa','🏠'],['castelo','🏰'],['igreja','⛪'],['onibus','🚌'],['trem','🚂'],['\\bmoto','🏍️'],['bicicleta','🚲'],['skate','🛹'],['barco','⛵'],['navio','🚢'],['helicoptero','🚁'],['ambulancia','🚑'],['bombeiro','🚒'],['trator','🚜'],['patinete','🛴'],['cadeira','🪑'],['\\bcama\\b','🛏️'],['sofa','🛋️'],['banheira','🛁'],['vassoura','🧹'],['balde','🪣'],['sabao','🧼'],['esponja','🧽'],['escova','🪥'],['mascara','🎭'],['palhaco','🤡'],['alien','👽'],['extraterrestre','👽'],['monstro','👾'],['zumbi','🧟'],['bruxa','🧙'],['mago','🧙'],['ninja','🥷'],['pirata','🏴‍☠️'],['mumia','🧟'],['fada','🧚'],['sereia','🧜'],['anjo','👼'],['diabo','😈'],['demonio','😈'],['coco\\b','💩'],['\\bcoco ','💩'],['emoji','😀'],['sorriso','😀'],['olho','👁️'],['cerebro','🧠'],['dente','🦷'],['lingua','👅'],['\\bpe\\b','🦶'],['perna','🦵'],['nariz','👃'],['orelha','👂'],['beijo','💋'],['nota de dinheiro','💵'],['controle','🎮'],['videogame','🎮'],['joystick','🕹️'],['ventilador','🌀'],['furacao','🌪️'],['tornado','🌪️'],['onda','🌊'],['bandeira','🚩'],['chapeu','🎩'],['oculos','🕶️'],['gravata','👔'],['camisa','👕'],['calca','👖'],['vestido','👗'],['meia','🧦'],['luva de boxe','🥊'],['capacete','⛑️'],['mochila','🎒'],['bolsa','👜'],['anel','💍'],['cogumelo','🍄'],['tenis','👟'],['sapo','🐸'],['dragao','🐉'],['cometa','☄️'],['fogos','🎆'],['foguete','🚀'],['satelite','🛰️'],['robo','🤖'],['ovni','🛸']];
 function detectEmoji(t){ for (const [w, e] of EMOJI_DICT){ if (new RegExp(w.includes('\\') ? w : w.replace(/[-\s]/g, m => m === ' ' ? '\\s' : '-?')).test(t)) return e; } return null; }
@@ -445,7 +447,7 @@ function detectModel(t){ for (const [re, k] of MODEL_WORDS) if (re.test(t)) retu
 function normModel(m){
   if (!Array.isArray(m)) return null; const out = [];
   const v = (a, lo, hi, d) => [0, 1, 2].map(i => num(Array.isArray(a) ? a[i] : undefined, lo, hi, d));
-  for (const p of m.slice(0, 28)){ if (!p || typeof p !== 'object') continue;
+  for (const p of m.slice(0, 40)){ if (!p || typeof p !== 'object') continue;
     out.push({ s: PART_SHAPES.includes(p.shape) ? p.shape : 'sphere', sz: v(p.size, .01, 1.2, .2), pos: v(p.pos, -1.2, 1.2, 0), rot: v(p.rot, -6.3, 6.3, 0), c: /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#cccccc', glow: !!p.glow }); }
   return out.length >= 2 ? out : null;
 }
@@ -455,7 +457,8 @@ function libMdl(k){ return { parts: LIB[k].parts, spin: LIB[k].spin, axis: LIB[k
 // Projectile priority: hand-made 3D model > emoji word turned into 3D voxels > model drawn by Claude > Claude's emoji as voxels > a default that fits the weapon.
 function finalize(it, req){
   const t = strip(req || '');
-  if (it.kind === 'weapon' || it.kind === 'turret'){ const gt = detectGun(t); if (gt) it.gunType = gt; }
+  it.reqGun = false;
+  if (it.kind === 'weapon' || it.kind === 'turret'){ const gt = detectGun(t); if (gt){ it.gunType = gt; it.reqGun = true; } }
   const w = it.weapon, g = it.gunType;
   if (w){
     if (g === 'bazooka') w.shape = 'rocket';
@@ -466,6 +469,7 @@ function finalize(it, req){
   }
   const claudeMdl = it.mdl; it.mdl = null;
   const mk = detectModel(t);
+  if (it.kind === 'transform' && claudeMdl && !mk){ it.mdl = claudeMdl; return it; }
   const selfMelee = it.gunType === 'sword' && ['sword','knife','axe','hammer'].includes(mk);
   const sprayer = w && w.arch === 'sprayer' && it.kind !== 'minion';
   if (mk === 'missile'){ if (w && it.kind !== 'minion' && !sprayer) w.shape = 'rocket'; }
@@ -473,7 +477,7 @@ function finalize(it, req){
   if (!it.mdl && !selfMelee && !sprayer && mk !== 'missile'){ const em = detectEmoji(t); if (em) it.mdl = { vox: em, spin: true, axis: 'y', key: 'vox' }; }
   if (!it.mdl && !sprayer && claudeMdl) it.mdl = claudeMdl;
   if (!it.mdl && w && !sprayer && w.shape === 'emoji' && w.projEmoji) it.mdl = { vox: w.projEmoji, spin: true, axis: 'y', key: 'vox' };
-  if (!it.mdl && it.kind === 'minion') it.mdl = { vox: it.emoji, spin: false, key: 'vox' };
+  if (!it.mdl && (it.kind === 'minion' || it.kind === 'transform')) it.mdl = { vox: it.emoji, spin: false, key: 'vox' };
   if (w && it.kind !== 'minion'){
     const a = w.arch, fxk = { fire: 'fireball', freeze: 'iceshard', poison: 'goo', lifesteal: 'bat' }[w.effect];
     if (!it.mdl && !['laser','railgun','rocket','sprayer','melee'].includes(a) && w.shape !== 'rocket'){
@@ -487,11 +491,11 @@ function finalize(it, req){
 }
 
 /* ================= item model (shared with 2D) ================= */
-const KINDS = ['weapon','turret','minion','wall','shield','heal','boost','mine','strike'];
+const KINDS = ['weapon','turret','minion','wall','shield','heal','boost','mine','strike','transform'];
 const EFFECTS = ['none','fire','freeze','poison','knockback','lifesteal'];
 const SHAPES = ['bullet','laser','orb','rocket','emoji'];
-const KIND_LABEL = {weapon:'Arma',turret:'Torre',minion:'Aliado',wall:'Muralha',shield:'Escudo',heal:'Cura',boost:'Turbo',mine:'Minas',strike:'Ataque aéreo'};
-const KIND_EMOJI = {weapon:'🔫',turret:'🗼',minion:'🤖',wall:'🧱',shield:'🛡️',heal:'💊',boost:'⚡',mine:'💣',strike:'☄️'};
+const KIND_LABEL = {weapon:'Arma',turret:'Torre',minion:'Aliado',wall:'Muralha',shield:'Escudo',heal:'Cura',boost:'Turbo',mine:'Minas',strike:'Ataque aéreo',transform:'Transformação'};
+const KIND_EMOJI = {weapon:'🔫',turret:'🗼',minion:'🤖',wall:'🧱',shield:'🛡️',heal:'💊',boost:'⚡',mine:'💣',strike:'☄️',transform:'🧬'};
 const EFFECT_LABEL = {none:'',fire:'queima',freeze:'congela',poison:'veneno',knockback:'empurrão',lifesteal:'rouba vida'};
 const seg = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter() : null;
 function glyph(s){ if (typeof s !== 'string' || !s.trim()) return ''; s = s.trim(); if (seg){ const f = seg.segment(s)[Symbol.iterator]().next().value; return f ? f.segment : ''; } return [...s][0] || ''; }
@@ -522,10 +526,13 @@ function normItem(r, req, source){
   else if (kind === 'heal'){ it.amount = num(r.amount,10,40,25); }
   else if (kind === 'boost'){ it.speed = num(r.speed,1.2,2,1.6); it.duration = num(r.duration,2,6,4); }
   else if (kind === 'mine'){ it.count = Math.round(num(r.count,1,5,3)); it.damage = num(r.damage,10,40,22); it.radius = num(r.radius,30,110,60); if (it.count*it.damage > 80){ it.damage = 80/it.count; it.nerfed = true; } }
+  else if (kind === 'transform'){ it.duration = num(r.duration,4,15,8); it.speed = num(r.speed,1,2,1.3); it.damageMult = num(r.damageMult,1,2.5,1.5); it.amount = num(r.amount,0,60,25); it.scale = num(r.scale,.8,2.5,1.6); it.contactDamage = num(r.contactDamage,0,20,8);
+    const pow = (it.damageMult - 1) * it.duration + it.amount / 10 + it.contactDamage * it.duration / 20; if (pow > 18){ it.duration = Math.max(4, it.duration * 18 / pow); it.nerfed = true; } }
   else if (kind === 'strike'){ it.count = Math.round(num(r.count,1,8,4)); it.damage = num(r.damage,8,35,18); it.radius = num(r.radius,30,120,60); it.delay = num(r.delay,0.6,2,1.2); if (it.count*it.damage > 70){ it.damage = 70/it.count; it.nerfed = true; } }
   if (it.weapon && it.weapon.nerfed) it.nerfed = true;
   it.gunType = GUN_TYPES.includes(r.gunType) ? r.gunType : null;
   const md = normModel(r.model); it.mdl = md ? { parts: md, spin: !!r.spin, key: null } : null;
+  const hd = normModel(r.heldModel); it.held = hd ? { parts: hd } : null;
   return it;
 }
 const BASE_ITEM = normItem({kind:'weapon',name:'Pistola de Fábrica',emoji:'🔫',color:'#d9d4c7',desc:'Munição infinita.',weapon:{damage:7,fireRate:3,speed:700,count:1,spread:2,size:5,range:700,ammo:300,shape:'bullet'}}, '', 'base');
@@ -534,7 +541,7 @@ function statLine(it){
   const f = n => (Math.round(n*10)/10).toString().replace('.', ',');
   const w = it.weapon, parts = [];
   if (w && it.kind !== 'minion') parts.push('modelo: ' + ARCH_LABEL[w.arch || gunArch(w)]);
-  if (it.mdl && ['weapon','turret','minion'].includes(it.kind)) parts.push(it.kind === 'minion' ? 'criatura 3D' : 'projétil 3D: ' + (it.mdl.vox ? it.mdl.vox + ' em cubinhos' : LIB_LABEL[it.mdl.key] || 'feito pela IA'));
+  if (it.mdl && ['weapon','turret','minion','transform'].includes(it.kind)) parts.push(it.kind === 'minion' || it.kind === 'transform' ? 'criatura 3D' : 'projétil 3D: ' + (it.mdl.vox ? it.mdl.vox + ' em cubinhos' : LIB_LABEL[it.mdl.key] || 'feito pela IA'));
   if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, `alcance ${Math.round(w.range*S)} m`);
     if (it.kind === 'weapon') parts.push(`munição ${w.ammo}`);
     if (w.explosion) parts.push('explode'); if (w.homing > .2) parts.push('teleguiado'); if (w.pierce) parts.push('atravessa');
@@ -546,6 +553,7 @@ function statLine(it){
   if (it.kind==='heal') parts.push(`+${Math.round(it.amount)} vida`);
   if (it.kind==='boost') parts.push(`${f(it.speed)}× velocidade`, `${f(it.duration)}s`);
   if (it.kind==='mine') parts.push(`${it.count} minas`, `dano ${f(it.damage)}`);
+  if (it.kind==='transform') parts.push(`dura ${f(it.duration)}s`, `${f(it.speed)}× velocidade`, `${f(it.damageMult)}× dano`, `+${Math.round(it.amount)} escudo`, ...(it.contactDamage ? [`contato ${f(it.contactDamage)}/s`] : []));
   if (it.kind==='strike') parts.push(`${it.count} impactos`, `dano ${f(it.damage)}`);
   return parts.join(' · ');
 }
@@ -556,8 +564,8 @@ const aiReady = new Promise(r => aiResolve = r);
 function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? 'IA: Claude forjando' : aiMode === 'local' ? 'IA: forja local (offline)' : 'IA: conectando…'; }
 (async () => { try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; } aiMode = sampleFn ? 'claude' : 'local'; updateBadge(); aiResolve(); })();
 setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); aiResolve(); } }, 12000);
-function buildPrompt(req){
-  return `Você é a FORJA de um jogo de tiro 3D em terceira pessoa, 1v1, estilo desenho animado (nada realista). Um jogador pediu: "${req.replace(/"/g,"'").slice(0,120)}".
+function buildPrompt(req, research){
+  return `Você é a FORJA de um jogo de tiro 3D em terceira pessoa, 1v1, estilo desenho animado (nada realista). Um jogador pediu: "${req.replace(/"/g,"'").slice(0,120)}".${research ? '\nPesquisa sobre o pedido (siga isto para acertar aparência, cores e poderes): ' + research.replace(/`/g, "'").slice(0, 700) : ''}
 Transforme o pedido em UM item jogável, criativo e fiel ao pedido, mesmo que seja absurdo. Escolha o "kind" que melhor representa o pedido:
 - weapon: arma que o personagem segura e dispara onde mira.
 - turret: torre parada que atira sozinha (usa "weapon" e "hp" 30-120).
@@ -567,11 +575,13 @@ Transforme o pedido em UM item jogável, criativo e fiel ao pedido, mesmo que se
 - heal: cura instantânea (amount 10-40).
 - boost: aumento de velocidade (speed 1.2-2, duration 2-6).
 - mine: minas no chão (count 1-5, damage 10-40, radius 30-110).
+- transform: transforma o personagem em outra criatura/forma por alguns segundos (ex.: relógio que vira alienígena, poção que vira monstro). Campos: duration 4-15, speed 1-2, damageMult 1-2.5, amount (escudo) 0-60, scale 0.8-2.5 (tamanho da forma), contactDamage 0-20; a forma vai em "model".
 - strike: ataque do céu em volta do inimigo (count 1-8, damage 8-35, radius 30-120, delay 0.6-2).
 Campos de "weapon": damage 1-80, fireRate 0.3-14 (tiros/s), speed 150-1200, count 1-8 (projéteis por tiro), spread 0-80 (graus), size 3-24, range 120-1100, homing 0-1, bounce 0-3, explosion 0-140 (raio), pierce true/false, effect: none|fire|freeze|poison|knockback|lifesteal, ammo 5-300, shape: bullet|laser|orb|rocket|emoji, projEmoji (um emoji, se shape for emoji).
 Campos extras:
 - "gunType" (weapon e turret): o tipo de arma que o personagem segura: pistol|rifle|sniper|shotgun|minigun|bazooka|laser|railgun|flamethrower|launcher|sword|bow. Se o pedido diz o tipo (pistola, rifle, bazuca...), use esse.
-- "model": modelo 3D do projétil (weapon/turret) ou da criatura (minion), feito de 4 a 20 peças. Peça: {"shape":"sphere|box|cylinder|cone|torus","size":[x,y,z],"pos":[x,y,z],"rot":[x,y,z],"color":"#rrggbb","glow":false}. O objeto cabe num cubo 1x1x1 centrado na origem, frente para +z, y para cima. size é a escala: esfera = raios; caixa = largura/altura/profundidade; cilindro e cone = [raio, altura, raio] com eixo em y; rot em radianos. Ex.: um elefante tem corpo (esfera), cabeça (esfera), tromba (cilindros), orelhas (esferas achatadas), presas (cones) e 4 pernas (cilindros).
+- "model": modelo 3D do projétil (weapon/turret) ou da criatura (minion), feito de 4 a 30 peças (use mais peças e cores certas para ficar fiel). Peça: {"shape":"sphere|box|cylinder|cone|torus","size":[x,y,z],"pos":[x,y,z],"rot":[x,y,z],"color":"#rrggbb","glow":false}. O objeto cabe num cubo 1x1x1 centrado na origem, frente para +z, y para cima. size é a escala: esfera = raios; caixa = largura/altura/profundidade; cilindro e cone = [raio, altura, raio] com eixo em y; rot em radianos. Ex.: um elefante tem corpo (esfera), cabeça (esfera), tromba (cilindros), orelhas (esferas achatadas), presas (cones) e 4 pernas (cilindros).
+- "heldModel" (weapon e turret, opcional): modelo 3D do objeto que o personagem segura ou veste, no mesmo formato de "model", quando o pedido não for uma arma comum (ex.: varinha, luva, relógio, cajado). Frente para +z; a ponta que dispara fica no +z.
 - "spin": true se o projétil gira no ar (bolas, frutas), false se voa de frente (animais, veículos).
 Não use bolinhas genéricas: o projétil deve ser exatamente o objeto pedido, descrito em "model" (uma bala de verdade se for arma de fogo comum). Em "weapon.projEmoji" coloque também um emoji que represente o projétil.
 Unidades: 20 = 1 metro; a arena tem 60x36 metros e os jogadores têm 100 de vida. Seja equilibrado: arma muito forte deve ter pouca munição ou cadência baixa.
@@ -580,11 +590,22 @@ Responda SOMENTE com um objeto JSON, sem texto fora dele, assim:
 "name": curto em português (até 24 letras). "desc": uma frase divertida em português (até 90 letras). "color": hex #rrggbb.`;
 }
 const PERMANENT = ['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','session_expired'];
-async function forgeItem(req){
+async function forgeItem(req, opts){
+  opts = opts || {}; const say = opts.status || (() => {});
   await aiReady;
   if (sampleFn && aiMode === 'claude'){
-    try { const raw = await sampleFn.json(buildPrompt(req), { modelTier: 'quick' }); return finalize(normItem(raw, req, 'claude'), req); }
-    catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); } }
+    let research = '';
+    try {
+      if (opts.research){
+        say(`🔎 Pesquisando “${req}”…`);
+        const r = await sampleFn(`Você é o pesquisador da forja de um jogo 3D. O jogador pediu: "${req.replace(/"/g, "'").slice(0, 120)}".
+Em até 3 frases curtas em português, diga: o que é isso (se vem de um desenho, filme, anime, jogo, série ou da vida real e de qual), como é a aparência (formato, partes e cores exatas) e o que faz ou que poderes tem. Se não reconhecer, diga como imagina pelo nome. Responda só o texto.`, { modelTier: 'quick', onText: ({ text }) => say('🔎 ' + text.slice(-150)) });
+        research = r.text.trim().slice(0, 700);
+        say('⚒️ Modelando em 3D…');
+      }
+      const raw = await sampleFn.json(buildPrompt(req, research), { modelTier: research ? 'default' : 'quick' });
+      const it = finalize(normItem(raw, req, 'claude'), req); if (research) it.research = research; return it;
+    } catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); } }
   }
   return localForge(req);
 }
@@ -608,6 +629,7 @@ const W_TPL = [
   [/arco|flecha|bow|arrow|besta|crossbow|dardo|lanca\b/, {emoji:'🏹',color:'#c9e265',desc:'Atravessa tudo no caminho.',weapon:{damage:16,fireRate:1.4,speed:950,pierce:true,range:850,size:5,ammo:30,shape:'laser'}}],
 ];
 const G_TPL = [
+  [/omnitrix|transforma|\bvirar\b|\bvira\b|hulk|lobisomem|sayajin|saiyajin|metamorf|mutante|alien ?x\b/, {kind:'transform',emoji:'👽',color:'#3ddc84',desc:'Aperta o botão e vira outra criatura por alguns segundos.',duration:9,speed:1.4,damageMult:1.6,amount:25,scale:1.7,contactDamage:10}],
   [/torre|turret|torreta|sentinela|canhao|canon|cannon|bunker/, {kind:'turret',emoji:'🗼',color:'#b0b8c4',desc:'Fica parada e atira sem reclamar.',hp:70,weapon:{damage:6,fireRate:1.6,speed:650,size:6,range:650}}],
   [/muro|muralha|parede|wall|barreira|fortaleza|forte|barricada|trincheira|castelo/, {kind:'wall',emoji:'🧱',color:'#c97b4a',desc:'Tiro inimigo não passa.',hp:140,length:180}],
   [/escudo|shield|armadura|armor|bolha|campo de forca|colete/, {kind:'shield',emoji:'🛡️',color:'#7fd3ff',desc:'Absorve o prejuízo por alguns segundos.',amount:40,duration:6}],
@@ -890,7 +912,18 @@ function gunArch(w){
   if (w.range >= 850) return 'rifle';
   return 'pistol';
 }
+function buildHeld(item){
+  const g = new THREE.Group(), m = buildModel(item.held.parts);
+  const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const sc = .7 / Math.max(.05, size.x, size.y, size.z); m.scale.setScalar(sc); m.position.set(-c.x * sc, -c.y * sc, -c.z * sc + .12); g.add(m);
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0, (box.max.z - c.z) * sc + .17); g.add(muzzle);
+  const halo = glowSprite(item.color, .25, .7); halo.position.copy(muzzle.position); g.add(halo);
+  g.userData.muzzle = muzzle; g.userData.arch = (item.weapon && item.weapon.arch) || 'launcher';
+  g.userData.tick = (dt, f, t) => { halo.scale.setScalar(.2 + .06 * Math.sin(t * 8) + (f.recoil || 0) * .3); };
+  return g;
+}
 function buildGun(item){
+  if (item.held && !item.reqGun) return buildHeld(item);
   const w = item.weapon, g = new THREE.Group(), col = item.color, arch = w.arch || archOf(item);
   const main = std(col, { metalness: .55, roughness: .32 }), dark = std('#1a1d23', { metalness: .6, roughness: .42 }), chrome = std('#c8ced8', { metalness: .95, roughness: .18 });
   const wood = std('#6e4326', { roughness: .7 }), glow = basic(col), glass = new THREE.MeshStandardMaterial({ color: lin('#bfe8ff'), transparent: true, opacity: .28, roughness: .05, metalness: .2, depthWrite: false });
@@ -1011,7 +1044,7 @@ function buildGun(item){
   if (w.effect === 'knockback' && arch !== 'melee') ring(.075, 0, .02, end - .02, chrome);
   if (w.effect === 'fire' && arch !== 'sprayer'){ const pf = emojiSprite('🔥', .14); pf.position.set(0, .05, end); g.add(pf); ticks.push((dt, f, t) => pf.scale.setScalar(.1 + .04 * Math.sin(t * 20))); }
   if (w.homing > .25 && arch !== 'melee'){ const dish = mesh(G.sph, chrome, .05, .05, .02, -.08, .12, .05); g.add(dish); P(G.sph, addMat('#ff3030', .9), .015, .015, .015, -.08, .17, .05, 0, 0, 0, false); }
-  const badge = w.mdl ? (() => { const mm = buildMdl(w.mdl); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
+  const badge = w.mdl ? (() => { const mm = buildMdl(w.mdl); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.userData.badge = true; badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, arch === 'rocket' ? .07 : arch === 'sprayer' || arch === 'laser' || arch === 'melee' ? 0 : .02, end + .04); g.add(muzzle);
   g.userData.muzzle = muzzle; g.userData.arch = arch;
   g.userData.tick = (dt, f, t) => { for (const fn of ticks) fn(dt, f, t); };
@@ -1021,7 +1054,7 @@ function buildGun(item){
 let pv = null;
 function itemPreview(it){
   if (it._pv !== undefined) return it._pv;
-  if (it.kind !== 'weapon' && it.kind !== 'turret' && !(it.kind === 'minion' && it.mdl)){ it._pv = null; return null; }
+  if (it.kind !== 'weapon' && it.kind !== 'turret' && !((it.kind === 'minion' || it.kind === 'transform') && it.mdl)){ it._pv = null; return null; }
   try {
     if (!pv){
       const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(320, 170, false); r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.4;
@@ -1031,7 +1064,7 @@ function itemPreview(it){
     }
     let obj, size;
     if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildMdl(it.mdl); mm.scale.setScalar(.42); if (it.mdl.vox) mm.rotation.y = Math.PI / 2 - .45; mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
-    else if (it.kind === 'minion'){ obj = buildMdl(it.mdl); obj.rotation.y = .7; }
+    else if (it.kind !== 'turret'){ obj = buildMdl(it.mdl); obj.rotation.y = it.mdl.vox ? 0 : .7; }
     else { obj = makeTurretModel(0, it); obj.rotation.y = .6; }
     obj.traverse(o => { if (o.isSprite) o.visible = o.scale.x < .21; });
     pv.sc.add(obj); obj.updateMatrixWorld(true);
@@ -1055,7 +1088,7 @@ function makeFighter(i){
   return { isFighter: true, i, name: i === 0 ? 'Você' : 'CPU', color: PCOL[i], inv: [], model, gun: null, gunItem: null,
     x: 0, y: 0, z: 0, vx: 0, vz: 0, vy: 0, r: .5, h: 2.1, yaw: 0, pitch: 0, hp: 100, maxHp: 100, weapons: [], wi: 0, gadgets: [], gi: 0, cool: 0,
     shield: 0, shieldT: 0, boostT: 0, boostMul: 1, burn: 0, poison: 0, slow: 0, kx: 0, kz: 0, flash: 0, dmgAcc: 0, dmgT: 0, walk: 0, recoil: 0,
-    onGround: true, groundY: 0, airT: 0, jumps: 0, dashT: 0, dashCD: 0, dashDir: [0, 1], stepT: 0, deadT: 0, camY: 0, anim: { lean: 0, side: 0, air: 0 },
+    transT: 0, transItem: null, form: null, onGround: true, groundY: 0, airT: 0, jumps: 0, dashT: 0, dashCD: 0, dashDir: [0, 1], stepT: 0, deadT: 0, camY: 0, anim: { lean: 0, side: 0, air: 0 },
     forgesLeft: 3, ready: false, pending: 0, ai: null, shieldMesh: null };
 }
 function setGun(f){
@@ -1160,6 +1193,7 @@ function resetRound(){
     f.gunItem = undefined; setGun(f); f.model.visible = true; f.model.rotation.x = 0;
     if (!f.shieldMesh){ f.shieldMesh = new THREE.Mesh(G.sph, new THREE.MeshBasicMaterial({ color: 0x7fd3ff, transparent: true, opacity: .22, depthWrite: false })); f.shieldMesh.scale.set(1, 1.25, 1); f.model.add(f.shieldMesh); f.shieldMesh.position.y = 1.1; }
     f.shieldMesh.visible = false;
+    endTransform(f, true);
   });
   yaw = Math.PI / 2; pitch = -.05;
 }
@@ -1199,10 +1233,10 @@ function renderForge(){
     p.inv.forEach((it, k) => {
       const li = document.createElement('li'); li.className = 'card'; li.style.setProperty('--ic', it.color);
       const pvUrl = itemPreview(it);
-      li.innerHTML = `<div class="em"></div><div style="min-width:0"><div class="kd"></div><div class="nm"></div><div class="ds"></div><div class="st"></div></div>` + (i === 1 ? '<span></span>' : `<button type="button" class="x" title="Descartar">×</button>`) + (pvUrl ? `<img class="pv" alt="Prévia 3D de ${esc(it.name)}" src="${pvUrl}">` : '');
+      li.innerHTML = `<div class="em"></div><div style="min-width:0"><div class="kd"></div><div class="nm"></div><div class="ds"></div><div class="st"></div><div class="rs"></div></div>` + (i === 1 ? '<span></span>' : `<button type="button" class="x" title="Descartar">×</button>`) + (pvUrl ? `<img class="pv" alt="Prévia 3D de ${esc(it.name)}" src="${pvUrl}">` : '');
       li.querySelector('.em').textContent = it.emoji;
       li.querySelector('.kd').innerHTML = `${KIND_LABEL[it.kind]}<span class="tag">${it.source === 'claude' ? 'Claude' : 'forja local'}</span>${it.nerfed ? '<span class="tag nerf">balanceado</span>' : ''}`;
-      li.querySelector('.nm').textContent = it.name; li.querySelector('.ds').textContent = it.desc || ('Pedido: ' + it.req); li.querySelector('.st').textContent = statLine(it);
+      li.querySelector('.nm').textContent = it.name; li.querySelector('.ds').textContent = it.desc || ('Pedido: ' + it.req); li.querySelector('.st').textContent = statLine(it); { const rs = li.querySelector('.rs'); if (it.research) rs.textContent = '🔎 ' + it.research; else rs.remove(); }
       const x = li.querySelector('.x'); if (x) x.onclick = () => { p.inv.splice(k, 1); renderForge(); };
       ul.appendChild(li);
     });
@@ -1216,7 +1250,7 @@ async function requestForge(i, req){
   p.forgesLeft--; p.pending++; renderForge();
   const st = $('#fst' + i); if (st) st.textContent = `Forjando “${req}”…`;
   const myRound = round; let it;
-  try { it = await forgeItem(req); } catch(e){ it = localForge(req); }
+  try { it = await forgeItem(req, { research: i === 0, status: m => { if (st && phase === 'forge') st.textContent = m; } }); } catch(e){ it = localForge(req); }
   if (phase !== 'forge' || round !== myRound || !fighters.includes(p)) return;
   p.pending--; p.inv.push(it); while (p.inv.length > MAX_INV) p.inv.shift();
   if (st) st.textContent = `Pronto: ${it.emoji} ${it.name} (${KIND_LABEL[it.kind]})`;
@@ -1283,6 +1317,7 @@ addEventListener('keydown', e => {
   if (phase === 'fight' && ['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(e.code)) e.preventDefault();
   if (!keys[e.code]) edges.add(e.code); keys[e.code] = true; initAudio();
   if (e.code === 'KeyV' && phase === 'fight') camSide *= -1;
+  if (e.code === 'KeyT') setFpv(!fpv);
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouseDown = false; rightDown = false; });
@@ -1318,6 +1353,7 @@ cv.addEventListener('pointermove', e => { if (e.pointerId !== touch.lookId) retu
   $('#tSwap').addEventListener('pointerdown', () => edges.add('KeyQ'));
   $('#tUse').addEventListener('pointerdown', () => edges.add('KeyE'));
   $('#tCycle').addEventListener('pointerdown', () => edges.add('KeyR'));
+  $('#tCam').addEventListener('pointerdown', () => setFpv(!fpv));
 })();
 function playerInput(dt){
   const k = keys;
@@ -1505,6 +1541,7 @@ function fire(origin, w, owner, color, aimAt){
 }
 function applyDamage(t, dmg, owner, effect, from){
   if (dmg <= 0 || phase !== 'fight') return;
+  const of = fighters[owner]; if (of && of.transT > 0 && of.transItem) dmg *= of.transItem.damageMult;
   if (t.isFighter){
     if (t.shield > 0){ const a = Math.min(t.shield, dmg); t.shield -= a; dmg -= a; }
     if (dmg > 0){ t.hp -= dmg; t.flash = .12; t.dmgAcc += dmg; }
@@ -1553,6 +1590,20 @@ function makeTurretModel(owner, it){
   g.userData.head = head; g.userData.gun = gun;
   return g;
 }
+function startTransform(p, it){
+  endTransform(p, true);
+  p.transT = it.duration; p.transItem = it; p.shield = Math.max(p.shield, it.amount); p.shieldT = Math.max(p.shieldT, it.duration);
+  const form = buildMdl(it.mdl, true), sc = it.scale * 1.4; form.scale.setScalar(sc);
+  const bx = new THREE.Box3().setFromObject(form); form.userData.base = -bx.min.y; form.position.y = form.userData.base;
+  p.model.add(form); p.form = form; p.model.userData.hips.visible = false;
+  p.r = .5 * Math.max(1, it.scale * .8); p.h = 2.1 * Math.max(.8, it.scale * .75);
+  const c = chest(p); for (let k = 0; k < 30; k++) spark(c, k % 2 ? it.color : '#ffffff', rand(3, 9), rand(.4, .9), .1);
+  fx(c, { tex: 'flash', color: it.color, size: 4, life: .25, add: true }); flashLight(c, it.color, 6, 12, .4);
+}
+function endTransform(p, quiet){
+  if (p.form){ p.model.remove(p.form); p.form = null; p.model.userData.hips.visible = true; if (!quiet) fx(chest(p), { tex: 'flash', color: '#ffffff', size: 2.5, life: .2, add: true }); }
+  p.transT = 0; p.transItem = null; p.r = .5; p.h = 2.1;
+}
 function useGadget(p){
   const avail = p.gadgets.filter(g => !g.used); if (!avail.length) return;
   let g = p.gadgets[p.gi]; if (!g || g.used){ g = avail[0]; p.gi = p.gadgets.indexOf(g); }
@@ -1574,6 +1625,7 @@ function useGadget(p){
       const ic = emojiSprite(it.emoji, .9); ic.position.set(x, gy + H + .6, z); mm.add(ic);
       mm.scale.y = .01; mm.userData.grow = 0;
       dynamic.add(mm); box.mesh = mm; box.body = body; walls.push(box); break; }
+    case 'transform': startTransform(p, it); break;
     case 'shield': p.shield = it.amount; p.shieldT = it.duration; break;
     case 'heal': p.hp = Math.min(p.maxHp, p.hp + it.amount); floatText(chest(p).add(_up), '+' + Math.round(it.amount), '#6fe08a'); for (let k = 0; k < 14; k++) spark(chest(p), '#6fe08a', rand(2, 5), .7, .1); break;
     case 'boost': p.boostMul = it.speed; p.boostT = it.duration; break;
@@ -1655,10 +1707,13 @@ function puff(pos, color, n, spd){ for (let k = 0; k < n; k++) spark(pos, color,
 function updateFighter(f, inp, dt){
   if (f.hp <= 0) return;
   if (f.boostT > 0){ f.boostT -= dt; if (f.boostT <= 0) f.boostMul = 1; }
+  if (f.transT > 0){ f.transT -= dt; const e = fighters[1 - f.i], ti = f.transItem;
+    if (ti.contactDamage > 0 && hdist(f, e) < f.r + e.r + .6 && Math.abs(e.y - f.y) < 1.8) applyDamage(e, ti.contactDamage * dt, f.i, 'none');
+    if (f.transT <= 0) endTransform(f); }
   if (f.slow > 0) f.slow -= dt;
   f.dashCD -= dt;
   let mx = inp.mx, mz = inp.mz; const m = Math.hypot(mx, mz); if (m > 1){ mx /= m; mz /= m; }
-  const spd = PSPEED * (inp.sprint ? 1.4 : 1) * f.boostMul * (f.slow > 0 ? .5 : 1);
+  const spd = PSPEED * (inp.sprint ? 1.4 : 1) * f.boostMul * (f.slow > 0 ? .5 : 1) * (f.transT > 0 ? f.transItem.speed : 1);
   if (inp.dash && f.dashCD <= 0 && f.dashT <= 0){
     const dm = Math.hypot(mx, mz); f.dashDir = dm > .2 ? [mx / dm, mz / dm] : [Math.sin(f.yaw), Math.cos(f.yaw)];
     f.dashT = .2; f.dashCD = 1.3; puff(new THREE.Vector3(f.x, f.y + .3, f.z), '#cfd6e0', 10, 4); sfx('jump', .8);
@@ -1694,7 +1749,10 @@ function updateFighter(f, inp, dt){
   const wi = f.weapons[f.wi];
   if (inp.fire && f.cool <= 0 && wi && countdown <= 0 && f.dashT <= 0){
     f.model.updateMatrixWorld(true);
-    const muzzle = f.gun.userData.muzzle.getWorldPosition(new THREE.Vector3());
+    let muzzle;
+    if (f.transT > 0) muzzle = chest(f).add(new THREE.Vector3(Math.sin(f.yaw), .25, Math.cos(f.yaw)).multiplyScalar(f.r + .4));
+    else if (f.i === 0 && fpvActive() && vm.gun){ vm.root.updateMatrixWorld(true); muzzle = vm.gun.userData.muzzle.getWorldPosition(new THREE.Vector3()); }
+    else muzzle = f.gun.userData.muzzle.getWorldPosition(new THREE.Vector3());
     let target;
     if (f.i === 0) target = aimPoint.clone();
     else { const e = fighters[0]; const err = [1.6, .9, .45][diff] + hdist(f, e) * [.05, .03, .015][diff]; target = chest(e).add(new THREE.Vector3(rand(-err, err), rand(-err, err) * .6, rand(-err, err))); }
@@ -1828,7 +1886,7 @@ function update(dt){
 
   const dead = fighters.map(f => f.hp <= 0);
   if (dead[0] || dead[1]){
-    fighters.forEach(f => { if (f.hp <= 0){ f.hp = 0; f.deadT = .001; const c = chest(f); for (let k = 0; k < 40; k++) spark(c, k % 2 ? f.color : '#222', rand(4, 10), rand(.5, 1.1), rand(.08, .2)); } });
+    fighters.forEach(f => { if (f.hp <= 0){ endTransform(f); f.hp = 0; f.deadT = .001; const c = chest(f); for (let k = 0; k < 40; k++) spark(c, k % 2 ? f.color : '#222', rand(4, 10), rand(.5, 1.1), rand(.08, .2)); } });
     if (dead[0]) camShake = .6;
     endRound(dead[0] && dead[1] ? -1 : dead[0] ? 1 : 0, 'Nocaute');
   } else if (roundTime <= 0){
@@ -1840,11 +1898,33 @@ let camDistNow = 4.4, fovNow = BASE_FOV, camSideNow = 1;
 function computeAim(){
   const ro = camera.position, rd = camera.getWorldDirection(new THREE.Vector3());
   let best = 160; aimOnEnemy = false;
-  const minT = camDistNow + .4;
+  const minT = fpvActive() ? .25 : camDistNow + .4;
   for (const R of blockers(0)){ const t = rayBox(ro, rd, R); if (t > minT && t < best) best = t; }
   for (const t of enemyTargets(0)){ const tt = rayBox(ro, rd, targetBox(t)); if (tt > minT && tt < best){ best = tt; aimOnEnemy = true; } }
   if (rd.y < -1e-4){ const tg = -ro.y / rd.y; if (tg > minT && tg < best){ best = tg; aimOnEnemy = false; } }
   aimPoint.copy(ro).addScaledVector(rd, best);
+}
+let fpv = false; try { fpv = localStorage.getItem('forja-fpv') === '1'; } catch(e){}
+const fpvActive = () => fpv && (phase === 'fight' || phase === 'roundEnd') && fighters[0] && fighters[0].hp > 0 && !(fighters[0].transT > 0);
+function setFpv(v){ fpv = v; try { localStorage.setItem('forja-fpv', v ? '1' : '0'); } catch(e){} $('#camBtn').textContent = 'Câmera: ' + (v ? '1ª pessoa' : '3ª pessoa'); }
+const vmScene = new THREE.Scene(); vmScene.add(new THREE.HemisphereLight(0xffe2c8, 0x302028, .95)); { const l = new THREE.DirectionalLight(0xffc89a, 1.1); l.position.set(1, 2, 1); vmScene.add(l); }
+const vm = { root: new THREE.Group(), holder: new THREE.Group(), gun: null, item: null, bob: 0 };
+vmScene.add(vm.root); vm.root.add(vm.holder); vm.holder.position.set(.3, -.3, -.62);
+(() => { const sleeve = std(PCOL[0], { roughness: .5, metalness: .2 }), glove = std('#3c434f', { metalness: .6, roughness: .45 });
+  limb(vm.root, [.5, -.72, -.1], [.3, -.42, -.52], .05, sleeve); vm.root.add(mesh(G.sph, glove, .055, .055, .055, .3, -.42, -.52, false));
+  limb(vm.root, [-.3, -.75, -.15], [.27, -.37, -.82], .05, sleeve); vm.root.add(mesh(G.sph, glove, .055, .055, .055, .27, -.37, -.82, false)); })();
+function updateViewmodel(dt, t){
+  const P = fighters[0]; if (!P) return;
+  const wi = P.weapons[P.wi], item = wi ? wi.item : null;
+  if (vm.item !== item){ if (vm.gun) vm.holder.remove(vm.gun); vm.gun = item ? buildGun(item) : null; vm.item = item; if (vm.gun){ vm.gun.rotation.y = Math.PI; vm.gun.scale.setScalar(.8); vm.gun.children.forEach(c => { if (c.userData.badge) c.visible = false; }); vm.holder.add(vm.gun); } }
+  vm.root.position.copy(camera.position); vm.root.quaternion.copy(camera.quaternion);
+  const sp = Math.min(1, Math.hypot(P.vx, P.vz) / PSPEED) * (P.onGround ? 1 : .25); vm.bob += dt * sp * 9;
+  const zoom = zooming(), k = Math.min(1, dt * 12);
+  vm.holder.position.x += ((zoom ? .03 : .3) + Math.sin(vm.bob) * .014 * sp - vm.holder.position.x) * k;
+  vm.holder.position.y += ((zoom ? -.21 : -.3) + Math.abs(Math.cos(vm.bob)) * .014 * sp - vm.holder.position.y) * k;
+  vm.holder.position.z = -.62 + (P.recoil || 0) * .07;
+  vm.holder.rotation.x = (P.recoil || 0) * .12;
+  if (vm.gun){ if (vm.gun.userData.arch === 'melee') vm.gun.rotation.z = (P.recoil || 0) * 1.2; vm.gun.userData.tick(dt, P, t); }
 }
 function placeCamera(dt){
   const P = fighters[0];
@@ -1853,19 +1933,29 @@ function placeCamera(dt){
     const zoom = zooming();
     const d = aimDir(), rx = -Math.cos(yaw), rz = Math.sin(yaw);
     P.camY += (P.y - P.camY) * Math.min(1, dt * (Math.abs(P.y - P.camY) > 2 ? 30 : 12));
-    camSideNow += (camSide - camSideNow) * Math.min(1, dt * 10);
-    const head = new THREE.Vector3(P.x, P.camY + 1.72, P.z);
-    const side = (zoom ? .55 : .8) * camSideNow;
-    const shoulder = head.clone().add(new THREE.Vector3(rx * side, .22, rz * side));
-    let want = zoom ? 2.3 : 4.4; const back = d.clone().multiplyScalar(-1);
-    for (const R of rocks.concat(walls)){ const t = rayBox(shoulder, back, R); if (t < want) want = Math.max(.5, t - .25); }
-    camDistNow += (want - camDistNow) * Math.min(1, dt * (want < camDistNow ? 25 : 8));
-    const pos = shoulder.clone().addScaledVector(back, camDistNow); if (pos.y < .3) pos.y = .3;
-    if (camShake > 0){ const s = camShake * camShake * .5; pos.x += rand(-s, s); pos.y += rand(-s, s); pos.z += rand(-s, s); }
-    camera.position.copy(pos); camera.lookAt(pos.clone().add(d));
     const moving = Math.hypot(P.vx, P.vz) > PSPEED * 1.1;
-    fovWant = zoom ? 42 : P.dashT > 0 ? 78 : moving ? 72 : BASE_FOV;
+    if (fpvActive()){
+      const eye = new THREE.Vector3(P.x, P.camY + 1.62, P.z);
+      if (camShake > 0){ const s = camShake * camShake * .25; eye.x += rand(-s, s); eye.y += rand(-s, s); eye.z += rand(-s, s); }
+      camera.position.copy(eye); camera.lookAt(eye.clone().add(d)); camDistNow = 0; P.model.visible = false;
+      fovWant = zoom ? 40 : P.dashT > 0 ? 86 : moving ? 80 : 76;
+    } else {
+      P.model.visible = true;
+      camSideNow += (camSide - camSideNow) * Math.min(1, dt * 10);
+      const big = P.transT > 0 ? P.h / 2.1 : 1;
+      const head = new THREE.Vector3(P.x, P.camY + 1.72 * big, P.z);
+      const side = (zoom ? .55 : .8) * camSideNow;
+      const shoulder = head.clone().add(new THREE.Vector3(rx * side, .22, rz * side));
+      let want = (zoom ? 2.3 : 4.4) * big; const back = d.clone().multiplyScalar(-1);
+      for (const R of rocks.concat(walls)){ const t = rayBox(shoulder, back, R); if (t < want) want = Math.max(.5, t - .25); }
+      camDistNow += (want - camDistNow) * Math.min(1, dt * (want < camDistNow ? 25 : 8));
+      const pos = shoulder.clone().addScaledVector(back, camDistNow); if (pos.y < .3) pos.y = .3;
+      if (camShake > 0){ const s = camShake * camShake * .5; pos.x += rand(-s, s); pos.y += rand(-s, s); pos.z += rand(-s, s); }
+      camera.position.copy(pos); camera.lookAt(pos.clone().add(d));
+      fovWant = zoom ? 42 : P.dashT > 0 ? 78 : moving ? 72 : BASE_FOV;
+    }
   } else {
+    if (P) P.model.visible = true;
     const t = performance.now() / 9000; camera.position.set(Math.cos(t) * 30, 13 + Math.sin(t * 2) * 2, Math.sin(t) * 22); camera.lookAt(0, 1.5, 0);
   }
   if (Math.abs(fovWant - fovNow) > .05){ fovNow += (fovWant - fovNow) * Math.min(1, dt * 10); camera.fov = fovNow; camera.updateProjectionMatrix(); }
@@ -1877,6 +1967,7 @@ function animateModels(dt){
     m.position.set(f.x, f.y, f.z); m.rotation.y = f.yaw;
     if (f.hp <= 0 && f.deadT > 0){ const dk = Math.min(1, f.deadT * 2.4); m.rotation.x = -1.45 * (1 - Math.pow(1 - dk, 3)); m.position.y = f.y + .15 * dk; f.shieldMesh.visible = false; continue; }
     m.rotation.x = 0;
+    if (f.form){ f.form.position.y = f.form.userData.base + Math.abs(Math.sin(f.walk)) * .12; f.form.rotation.z = Math.sin(f.walk) * .06; }
     const fx = Math.sin(f.yaw), fz = Math.cos(f.yaw), rx = -Math.cos(f.yaw), rz = Math.sin(f.yaw);
     const fwd = (f.vx * fx + f.vz * fz) / PSPEED, side = (f.vx * rx + f.vz * rz) / PSPEED, sp = Math.min(1.4, Math.hypot(f.vx, f.vz) / PSPEED);
     A.lean += ((f.dashT > 0 ? .45 : fwd * .14) - A.lean) * k; A.side += (-side * .1 - A.side) * k; A.air += ((f.onGround ? 0 : 1) - A.air) * k;
@@ -1953,13 +2044,15 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt
 fighters = [makeFighter(0), makeFighter(1)];
 fighters[0].inv = [localForge('lança-chamas de dragão')]; fighters[1].inv = [localForge('torre de mísseis')];
 resetRound();
+$('#camBtn').onclick = () => setFpv(!fpv); setFpv(fpv);
 let last = performance.now(), hudT = 0;
 function loop(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (phase === 'fight' && countdown <= 0) fightClock += dt;
   update(dt);
   animateModels(dt); placeCamera(dt);
-  renderer.render(scene, camera);
+  renderer.autoClear = false; renderer.clear(); renderer.render(scene, camera);
+  if (fpvActive()){ updateViewmodel(dt, now / 1000); renderer.clearDepth(); renderer.render(vmScene, camera); }
   renderLabels();
   if (phase !== 'fight') fightClock = 0;
   hudT -= dt; if (hudT <= 0){ hudT = .1; renderHud(); }
