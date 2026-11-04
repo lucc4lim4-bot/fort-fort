@@ -19,3 +19,7 @@ Quando o jogo é aberto como Artifact no claude.ai, os pedidos são forjados pel
 - **À distância:** armas de tiro, torres, aliados e poderes que disparam projéteis 3D.
 - **Botões por forma:** cada alien de uma transformação (Omnitrix, Megazord…) ganha o seu botão; no teclado são `Z X N M J K L U I O`.
 - **Nada de emoji nem de cubinhos:** todo item, alien e projétil é um modelo 3D com esqueleto. Quando a IA não devolve um modelo, o jogo gera um por código.
+
+## IA no GitHub Pages (chave própria)
+
+O site estático não tem servidor, então a IA só liga se você colar a sua chave da API Anthropic (`sk-ant-…`) no menu inicial. A chave fica só no `localStorage` do seu navegador e vai direto para `api.anthropic.com`; o uso é cobrado na sua conta. Sem chave, o jogo avisa "SEM IA" e usa o gerador local por palavras-chave. No Artifact do Claude não precisa de chave.
