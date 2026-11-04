@@ -22,4 +22,9 @@ Quando o jogo é aberto como Artifact no claude.ai, os pedidos são forjados pel
 
 ## IA no GitHub Pages (chave própria)
 
-O site estático não tem servidor, então a IA só liga se você colar a sua chave da API Anthropic (`sk-ant-…`) no menu inicial. A chave fica só no `localStorage` do seu navegador e vai direto para `api.anthropic.com`; o uso é cobrado na sua conta. Sem chave, o jogo avisa "SEM IA" e usa o gerador local por palavras-chave. No Artifact do Claude não precisa de chave.
+O site estático não tem servidor, então a IA só liga se você colar uma chave no menu inicial. Dois provedores:
+
+- **Google Gemini (grátis):** crie a chave em https://aistudio.google.com/apikey (começa com `AIza`). O plano gratuito tem limite por minuto e por dia; o jogo enfileira as chamadas e tenta de novo quando o limite aperta.
+- **Anthropic Claude (pago):** chave em https://console.anthropic.com (começa com `sk-ant-`).
+
+A chave fica só no `localStorage` do seu navegador e vai direto para o provedor. Sem chave, o jogo avisa "SEM IA" e usa o gerador local por palavras-chave. No Artifact do Claude não precisa de chave.

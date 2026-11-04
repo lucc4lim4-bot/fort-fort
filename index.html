@@ -234,7 +234,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     </div>
     <div class="modes opts">
       <label><input type="checkbox" id="deep" checked> Forja caprichada: pesquisa profunda e modelos 3D detalhados (mais lenta)</label>
-      <div id="keyBox" hidden style="margin:.5rem 0;padding:.6rem;border:1px dashed #556;border-radius:8px"><label style="display:block">🔑 IA neste site: cole sua chave da API Anthropic (sk-ant-…). Ela fica só neste navegador e vai direto para a Anthropic; o uso é cobrado na sua conta.<input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…" style="width:100%;margin-top:.3rem"></label><button type="button" id="keySave">Salvar e ativar IA</button> <button type="button" id="keyClear">Remover</button> <small id="keyMsg"></small></div>
+      <div id="keyBox" hidden style="margin:.5rem 0;padding:.6rem;border:1px dashed #556;border-radius:8px"><div style="margin-bottom:.3rem">🔑 IA neste site: escolha o provedor e cole a sua chave. Ela fica só neste navegador e vai direto para o provedor.</div><select id="provSel"><option value="gemini">Google Gemini (grátis, aistudio.google.com)</option><option value="anthropic">Anthropic Claude (pago, console.anthropic.com)</option></select> <input type="password" id="apiKey" autocomplete="off" placeholder="AIza…" style="width:100%;margin:.3rem 0"><button type="button" id="keySave">Salvar e ativar IA</button> <button type="button" id="keyClear">Remover</button> <small id="keyMsg"></small></div>
       <label><input type="checkbox" id="rev" checked> Revisão visual: a IA olha imagens do modelo 3D e corrige (mais lenta)</label>
       <label><input type="checkbox" id="bal"> Balancear armas (desligado = sem limites)</label>
     </div>
@@ -963,13 +963,15 @@ function statLine(it){
 /* ================= AI forge (Claude) ================= */
 let sampleFn = null, aiMode = 'checking', aiResolve;
 const aiReady = new Promise(r => aiResolve = r);
-function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? (keyMode ? 'IA: Claude (sua chave)' : 'IA: Claude forjando') : aiMode === 'local' ? 'SEM IA — palpite local, sem pesquisa' : 'IA: conectando…'; }
-const KEY_LS = 'forja_api_key', TIER_MODEL = { quick: 'claude-haiku-5-5', default: 'claude-sonnet-5-5', complex: 'claude-opus-5-5' };
+function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? (keyMode ? 'IA: ' + PROV_NAME[getProv()] + ' (sua chave)' : 'IA: Claude forjando') : aiMode === 'local' ? 'SEM IA — palpite local, sem pesquisa' : 'IA: conectando…'; }
+const KEY_LS = { anthropic: 'forja_api_key', gemini: 'forja_gemini_key' }, PROV_LS = 'forja_provider', PROV_NAME = { anthropic: 'Claude', gemini: 'Gemini' };
+const TIER_MODEL = { quick: 'claude-haiku-5-5', default: 'claude-sonnet-5-5', complex: 'claude-opus-5-5' };
 let keyMode = false;
-const getKey = () => { try { return (localStorage.getItem(KEY_LS) || '').trim(); } catch(_){ return ''; } };
+const getProv = () => { try { return localStorage.getItem(PROV_LS) === 'anthropic' ? 'anthropic' : 'gemini'; } catch(_){ return 'gemini'; } };
+const getKey = p => { try { return (localStorage.getItem(KEY_LS[p || getProv()]) || '').trim(); } catch(_){ return ''; } };
 const blobB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(b); });
 // Same interface as the Artifact "sample" capability, but calling the Anthropic API directly with the player's own key (GitHub Pages has no server).
-function makeKeySample(key){
+function makeAnthropicSample(key){
   const err = (code, message, text) => Object.assign(new Error(message), { code, text });
   async function sample(input, opts){
     opts = opts || {};
@@ -1010,15 +1012,80 @@ function makeKeySample(key){
   sample.limits = async () => ({ images: true });
   return sample;
 }
-function setKeyMode(on){ keyMode = on; const k = getKey(); if (on && k){ sampleFn = makeKeySample(k); aiMode = 'claude'; } else if (!window.claude){ sampleFn = null; aiMode = 'local'; } updateBadge(); const kb = $('#keyBox'); if (kb) kb.hidden = !!(window.claude && sampleFn && !keyMode); }
+
+// Google Gemini (free tier) with the same interface. Free tier is rate limited, so calls are queued (2 at a time) and retried on 429.
+const GEM_MODEL = { quick: ['gemini-2.5-flash-lite', 'gemini-2.5-flash'], default: ['gemini-2.5-flash', 'gemini-2.0-flash'], complex: ['gemini-2.5-flash', 'gemini-2.0-flash'] };
+function makeGeminiSample(key){
+  const err = (code, message, text) => Object.assign(new Error(message), { code, text });
+  let active = 0; const waiters = [];
+  const acquire = () => new Promise(r => { const go = () => { if (active < 2){ active++; r(); } else waiters.push(go); }; go(); });
+  const release = () => { active--; const n = waiters.shift(); if (n) n(); };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  async function once(model, contents, opts, json, think){
+    const gen = { maxOutputTokens: opts.modelTier === 'quick' ? 4096 : 16384, temperature: 0.8 };
+    if (json) gen.responseMimeType = 'application/json';
+    if (think && /2\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: opts.modelTier === 'quick' ? 0 : 1024 };
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':streamGenerateContent?alt=sse', { method: 'POST', signal: opts.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ contents, generationConfig: gen }) });
+    if (!resp.ok){ let m = '', d = null; try { d = (await resp.json()).error; m = d.message; } catch(_){} return { status: resp.status, message: m || '', retry: d && d.details ? (JSON.stringify(d.details).match(/"retryDelay":"(\d+)/) || [])[1] : null }; }
+    const rd = resp.body.getReader(), dec = new TextDecoder(); let buf = '', text = '', stop = null;
+    for (;;){
+      const { done, value } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true });
+      let i; while ((i = buf.indexOf('\n')) >= 0){
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith('data:')) continue;
+        let ev; try { ev = JSON.parse(line.slice(5).trim()); } catch(_){ continue; }
+        const c = ev.candidates && ev.candidates[0]; if (!c) { if (ev.promptFeedback && ev.promptFeedback.blockReason) throw err('blocked', 'A Gemini bloqueou o pedido (' + ev.promptFeedback.blockReason + ')', text); continue; }
+        const parts = c.content && c.content.parts || [];
+        for (const p of parts) if (typeof p.text === 'string' && !p.thought){ text += p.text; if (opts.onText) try { opts.onText({ text, delta: p.text }); } catch(_){} }
+        if (c.finishReason) stop = c.finishReason;
+      }
+    }
+    return { text, truncated: stop === 'MAX_TOKENS' };
+  }
+  async function sample(input, opts, json){
+    opts = opts || {};
+    const contents = (typeof input === 'string' ? [{ role: 'user', content: input }] : input).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+    if (opts.images && opts.images.length){ const imgs = []; for (const b of opts.images) imgs.push({ inline_data: { mime_type: b.type || 'image/png', data: await blobB64(b) } }); contents[contents.length - 1].parts.unshift(...imgs); }
+    const models = GEM_MODEL[opts.modelTier] || GEM_MODEL.default; let last = null, think = true;
+    await acquire();
+    try {
+      for (let mi = 0; mi < models.length; mi++){
+        for (let attempt = 0; attempt < 4; attempt++){
+          let r; try { r = await once(models[mi], contents, opts, json, think); } catch(e){ if (e && e.code) throw e; throw err('network_error', 'Sem conexão com a Gemini: ' + e.message); }
+          if (r.text !== undefined) return r;
+          last = r;
+          if (r.status === 429){ if (attempt === 3) throw err('rate_limited', 'Limite grátis da Gemini atingido: ' + r.message.slice(0, 120)); await wait(Math.min(25000, ((+r.retry || 0) + 2) * 1000 || 6000) * (attempt ? 1.3 : 1)); continue; }
+          if (r.status === 400 && think && /thinking/i.test(r.message)){ think = false; continue; }
+          if (r.status === 400 && /API key|API_KEY/i.test(r.message) || r.status === 401 || r.status === 403) throw err('not_granted', 'Chave da Gemini recusada (' + r.status + '): ' + r.message.slice(0, 120));
+          if (r.status === 404) break;
+          throw err('api_error', 'Gemini ' + r.status + ': ' + r.message.slice(0, 160));
+        }
+      }
+      throw err('api_error', 'Gemini indisponível' + (last ? ' (' + last.status + '): ' + last.message.slice(0, 120) : ''));
+    } finally { release(); }
+  }
+  const f = (input, opts) => sample(input, opts, false);
+  f.json = async (input, opts) => {
+    const msgs = typeof input === 'string' ? input + '\n\nResponda SOMENTE com um objeto JSON válido, sem markdown e sem texto fora do JSON.' : input;
+    const r = await sample(msgs, opts, true), t = r.text, a = t.indexOf('{'), b = t.lastIndexOf('}');
+    if (a < 0 || b <= a) throw err('bad_json', 'a IA não devolveu JSON', t);
+    try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ throw err('bad_json', 'JSON da IA inválido' + (r.truncated ? ' (resposta cortada)' : ''), t); }
+  };
+  f.limits = async () => ({ images: true });
+  return f;
+}
+const makeKeySample = (p, key) => p === 'gemini' ? makeGeminiSample(key) : makeAnthropicSample(key);
+function setKeyMode(on){ keyMode = on; const k = getKey(); if (on && k){ sampleFn = makeKeySample(getProv(), k); aiMode = 'claude'; } else if (!window.claude){ sampleFn = null; aiMode = 'local'; } updateBadge(); const kb = $('#keyBox'); if (kb) kb.hidden = !!(window.claude && sampleFn && !keyMode); }
 (async () => {
   try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; }
-  if (sampleFn) aiMode = 'claude'; else if (getKey()){ keyMode = true; sampleFn = makeKeySample(getKey()); aiMode = 'claude'; } else aiMode = 'local';
+  if (sampleFn) aiMode = 'claude'; else if (getKey()){ keyMode = true; sampleFn = makeKeySample(getProv(), getKey()); aiMode = 'claude'; } else aiMode = 'local';
   updateBadge(); aiResolve();
-  const kb = $('#keyBox'), inp = $('#apiKey'); if (kb){ kb.hidden = !!(sampleFn && !keyMode); if (getKey()) inp.placeholder = 'chave salva neste navegador'; }
-  const sv = $('#keySave'), cl = $('#keyClear');
-  if (sv) sv.onclick = () => { const v = inp.value.trim(); if (!/^sk-ant-/.test(v)){ $('#keyMsg').textContent = 'Chave inválida: ela começa com sk-ant-'; return; } try { localStorage.setItem(KEY_LS, v); } catch(_){ $('#keyMsg').textContent = 'Seu navegador bloqueou o armazenamento.'; return; } inp.value = ''; setKeyMode(true); $('#keyMsg').textContent = 'IA ativada com a sua chave.'; };
-  if (cl) cl.onclick = () => { try { localStorage.removeItem(KEY_LS); } catch(_){} keyMode = false; sampleFn = null; aiMode = 'local'; updateBadge(); $('#keyMsg').textContent = 'Chave removida.'; };
+  const kb = $('#keyBox'), inp = $('#apiKey'); if (kb){ kb.hidden = !!(sampleFn && !keyMode); }
+  const sv = $('#keySave'), cl = $('#keyClear'), ps = $('#provSel');
+  const syncProv = () => { const p = getProv(); if (ps) ps.value = p; if (inp) inp.placeholder = getKey(p) ? 'chave salva neste navegador' : (p === 'gemini' ? 'AIza…' : 'sk-ant-…'); };
+  syncProv();
+  if (ps) ps.onchange = () => { try { localStorage.setItem(PROV_LS, ps.value); } catch(_){} syncProv(); if (!window.claude || keyMode){ if (getKey()) setKeyMode(true); else { keyMode = false; sampleFn = null; aiMode = 'local'; updateBadge(); } } };
+  if (sv) sv.onclick = () => { const v = inp.value.trim(); const p = ps ? ps.value : getProv(); if (!(p === 'gemini' ? /^AIza/ : /^sk-ant-/).test(v)){ $('#keyMsg').textContent = 'Chave inválida: ela começa com ' + (p === 'gemini' ? 'AIza' : 'sk-ant-'); return; } try { localStorage.setItem(PROV_LS, p); localStorage.setItem(KEY_LS[p], v); } catch(_){ $('#keyMsg').textContent = 'Seu navegador bloqueou o armazenamento.'; return; } inp.value = ''; setKeyMode(true); $('#keyMsg').textContent = 'IA ativada com a sua chave.'; };
+  if (cl) cl.onclick = () => { try { localStorage.removeItem(KEY_LS[getProv()]); } catch(_){} syncProv(); keyMode = false; sampleFn = null; aiMode = 'local'; updateBadge(); $('#keyMsg').textContent = 'Chave removida.'; };
 })();
 setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); aiResolve(); } }, 12000);
 const q = s => String(s).replace(/"/g, "'").replace(/`/g, "'");
@@ -1233,7 +1300,7 @@ async function forgeItem(req, opts){
   await aiReady;
   const why = e => (e && (e.message || e.code)) ? String(e.message || e.code).slice(0, 140) : 'erro desconhecido';
   const noAI = (reason) => { const it = localForge(req); it.noAI = reason; it.desc = '⚠️ SEM PESQUISA — ' + reason + '. Isto é só um palpite por palavras-chave.'; return it; };
-  if (!sampleFn || aiMode !== 'claude') return noAI(window.claude ? 'a IA não está liberada para esta página (permita o acesso ao Claude e recarregue)' : 'sem IA ativa: cole sua chave da API Anthropic no menu (ou abra a versão do Claude)');
+  if (!sampleFn || aiMode !== 'claude') return noAI(window.claude ? 'a IA não está liberada para esta página (permita o acesso ao Claude e recarregue)' : 'sem IA ativa: cole uma chave grátis da Gemini (ou da Anthropic) no menu, ou abra a versão do Claude');
   let lastErr = null;
   {
     if (opts.research && deepForge){
