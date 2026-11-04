@@ -5,9 +5,9 @@ import {
 } from '../shared/data.js';
 import { createWorld, makePieceCollider, pieceKey, pieceCenter, rayAABB } from '../shared/world.js';
 
-export const WEAPON_IDS = ['pickaxe', 'pistol', 'smg', 'ar', 'shotgun', 'sniper'];
-const GUNS = ['pistol', 'smg', 'ar', 'shotgun', 'sniper'];
-const GUN_WEIGHT = { pistol: 16, smg: 18, ar: 28, shotgun: 20, sniper: 9 };
+export const WEAPON_IDS = ['pickaxe', 'pistol', 'smg', 'ar', 'shotgun', 'sniper', 'rocket'];
+const GUNS = ['pistol', 'smg', 'ar', 'shotgun', 'sniper', 'rocket'];
+const GUN_WEIGHT = { pistol: 16, smg: 18, ar: 28, shotgun: 20, sniper: 9, rocket: 4 };
 const CONS = Object.keys(CONSUMABLES);
 const NODE_MAT = { tree: 'wood', rock: 'brick', scrap: 'metal' };
 const BOT_NAMES = ['Bia', 'Rafa', 'Kiko', 'Lobo', 'Nina', 'Tigrão', 'Duda', 'Zeca', 'Mel', 'Bruxo', 'Pandora', 'Tião', 'Luna', 'Fênix', 'Cacá', 'Jabuti', 'Vesgo', 'Maya', 'Dino', 'Pipoca', 'Sombra', 'Raio', 'Nico', 'Gaia', 'Thor', 'Lili', 'Max', 'Safira', 'Rex', 'Cometa'];
@@ -78,7 +78,7 @@ export class Game {
   }
   resetInventory(p) {
     p.inv = [{ k: 'pickaxe' }, null, null, null, null, null];
-    p.slot = 0; p.ammo = { light: 0, medium: 0, shell: 0, heavy: 0 }; p.mats = { wood: 120, brick: 0, metal: 0 };
+    p.slot = 0; p.ammo = { light: 0, medium: 0, shell: 0, heavy: 0, rocket: 0 }; p.mats = { wood: 120, brick: 0, metal: 0 };
     p.reloadEnd = 0; p.using = null; p.dirty = true;
   }
 
@@ -266,7 +266,7 @@ export class Game {
   }
   updateHeld(p) {
     const it = p.inv[p.slot];
-    p.held = !it ? 0 : WEAPON_IDS.indexOf(it.k) >= 0 ? WEAPON_IDS.indexOf(it.k) : 6 + CONS.indexOf(it.k);
+    p.held = !it ? 0 : WEAPON_IDS.indexOf(it.k) >= 0 ? WEAPON_IDS.indexOf(it.k) : 10 + CONS.indexOf(it.k);
   }
   weapon(p) { const it = p.inv[p.slot]; return it && WEAPONS[it.k] ? { it, w: WEAPONS[it.k] } : null; }
 
@@ -339,10 +339,22 @@ export class Game {
       const hit = this.castRay(p, ox, oy, oz, ddx, ddy, ddz, w.range);
       const t = hit ? hit.t : w.range;
       ends.push([r1(ox + ddx * t), r1(oy + ddy * t), r1(oz + ddz * t), hit ? (hit.type === 'player' ? 2 : 1) : 0]);
-      if (hit) this.applyHit(p, hit, w.dmg * rmul, it.k, w.hs, ox, oy, oz);
+      if (w.explode) { this.explode(p, ox + ddx * t, oy + ddy * t, oz + ddz * t, w.dmg * rmul, w.explode, it.k); ends[ends.length - 1][3] = 3; }
+      else if (hit) this.applyHit(p, hit, w.dmg * rmul, it.k, w.hs, ox, oy, oz);
     }
     this.broadcast({ t: 'sh', i: p.id, o: [r1(ox), r1(oy), r1(oz)], e: ends, w: WEAPON_IDS.indexOf(it.k) });
     if (it.mag <= 0 && p.ammo[w.ammo] > 0) this.startReload(p);
+  }
+
+  explode(p, x, y, z, dmg, radius, wk) {
+    for (const q of this.players.values()) {
+      if (!q.alive || q.bus) continue;
+      const d = Math.hypot(q.x - x, q.y + 0.9 - y, q.z - z);
+      if (d < radius) this.damage(q, dmg * (1 - d / radius * 0.7) * (q === p ? 0.5 : 1), p, wk, false);
+    }
+    for (const b of [...this.builds.values()]) {
+      const c = b.col; if (Math.hypot((c.minx + c.maxx) / 2 - x, (c.miny + c.maxy) / 2 - y, (c.minz + c.maxz) / 2 - z) < radius + 1.5) this.damageBuild(b, 260);
+    }
   }
 
   castRay(shooter, ox, oy, oz, dx, dy, dz, maxD) {
@@ -421,7 +433,7 @@ export class Game {
   makeLootDef(forceType, boost = 0) {
     const roll = forceType || (Math.random() < 0.45 ? 'w' : Math.random() < 0.55 ? 'a' : 'c');
     if (roll === 'w') return { kind: 'weapon', k: this.randWeapon(), r: this.rollRarity(boost), n: 1 };
-    if (roll === 'a') { const t = Object.keys(AMMO)[Math.floor(Math.random() * 4)]; return { kind: 'ammo', k: t, r: 0, n: AMMO[t].pick }; }
+    if (roll === 'a') { const t = Object.keys(AMMO)[Math.floor(Math.random() * 5)]; return { kind: 'ammo', k: t, r: 0, n: AMMO[t].pick }; }
     const k = CONS[Math.floor(Math.pow(Math.random(), 1.4) * CONS.length)];
     return { kind: 'cons', k, r: 0, n: k === 'bandage' ? 5 : k === 'minishield' ? 2 : 1 };
   }

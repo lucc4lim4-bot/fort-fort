@@ -31,6 +31,7 @@ export const sfx = {
     else if (kind === 'shotgun') { noise(0.45, 0.9 * v, 3200, 140, 'lowpass'); tone(110, 0.25, 0.5 * v, 'sine', -60); }
     else if (kind === 'ar') { noise(0.2, 0.55 * v, 3800, 260, 'lowpass'); tone(150, 0.12, 0.35 * v, 'square', -90); }
     else if (kind === 'smg') { noise(0.13, 0.4 * v, 5200, 500, 'lowpass'); tone(210, 0.08, 0.2 * v, 'square', -120); }
+    else if (kind === 'rocket') { noise(0.5, 0.7 * v, 1200, 200, 'bandpass', 0.7); tone(120, 0.4, 0.4 * v, 'sawtooth', -70); }
     else if (kind === 'pistol') { noise(0.16, 0.45 * v, 4200, 400, 'lowpass'); tone(180, 0.1, 0.3 * v, 'square', -100); }
     else if (kind === 'pickaxe') noise(0.15, 0.3 * v, 800, 3000, 'bandpass', 1.5);
   },
@@ -45,5 +46,6 @@ export const sfx = {
   bus() { tone(160, 0.5, 0.15, 'sawtooth', 20); },
   click() { tone(800, 0.04, 0.15, 'square'); },
   jump() { noise(0.35, 0.5, 600, 2400, 'bandpass', 1); },
+  boom(v = 1) { noise(1.0, 1.0 * v, 1800, 60, 'lowpass'); tone(70, 0.6, 0.8 * v, 'sine', -40); },
   storm() { noise(0.9, 0.25, 300, 120, 'lowpass'); },
 };

@@ -7,9 +7,9 @@ import { buildSky, buildTerrain, buildStatics, createPieceMesh, createStorm, cre
 import { initAudio, sfx, setVolume } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
-const WID = ['pickaxe', 'pistol', 'smg', 'ar', 'shotgun', 'sniper'];
+const WID = ['pickaxe', 'pistol', 'smg', 'ar', 'shotgun', 'sniper', 'rocket'];
 const CONS_IDS = Object.keys(CONSUMABLES);
-const ICON = { pickaxe: '⛏️', pistol: '🔫', smg: '🔫', ar: '🔫', shotgun: '🔫', sniper: '🎯', bandage: '🩹', medkit: '➕', minishield: '🛡️', shieldpot: '🧪' };
+const ICON = { pickaxe: '⛏️', pistol: '🔫', smg: '🔫', ar: '🔫', shotgun: '🔫', sniper: '🎯', rocket: '🚀', bandage: '🩹', medkit: '➕', minishield: '🛡️', shieldpot: '🧪' };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const angDiff = (a, b) => { let d = (b - a) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
 const store = {
@@ -42,7 +42,7 @@ let phase = 'lobby', mode = 'lobby', lobbyT = -1, snap = null, storm = null, bus
 let sens = Number(store.get('sens', 80)), mySkin = Number(store.get('skin', 0)) || 0, myName = store.get('name', '');
 const players = new Map(), roster = new Map(), items = new Map(), chestMeshes = [], builds = new Map(), nodeShake = new Map();
 const me = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, onGround: false, yaw: 0, pitch: 0, hp: 100, sh: 0, alive: false, kills: 0, rig: null, speed: 0, deadT: 0, swingT: 9, recoil: 0, glideT: 0 };
-const inv = { items: [null, null, null, null, null, null], slot: 0, ammo: { light: 0, medium: 0, shell: 0, heavy: 0 }, mats: { wood: 0, brick: 0, metal: 0 } };
+const inv = { items: [null, null, null, null, null, null], slot: 0, ammo: { light: 0, medium: 0, shell: 0, heavy: 0, rocket: 0 }, mats: { wood: 0, brick: 0, metal: 0 } };
 const keys = {}; let locked = false, mouseL = false, mouseR = false, ads = false, buildPiece = null, matSel = 0, emoting = false, showBig = false;
 let nextFire = 0, progress = null, spectateId = -1, busY = 0, lastIn = 0, ghost = null, lastPlace = 0, deathInfo = null, chestOpen = new Set();
 let netPing = 0, fovCur = 75;
@@ -185,7 +185,7 @@ function clearMatchState() {
   for (const [, it] of items) scene.remove(it.group); items.clear();
   for (const [, b] of builds) { world.colliders.remove(b.col); scene.remove(b.mesh); } builds.clear();
   chestOpen.clear(); chestMeshes.forEach((c) => { c.userData.lid.rotation.x = 0; c.userData.glow.visible = true; });
-  inv.items = [null, null, null, null, null, null]; inv.slot = 0; inv.ammo = { light: 0, medium: 0, shell: 0, heavy: 0 }; inv.mats = { wood: 0, brick: 0, metal: 0 };
+  inv.items = [null, null, null, null, null, null]; inv.slot = 0; inv.ammo = { light: 0, medium: 0, shell: 0, heavy: 0, rocket: 0 }; inv.mats = { wood: 0, brick: 0, metal: 0 };
 }
 
 // ------------------------------------------------------------------ itens / baús / construções
@@ -330,6 +330,13 @@ function muzzleFlash(rig, scale = 0.7) {
   rig.flash.scale.setScalar(scale); rig.flash.visible = true; rig.flashT = 0.05;
 }
 const _v = new THREE.Vector3();
+const blasts = [];
+function boom(x, y, z) {
+  burst(x, y, z, 0xff9a2a, 40, 10); burst(x, y, z, 0x555555, 20, 6);
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffa030, transparent: true, opacity: 0.8, depthWrite: false }));
+  m.position.set(x, y, z); scene.add(m); blasts.push({ m, t: 0 });
+  const d = Math.hypot(x - camera.position.x, z - camera.position.z); sfx.boom(clamp(1 - d / 220, 0.1, 1));
+}
 function onShot(m) {
   const own = m.i === myId; const p = own ? me : players.get(m.i);
   const rig = p && p.rig; const key = WID[m.w] || 'ar';
@@ -339,7 +346,7 @@ function onShot(m) {
   for (const e of m.e) {
     const to = new THREE.Vector3(e[0], e[1], e[2]);
     if (key !== 'shotgun' || Math.random() < 0.5) tracer(from, to);
-    if (e[3] === 1) burst(e[0], e[1], e[2], 0xd8c9a0, 4, 3); else if (e[3] === 2) burst(e[0], e[1], e[2], 0xff3030, 6, 3);
+    if (e[3] === 1) burst(e[0], e[1], e[2], 0xd8c9a0, 4, 3); else if (e[3] === 2) burst(e[0], e[1], e[2], 0xff3030, 6, 3); else if (e[3] === 3) boom(e[0], e[1], e[2]);
   }
 }
 
@@ -615,9 +622,9 @@ function updatePlayers(dt) {
     if (!rig.root.visible) continue;
     rig.root.position.set(p.x, p.y, p.z); rig.root.rotation.y = p.yaw;
     const fl = p.flags, mode2 = fl & 2 ? 'glide' : fl & 1 ? 'fall' : 'ground';
-    const wk = p.held <= 5 ? WID[p.held] : null;
+    const wk = p.held <= 6 ? WID[p.held] : null;
     setRigWeapon(rig, wk, 0);
-    poseRig(rig, { speed: p.speed, onGround: !(fl & 8) && mode2 === 'ground', mode: mode2, pitch: p.pitch, gun: p.held >= 1 && p.held <= 5, melee: p.held === 0, using: p.held >= 6, swing: p.swingT, emote: p.emote && p.speed < 0.5, dead: !p.alive, recoil: p.recoil }, dt);
+    poseRig(rig, { speed: p.speed, onGround: !(fl & 8) && mode2 === 'ground', mode: mode2, pitch: p.pitch, gun: p.held >= 1 && p.held <= 6, melee: p.held === 0, using: p.held >= 10, swing: p.swingT, emote: p.emote && p.speed < 0.5, dead: !p.alive, recoil: p.recoil }, dt);
     p.recoil = Math.max(0, p.recoil - dt * 6);
     if (rig.flashT !== undefined && rig.flash) { rig.flashT -= dt; if (rig.flashT <= 0) rig.flash.visible = false; }
     const d = Math.hypot(p.x - camera.position.x, p.z - camera.position.z);
@@ -711,6 +718,7 @@ function frame(now) {
     // tracers
     for (let i = tracers.length - 1; i >= 0; i--) { const t = tracers[i]; t.life -= dt; if (t.life <= 0) { scene.remove(t.m); tracers.splice(i, 1); } }
     updateSparks(dt);
+    for (let i = blasts.length - 1; i >= 0; i--) { const b = blasts[i]; b.t += dt; b.m.scale.setScalar(1 + b.t * 14); b.m.material.opacity = Math.max(0, 0.8 - b.t * 2); if (b.t > 0.4) { scene.remove(b.m); blasts.splice(i, 1); } }
     // tempestade e ônibus
     if (storm) {
       stormObj.wall.visible = true; stormObj.wall.scale.set(storm[2], 1, storm[2]); stormObj.wall.position.x = storm[0]; stormObj.wall.position.z = storm[1]; stormObj.tx.offset.y -= dt * 0.15; stormObj.tx.offset.x += dt * 0.01;
@@ -740,7 +748,7 @@ const stageRing = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.025, 8, 60), ne
 let pRig = null, pRot = 0.4, pDrag = false, pEmote = false;
 function setPreviewSkin() {
   if (pRig) pScene.remove(pRig.root);
-  pRig = createCharacter(mySkin); setRigWeapon(pRig, 'ar', Math.max(1, SKINS[mySkin].rarity)); pScene.add(pRig.root); pRig.setOutline(true);
+  pRig = createCharacter(mySkin); setRigWeapon(pRig, new URLSearchParams(location.search).get('w') || 'ar', Math.max(1, SKINS[mySkin].rarity)); pScene.add(pRig.root); pRig.setOutline(true);
   const s = SKINS[mySkin];
   $('skinName').textContent = s.name; $('skinRar').textContent = RARITY[s.rarity].n.toUpperCase(); $('skinRar').style.color = RARITY[s.rarity].c; $('skinDesc').textContent = s.desc;
   document.querySelectorAll('#skinGrid div').forEach((d, i) => d.classList.toggle('sel', i === mySkin));

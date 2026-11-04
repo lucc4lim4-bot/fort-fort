@@ -198,7 +198,7 @@ export function createStorm(scene) {
 }
 
 // ------------------------------------------------------------ loot
-const AMMO_COL = { light: 0xffc94a, medium: 0x6fd36a, shell: 0xff6a4a, heavy: 0x66aaff };
+const AMMO_COL = { light: 0xffc94a, medium: 0x6fd36a, shell: 0xff6a4a, heavy: 0x66aaff, rocket: 0xff7a2a };
 export function createItemMesh(kind, k, r, createWeapon) {
   const g = new THREE.Group(); const col = new THREE.Color(RARITY[r || 0].c);
   if (kind === 'weapon') { const w = createWeapon(k, r); w.scale.setScalar(1.5); w.rotation.y = Math.PI / 2; g.add(w); }

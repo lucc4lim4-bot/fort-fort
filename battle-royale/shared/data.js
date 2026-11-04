@@ -20,17 +20,19 @@ export const RMUL = [1, 1.05, 1.1, 1.15, 1.2];
 // rps = tiros/s, hs = multiplicador de headshot, ammo = tipo de munição
 export const WEAPONS = {
   pickaxe: { n: 'Picareta', melee: true, dmg: 20, rps: 1.8, range: 3.6 },
-  pistol:  { n: 'Pistola', dmg: 24, rps: 6, mag: 16, reload: 1.6, spread: 0.012, range: 170, ammo: 'light', hs: 1.5, pellets: 1 },
-  smg:     { n: 'Submetralhadora', dmg: 17, rps: 11, mag: 30, reload: 2.0, spread: 0.028, range: 120, ammo: 'light', hs: 1.5, pellets: 1 },
+  pistol:  { n: 'Pistola Pesada', dmg: 24, rps: 6, mag: 16, reload: 1.6, spread: 0.012, range: 170, ammo: 'light', hs: 1.5, pellets: 1 },
+  smg:     { n: 'SMG Tática', dmg: 17, rps: 11, mag: 30, reload: 2.0, spread: 0.028, range: 120, ammo: 'light', hs: 1.5, pellets: 1 },
   ar:      { n: 'Rifle de Assalto', dmg: 30, rps: 5.5, mag: 30, reload: 2.3, spread: 0.017, range: 220, ammo: 'medium', hs: 1.5, pellets: 1 },
-  shotgun: { n: 'Escopeta', dmg: 12, rps: 0.95, mag: 5, reload: 3.0, spread: 0.065, range: 45, ammo: 'shell', hs: 1.5, pellets: 9 },
-  sniper:  { n: 'Sniper', dmg: 105, rps: 0.55, mag: 1, reload: 2.4, spread: 0.0008, range: 400, ammo: 'heavy', hs: 2.2, pellets: 1, scope: true },
+  shotgun: { n: 'Escopeta Pump', dmg: 12, rps: 0.95, mag: 5, reload: 3.0, spread: 0.065, range: 45, ammo: 'shell', hs: 1.5, pellets: 9 },
+  rocket:  { n: 'Lança-foguetes', dmg: 100, rps: 0.45, mag: 1, reload: 3.2, spread: 0.004, range: 300, ammo: 'rocket', hs: 1, pellets: 1, explode: 5.5 },
+  sniper:  { n: 'Rifle de Caça', dmg: 105, rps: 0.55, mag: 1, reload: 2.4, spread: 0.0008, range: 400, ammo: 'heavy', hs: 2.2, pellets: 1, scope: true },
 };
 export const AMMO = {
   light: { n: 'Munição Leve', max: 240, pick: 36 },
   medium: { n: 'Munição Média', max: 240, pick: 30 },
   shell: { n: 'Cartuchos', max: 60, pick: 10 },
   heavy: { n: 'Munição Pesada', max: 40, pick: 6 },
+  rocket: { n: 'Foguetes', max: 12, pick: 3 },
 };
 // time = segundos para usar
 export const CONSUMABLES = {

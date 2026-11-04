@@ -43,19 +43,29 @@ function buildRig(sp) {
   const root = new THREE.Group(); root.rotation.order = 'YXZ'; rig.root = root;
   const hips = new THREE.Group(); hips.position.y = 0.82; root.add(hips); rig.hips = hips;
   const pelvis = outlined(put(hips, box(0.34, 0.2, 0.22, M(sp.pants)), 0, -0.02, 0), rig, 1.1); rig.pelvis = pelvis;
-  const torso = new THREE.Group(); torso.position.y = 0.05; hips.add(torso); rig.torso = torso;
+  const torso = new THREE.Group(); torso.position.y = 0.05; torso.scale.set(1.08, 1, 1.1); hips.add(torso); rig.torso = torso;
   const chest = cap(0.19, 0.2, M(sp.shirt)); chest.scale.set(1.12, 1, 0.78); put(torso, chest, 0, 0.27, 0); outlined(chest, rig, 1.06); rig.chest = chest;
   rig.back = new THREE.Group(); rig.back.position.set(0, 0.32, -0.17); torso.add(rig.back);
   rig.front = new THREE.Group(); rig.front.position.set(0, 0.3, 0.16); torso.add(rig.front);
   // cabeça
-  const head = new THREE.Group(); head.position.y = 0.64; torso.add(head); rig.head = head;
+  const head = new THREE.Group(); head.position.y = 0.64; head.scale.setScalar(1.28); torso.add(head); rig.head = head;
   const skull = sph(0.2, M(sp.skin)); skull.scale.set(1, 1.04, 1.02); put(head, skull, 0, 0.1, 0); outlined(skull, rig, 1.06); rig.skull = skull;
+  for (const e of [-1, 1]) { const ear = sph(0.05, M(sp.skin), 8, 6); ear.scale.set(0.5, 1, 0.8); put(head, ear, e * 0.2, 0.08, -0.01); }
+  put(head, cyl(0.075, 0.09, 0.1, M(sp.skin), 10), 0, -0.04, 0);
+  if (sp.hairStyle) {
+    const hc = M(sp.hairColor || 0x4a2f1a);
+    const cap2 = new THREE.Mesh(geo(G.sph, 'hairCap', () => new THREE.SphereGeometry(0.218, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55)), hc);
+    put(head, cap2, 0, 0.115, -0.02, -0.25, 0, 0); outlined(cap2, rig, 1.04);
+    put(head, sph(0.1, hc, 10, 8), 0, 0.3, 0.1, 0, 0, 0).scale.set(1.2, 0.7, 1.3);
+    if (sp.hairStyle === 'long') put(head, box(0.34, 0.34, 0.08, hc), 0, -0.02, -0.17);
+  }
   rig.face = new THREE.Group(); rig.face.position.set(0, 0.11, 0.185); head.add(rig.face);
   if (!sp.noFace) {
     const eyeM = M(sp.eye || 0xffffff), pup = M(sp.pupil || 0x1a1a22);
     for (const s of [-1, 1]) {
       put(rig.face, sph(0.042, eyeM, 10, 8), s * 0.075, 0.025, 0.01);
       put(rig.face, sph(0.024, pup, 8, 6), s * 0.075, 0.025, 0.045);
+      put(rig.face, sph(0.009, M(0xffffff, { glow: true }), 6, 4), s * 0.075 + 0.008, 0.035, 0.066);
       put(rig.face, box(0.09, 0.016, 0.02, M(sp.brow || sp.hair || 0x3a2a1c)), s * 0.075, 0.09, 0.015, 0, 0, -s * 0.12);
     }
     put(rig.face, box(0.07, 0.014, 0.02, M(0x7a2f2f)), 0, -0.07, 0.02);
@@ -66,10 +76,10 @@ function buildRig(sp) {
   for (const s of [-1, 1]) {
     const sh = new THREE.Group(); sh.position.set(s * 0.26, 0.5, 0); sh.rotation.order = 'YXZ'; torso.add(sh);
     put(sh, sph(0.085, M(sp.shirtB || sp.shirt), 12, 8), 0, 0, 0);
-    const up = cap(0.065, 0.16, M(sp.sleeve ?? sp.shirt)); put(sh, up, 0, -0.15, 0); outlined(up, rig, 1.1);
+    const up = cap(0.077, 0.16, M(sp.sleeve ?? sp.shirt)); put(sh, up, 0, -0.15, 0); outlined(up, rig, 1.1);
     const el = new THREE.Group(); el.position.y = -0.29; el.rotation.order = 'YXZ'; sh.add(el);
-    const lo = cap(0.058, 0.14, M(sp.forearm ?? sp.skin)); put(el, lo, 0, -0.13, 0); outlined(lo, rig, 1.1);
-    const hand = sph(0.07, M(sp.glove ?? sp.skin), 12, 8); put(el, hand, 0, -0.28, 0); outlined(hand, rig, 1.1);
+    const lo = cap(0.069, 0.14, M(sp.forearm ?? sp.skin)); put(el, lo, 0, -0.13, 0); outlined(lo, rig, 1.1);
+    const hand = sph(0.088, M(sp.glove ?? sp.skin), 12, 8); put(el, hand, 0, -0.29, 0); outlined(hand, rig, 1.1);
     arms.push({ sh, el, hand, up, lo });
   }
   rig.armL = arms[0]; rig.armR = arms[1];
@@ -78,10 +88,10 @@ function buildRig(sp) {
   const legs = [];
   for (const s of [-1, 1]) {
     const hp = new THREE.Group(); hp.position.set(s * 0.12, -0.04, 0); hips.add(hp);
-    const th = cap(0.09, 0.22, M(sp.pants)); put(hp, th, 0, -0.2, 0); outlined(th, rig, 1.09);
+    const th = cap(0.105, 0.22, M(sp.pants)); put(hp, th, 0, -0.2, 0); outlined(th, rig, 1.09);
     const kn = new THREE.Group(); kn.position.y = -0.4; hp.add(kn);
-    const sn = cap(0.075, 0.24, M(sp.shin ?? sp.pants)); put(kn, sn, 0, -0.2, 0.01); outlined(sn, rig, 1.1);
-    const ft = box(0.14, 0.09, 0.27, M(sp.shoes)); put(kn, ft, 0, -0.395, 0.05); outlined(ft, rig, 1.12);
+    const sn = cap(0.088, 0.24, M(sp.shin ?? sp.pants)); put(kn, sn, 0, -0.2, 0.01); outlined(sn, rig, 1.1);
+    const ft = box(0.17, 0.1, 0.32, M(sp.shoes)); put(kn, ft, 0, -0.395, 0.07); outlined(ft, rig, 1.12); put(kn, box(0.175, 0.03, 0.33, M(0xe8e8e8)), 0, -0.44, 0.07);
     legs.push({ hp, kn, th, sn, ft });
   }
   rig.legL = legs[0]; rig.legR = legs[1];
@@ -246,7 +256,7 @@ const SPECS = [
   { skin: 0xe8b890, shirt: 0x4b5a3a, pants: 0x55633f, shoes: 0x1c1c1c, hair: 0x3a2a1c, gliderColor: 0x56653f },
   { skin: 0xe3b48f, shirt: 0x1b1b24, pants: 0x1b1b24, shoes: 0x16161c, glove: 0x16161c, gliderColor: 0xd8232f, noFace: true },
   { skin: 0xc9d4e0, shirt: 0xb7c3d0, pants: 0xaeb9c6, shoes: 0x2a3340, glove: 0x2a3340, forearm: 0xaeb9c6, gliderColor: 0x37e8ff, noFace: true },
-  { skin: 0xf0c8a0, shirt: 0xf1f3f7, pants: 0xe6e9ef, shoes: 0x8890a0, glove: 0xff7a1a, gliderColor: 0xff7a1a },
+  { hairStyle: 'short', hairColor: 0x6b4423, skin: 0xf0c8a0, shirt: 0xf1f3f7, pants: 0xe6e9ef, shoes: 0x8890a0, glove: 0xff7a1a, gliderColor: 0xff7a1a },
   { skin: 0xc2392f, shirt: 0xb3262c, pants: 0x8f1d23, shoes: 0x4a0f12, glove: 0xb3262c, forearm: 0xb3262c, eye: 0xffe35a, pupil: 0x1a0505, brow: 0x4a0f12, gliderColor: 0xb3262c },
   { skin: 0xd9a77a, shirt: 0xf2ead8, pants: 0x1c1c24, shoes: 0x141418, sleeve: 0x7a1f2b, glove: 0xd9a77a, gliderColor: 0x16161c, hair: 0x2a1a10 },
   { skin: 0x8cb56c, shirt: 0x5a4a3a, pants: 0x3f4a5a, shoes: 0x2a2a2a, eye: 0xf4f0c0, pupil: 0x7a1010, brow: 0x3a4a2a, gliderColor: 0x6a8a4a },
@@ -268,34 +278,50 @@ export function createCharacter(skinId) {
 // ---------------------------------------------------------------- armas
 const WCOL = [0xb4b9be, 0x5fd34a, 0x3aa0ff, 0xb45cff, 0xffb02e];
 export function createWeapon(key, rarity = 0) {
-  const g = new THREE.Group(); const acc = M(WCOL[rarity] || WCOL[0], { glow: rarity > 0 ? false : false });
-  const steel = M(0x3b414a, { metal: true }), dark = M(0x1d2026), wood = M(0x7a4a28), grip = M(0x23262c);
-  const A = (m, x, y, z) => { m.castShadow = true; g.add(m); m.position.set(x, y, z); return m; };
+  const g = new THREE.Group();
+  const rc = WCOL[rarity] || WCOL[0];
+  const acc = M(rc, { glow: true }), steel = M(0x3a3f47, { metal: true }), dark = M(0x1b1e23), grip = M(0x24272d), tan = M(0xb59f74), olive = M(0x56603f), wood = M(0x8a5530), chrome = M(0xcfd6de, { metal: true }), red = M(0xff3b3b, { glow: true });
+  const A = (m, x, y, z, rx = 0, ry = 0, rz = 0) => { m.castShadow = true; g.add(m); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); return m; };
+  const tube = (r, l, m, x, y, z) => A(cyl(r, r, l, m, 10), x, y, z, Math.PI / 2, 0, 0);
   let muzzleZ = 0.5;
   switch (key) {
-    case 'pickaxe': {
-      A(cyl(0.022, 0.025, 0.85, wood, 6), 0, 0, 0.0).rotation.x = Math.PI / 2;
-      const hd = A(box(0.05, 0.05, 0.55, steel), 0, 0.0, 0.4); hd.rotation.set(0, 0, 0); hd.scale.set(1, 1, 1); hd.rotation.y = Math.PI / 2; hd.position.set(0, 0, 0.44);
-      A(cone(0.04, 0.2, steel, 6), 0.34, 0, 0.44).rotation.z = -Math.PI / 2; A(cone(0.04, 0.2, steel, 6), -0.34, 0, 0.44).rotation.z = Math.PI / 2;
-      muzzleZ = 0.5; break;
-    }
-    case 'pistol':
-      A(box(0.05, 0.065, 0.24, steel), 0, 0.03, 0.12); A(box(0.045, 0.12, 0.06, grip), 0, -0.05, 0.03).rotation.x = 0.2; A(box(0.052, 0.02, 0.2, acc), 0, 0.066, 0.12); muzzleZ = 0.25; break;
-    case 'smg':
-      A(box(0.06, 0.09, 0.38, steel), 0, 0.03, 0.18); A(box(0.045, 0.16, 0.06, grip), 0, -0.1, 0.04).rotation.x = 0.15; A(box(0.04, 0.2, 0.05, dark), 0, -0.14, 0.2);
-      A(box(0.062, 0.02, 0.3, acc), 0, 0.085, 0.18); A(cyl(0.014, 0.014, 0.12, dark, 6), 0, 0.03, 0.43).rotation.x = Math.PI / 2; muzzleZ = 0.5; break;
-    case 'ar':
-      A(box(0.065, 0.1, 0.5, steel), 0, 0.03, 0.22); A(cyl(0.016, 0.016, 0.34, dark, 6), 0, 0.045, 0.64).rotation.x = Math.PI / 2;
-      A(box(0.05, 0.1, 0.22, wood), 0, 0.0, -0.17); A(box(0.045, 0.14, 0.06, grip), 0, -0.1, 0.06).rotation.x = 0.2; A(box(0.045, 0.19, 0.07, dark), 0, -0.13, 0.28).rotation.x = -0.15;
-      A(box(0.04, 0.05, 0.12, dark), 0, 0.115, 0.22); A(box(0.067, 0.025, 0.4, acc), 0, 0.085, 0.24); muzzleZ = 0.82; break;
-    case 'shotgun':
-      A(cyl(0.028, 0.028, 0.66, steel, 8), 0, 0.04, 0.42).rotation.x = Math.PI / 2; A(cyl(0.024, 0.024, 0.5, dark, 8), 0, -0.01, 0.38).rotation.x = Math.PI / 2;
-      A(box(0.06, 0.09, 0.2, wood), 0, 0.0, 0.0); A(box(0.055, 0.12, 0.26, wood), 0, -0.03, -0.2).rotation.x = 0.12; A(box(0.07, 0.06, 0.14, acc), 0, -0.01, 0.32); A(box(0.045, 0.1, 0.05, grip), 0, -0.08, 0.03).rotation.x = 0.2; muzzleZ = 0.76; break;
-    case 'sniper':
-      A(box(0.055, 0.085, 0.6, steel), 0, 0.03, 0.2); A(cyl(0.015, 0.015, 0.55, dark, 6), 0, 0.04, 0.8).rotation.x = Math.PI / 2;
-      A(box(0.055, 0.13, 0.28, wood), 0, -0.01, -0.22); A(box(0.045, 0.13, 0.05, grip), 0, -0.1, 0.05).rotation.x = 0.2;
-      A(cyl(0.03, 0.03, 0.3, dark, 10), 0, 0.12, 0.2).rotation.x = Math.PI / 2; A(cyl(0.04, 0.04, 0.04, M(0x66d9ff, { glow: true }), 10), 0, 0.12, 0.37).rotation.x = Math.PI / 2; A(box(0.058, 0.02, 0.46, acc), 0, 0.078, 0.22);
-      muzzleZ = 1.08; break;
+    case 'pickaxe':
+      tube(0.024, 0.9, wood, 0, 0, 0.05); A(box(0.06, 0.06, 0.1, dark), 0, 0, 0.42);
+      A(box(0.05, 0.07, 0.62, chrome), 0, 0, 0.47, 0, Math.PI / 2, 0);
+      A(cone(0.05, 0.26, chrome, 6), 0.4, 0, 0.47, 0, 0, -Math.PI / 2); A(cone(0.05, 0.26, chrome, 6), -0.4, 0, 0.47, 0, 0, Math.PI / 2);
+      A(box(0.07, 0.07, 0.04, acc), 0, 0, 0.3); muzzleZ = 0.5; break;
+    case 'pistol': // pistola pesada
+      A(box(0.055, 0.075, 0.3, steel), 0, 0.04, 0.16); A(box(0.056, 0.03, 0.31, chrome), 0, 0.085, 0.16);
+      tube(0.02, 0.12, dark, 0, 0.04, 0.34); A(box(0.05, 0.14, 0.07, grip), 0, -0.06, 0.03, 0.25, 0, 0);
+      A(box(0.03, 0.04, 0.03, acc), 0, 0.12, 0.28); A(box(0.058, 0.05, 0.1, acc), 0, -0.01, 0.2); muzzleZ = 0.4; break;
+    case 'smg': // SMG tática com silenciador
+      A(box(0.07, 0.1, 0.36, dark), 0, 0.03, 0.17); A(box(0.072, 0.03, 0.34, steel), 0, 0.095, 0.17);
+      A(box(0.05, 0.16, 0.06, grip), 0, -0.1, 0.03, 0.15, 0, 0); A(box(0.045, 0.26, 0.065, steel), 0, -0.17, 0.2, -0.12, 0, 0);
+      A(box(0.05, 0.08, 0.1, grip), 0, -0.08, 0.34); tube(0.03, 0.26, dark, 0, 0.04, 0.46); A(box(0.074, 0.03, 0.2, acc), 0, 0.02, 0.14);
+      A(box(0.05, 0.05, 0.1, olive), 0, 0.14, 0.12); A(box(0.03, 0.04, 0.03, red), 0, 0.17, 0.12); A(box(0.06, 0.07, 0.22, steel), 0, 0.02, -0.14); muzzleZ = 0.6; break;
+    case 'ar': // rifle de assalto (estilo SCAR)
+      A(box(0.075, 0.115, 0.5, tan), 0, 0.03, 0.2); A(box(0.06, 0.04, 0.42, dark), 0, 0.105, 0.22);
+      A(box(0.05, 0.09, 0.32, steel), 0, 0.03, 0.6); tube(0.018, 0.2, dark, 0, 0.045, 0.82); A(box(0.06, 0.06, 0.08, steel), 0, 0.045, 0.9);
+      A(box(0.058, 0.11, 0.24, tan), 0, 0.0, -0.2, 0.1, 0, 0); A(box(0.05, 0.075, 0.1, dark), 0, 0.02, -0.34);
+      A(box(0.05, 0.15, 0.065, grip), 0, -0.11, 0.05, 0.22, 0, 0); A(box(0.048, 0.22, 0.07, dark), 0, -0.15, 0.3, -0.18, 0, 0);
+      A(box(0.06, 0.08, 0.14, dark), 0, 0.17, 0.22); A(box(0.04, 0.05, 0.02, red), 0, 0.19, 0.3);
+      A(box(0.078, 0.025, 0.46, acc), 0, 0.075, 0.2); A(box(0.045, 0.05, 0.14, dark), 0, -0.055, 0.5); muzzleZ = 0.96; break;
+    case 'shotgun': // escopeta pump
+      tube(0.03, 0.78, steel, 0, 0.055, 0.44); tube(0.026, 0.62, dark, 0, -0.01, 0.4); A(box(0.07, 0.11, 0.3, steel), 0, 0.02, 0.02);
+      A(box(0.08, 0.075, 0.2, wood), 0, -0.03, 0.4); A(box(0.082, 0.02, 0.2, acc), 0, 0.012, 0.4);
+      A(box(0.06, 0.13, 0.3, wood), 0, -0.02, -0.22, 0.14, 0, 0); A(box(0.055, 0.09, 0.05, grip), 0, -0.09, 0.0, 0.2, 0, 0);
+      A(box(0.03, 0.03, 0.04, red), 0, 0.12, 0.74); A(box(0.02, 0.04, 0.02, dark), 0, 0.11, 0.1); muzzleZ = 0.84; break;
+    case 'sniper': // rifle de caça com luneta
+      A(box(0.06, 0.09, 0.62, steel), 0, 0.03, 0.22); tube(0.017, 0.62, dark, 0, 0.045, 0.82); tube(0.024, 0.06, steel, 0, 0.045, 1.14);
+      A(box(0.06, 0.14, 0.34, wood), 0, -0.01, -0.22, 0.1, 0, 0); A(box(0.065, 0.08, 0.3, wood), 0, -0.02, 0.4); A(box(0.048, 0.13, 0.05, grip), 0, -0.1, 0.03, 0.2, 0, 0);
+      tube(0.035, 0.34, dark, 0, 0.14, 0.22); tube(0.05, 0.1, steel, 0, 0.14, 0.42); tube(0.045, 0.08, steel, 0, 0.14, 0.02);
+      A(cyl(0.042, 0.042, 0.02, M(0x66d9ff, { glow: true }), 12), 0, 0.14, 0.475, Math.PI / 2, 0, 0); A(box(0.03, 0.05, 0.04, steel), 0, 0.09, 0.2);
+      A(box(0.07, 0.025, 0.1, acc), 0, 0.085, -0.02); A(box(0.03, 0.03, 0.09, chrome), 0.06, 0.06, 0.05, 0, 0, 0.5); muzzleZ = 1.16; break;
+    case 'rocket': // lança-foguetes
+      tube(0.1, 0.95, olive, 0, 0.06, 0.15); tube(0.115, 0.14, dark, 0, 0.06, 0.62); tube(0.115, 0.14, dark, 0, 0.06, -0.3);
+      A(cone(0.075, 0.2, M(0xd23a2a), 8), 0, 0.06, 0.78, Math.PI / 2, 0, 0); A(box(0.06, 0.14, 0.06, grip), 0, -0.07, 0.1, 0.2, 0, 0); A(box(0.06, 0.14, 0.06, grip), 0, -0.06, 0.36, 0.1, 0, 0);
+      A(box(0.05, 0.08, 0.2, steel), 0.0, 0.2, 0.18); A(box(0.04, 0.025, 0.04, red), 0, 0.25, 0.1); A(box(0.205, 0.03, 0.4, acc), 0, 0.06, 0.15);
+      A(cone(0.12, 0.2, dark, 10), 0, 0.06, -0.46, -Math.PI / 2, 0, 0); muzzleZ = 0.95; break;
     default: break;
   }
   const mz = new THREE.Object3D(); mz.position.set(0, 0.04, muzzleZ); g.add(mz); g.userData.muzzle = mz;
