@@ -1,0 +1,10 @@
+{
+  "_comentario": "Liste aqui os GLB que existirem. O que faltar usa o modelo procedural. Ver public/models/README.md.",
+  "character": {},
+  "weapon": {},
+  "bus": {},
+  "chest": {},
+  "glider": {},
+  "tree": {},
+  "rock": {}
+}

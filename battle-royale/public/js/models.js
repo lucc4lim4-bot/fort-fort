@@ -1,5 +1,6 @@
 // Modelos 3D procedurais: 10 skins de personagem (estilo cartoon com contorno) + armas.
 import * as THREE from 'three';
+import { getAsset, findNode } from './assets.js';
 
 const gradCanvas = document.createElement('canvas'); gradCanvas.width = 4; gradCanvas.height = 1;
 { const g = gradCanvas.getContext('2d'); ['#6b6b78', '#a8a8b4', '#e0e0e8', '#ffffff'].forEach((c, i) => { g.fillStyle = c; g.fillRect(i, 0, 1, 1); }); }
@@ -117,16 +118,20 @@ function buildRig(sp) {
     legs.push({ hp, kn, th, sn, ft, ftG });
   }
   rig.legL = legs[0]; rig.legR = legs[1];
-  // planador
-  const gl = new THREE.Group(); gl.visible = false; rig.glider = gl; root.add(gl);
+  rig.glider = buildGlider(sp); root.add(rig.glider);
+  rig.spec = sp;
+  return rig;
+}
+function buildGlider(sp) {
+  const gl = new THREE.Group(); gl.visible = false;
   for (let i = 0; i < 8; i++) {
     const seg = new THREE.Mesh(new THREE.SphereGeometry(1.9, 6, 8, (i / 8) * Math.PI * 2, Math.PI / 4, 0, Math.PI / 2.3), M(i % 2 ? 0xffffff : (sp.gliderColor || 0xff4f6b), { side: THREE.DoubleSide }));
     seg.scale.set(1, 0.48, 1); put(gl, seg, 0, 2.5, 0);
   }
   put(gl, cyl(0.05, 0.05, 0.12, M(0x222222), 8), 0, 3.42, 0);
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.78; const ln = cyl(0.01, 0.01, 1.6, M(0x222222), 4); put(gl, ln, Math.cos(a) * 0.55, 1.65, Math.sin(a) * 0.55); ln.rotation.set(Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); }
-  rig.spec = sp;
-  return rig;
+  const g2 = getAsset('glider', 'default'); if (g2) { gl.clear(); g2.position.y = 1.7; gl.add(g2); }
+  return gl;
 }
 
 // ---------------------------------------------------------------- skins
@@ -288,9 +293,42 @@ const SPECS = [
   { skin: 0xe8b890, shirt: 0x1b1a24, pants: 0x1b1a24, shoes: 0x0f0f14, glove: 0xf4f4f4, gliderColor: 0xff8a1a },
 ];
 
+// Nomes de nós aceitos em personagens GLB (sem skinning: cada parte é filha da junta).
+export const CHAR_JOINTS = {
+  hips: ['hips', 'Hips'], torso: ['torso', 'Spine', 'spine'], head: ['head', 'Head'],
+  shoulder_L: ['shoulder_L', 'LeftArm'], elbow_L: ['elbow_L', 'LeftForeArm'], shoulder_R: ['shoulder_R', 'RightArm'], elbow_R: ['elbow_R', 'RightForeArm'],
+  leg_L: ['leg_L', 'LeftUpLeg'], knee_L: ['knee_L', 'LeftLeg'], foot_L: ['foot_L', 'LeftFoot'], leg_R: ['leg_R', 'RightUpLeg'], knee_R: ['knee_R', 'RightLeg'], foot_R: ['foot_R', 'RightFoot'],
+  hand_R_socket: ['hand_R_socket', 'RightHandSocket', 'RightHand'],
+};
+function rigFromAsset(model, sp) {
+  const j = {}; for (const [k, names] of Object.entries(CHAR_JOINTS)) j[k] = findNode(model, names);
+  const required = ['hips', 'torso', 'head', 'shoulder_L', 'elbow_L', 'shoulder_R', 'elbow_R', 'leg_L', 'knee_L', 'leg_R', 'knee_R'];
+  const missing = required.filter((k) => !j[k]);
+  if (missing.length) { console.warn('[assets] personagem GLB sem juntas:', missing.join(', '), '— usando procedural'); return null; }
+  const rig = { outlines: [], phase: 0, t: Math.random() * 10, swing: 0, dead: 0, land: 0, air: 0, fromAsset: true };
+  rig.root = new THREE.Group(); rig.root.rotation.order = 'YXZ'; rig.root.add(model);
+  rig.hips = j.hips; rig.torso = j.torso; rig.head = j.head; rig.chest = j.torso; rig.skull = j.head;
+  rig.face = new THREE.Group(); rig.back = new THREE.Group(); rig.front = new THREE.Group();
+  [j.torso, j.head].forEach((o) => (o.rotation.order = 'YXZ'));
+  const foot = (o, parent) => o || parent.add(new THREE.Object3D()) && parent.children[parent.children.length - 1];
+  rig.armL = { sh: j.shoulder_L, el: j.elbow_L }; rig.armR = { sh: j.shoulder_R, el: j.elbow_R };
+  [rig.armL.sh, rig.armL.el, rig.armR.sh, rig.armR.el].forEach((o) => (o.rotation.order = 'YXZ'));
+  rig.legL = { hp: j.leg_L, kn: j.knee_L, ftG: foot(j.foot_L, j.knee_L) }; rig.legR = { hp: j.leg_R, kn: j.knee_R, ftG: foot(j.foot_R, j.knee_R) };
+  // poseRig usa a altura do quadril como referência (0,84 m)
+  rig.hipBase = j.hips.position.y;
+  if (j.hand_R_socket) { rig.mount = new THREE.Group(); j.hand_R_socket.add(rig.mount); }
+  else { rig.mount = new THREE.Group(); rig.mount.position.set(0, -0.3, 0.02); rig.mount.rotation.x = Math.PI / 2; j.elbow_R.add(rig.mount); }
+  rig.glider = buildGlider(sp); rig.root.add(rig.glider);
+  rig.spec = sp;
+  return rig;
+}
+
 export function createCharacter(skinId) {
   const id = ((skinId % SPECS.length) + SPECS.length) % SPECS.length;
-  const rig = buildRig(SPECS[id]); rig.skinId = id;
+  const model = getAsset('character', id);
+  let rig = model ? rigFromAsset(model, SPECS[id]) : null;
+  if (rig) { rig.skinId = id; rig.weapon = null; rig.weaponKey = ''; rig.setOutline = () => {}; return rig; }
+  rig = buildRig(SPECS[id]); rig.skinId = id;
   SKIN_BUILD[id](rig);
   shadowAll(rig.root);
   rig.weapon = null; rig.weaponKey = '';
@@ -300,7 +338,18 @@ export function createCharacter(skinId) {
 
 // ---------------------------------------------------------------- armas
 const WCOL = [0xb4b9be, 0x5fd34a, 0x3aa0ff, 0xb45cff, 0xffb02e];
+function weaponFromAsset(key, rarity) {
+  const m = getAsset('weapon', key); if (!m) return null;
+  const g = new THREE.Group(); g.add(m);
+  // material chamado "rarity" (ou "Rarity") recebe a cor da raridade
+  m.traverse((o) => { if (o.isMesh && /rarity/i.test(o.material.name || '')) { o.material.color.setHex(WCOL[rarity] || WCOL[0]); if (o.material.emissive) o.material.emissive.setHex(WCOL[rarity] || WCOL[0]).multiplyScalar(0.4); } });
+  let mz = findNode(m, ['muzzle', 'Muzzle']);
+  if (!mz) { const b = new THREE.Box3().setFromObject(m); mz = new THREE.Object3D(); mz.position.set(0, (b.min.y + b.max.y) / 2, b.max.z); g.add(mz); }
+  g.userData.muzzle = mz;
+  return g;
+}
 export function createWeapon(key, rarity = 0) {
+  const fromAsset = weaponFromAsset(key, rarity); if (fromAsset) return fromAsset;
   const g = new THREE.Group();
   const rc = WCOL[rarity] || WCOL[0];
   const acc = M(rc, { glow: true }), steel = M(0x3a3f47, { metal: true }), dark = M(0x1b1e23), grip = M(0x24272d), tan = M(0xb59f74), olive = M(0x56603f), wood = M(0x8a5530), chrome = M(0xcfd6de, { metal: true }), red = M(0xff3b3b, { glow: true });
@@ -352,6 +401,7 @@ export function createWeapon(key, rarity = 0) {
 }
 
 export function createBusModel() {
+  const a = getAsset('bus', 'default'); if (a) return a;
   const g = new THREE.Group();
   g.add(box(3.4, 2.6, 9, M(0x2f7cff)));
   put(g, box(3.5, 0.5, 9.1, M(0xffffff)), 0, -0.3, 0);
@@ -453,7 +503,7 @@ export function poseRig(rig, st, dt) {
   }
   if (st.dead) { T.lax = -0.3; T.rax = -0.3; T.laz = -1.0; T.raz = 1.0; T.llz = -0.2; T.rlz = 0.2; T.headX = 0.3; }
   for (const key of JKEYS) J[key] += (T[key] - J[key]) * k;
-  const h = rig.hips; h.position.y = J.hipY; h.rotation.set(J.hipRX, J.hipRY, J.hipRZ);
+  const h = rig.hips; h.position.y = J.hipY + (rig.hipBase !== undefined ? rig.hipBase - 0.84 : 0); h.rotation.set(J.hipRX, J.hipRY, J.hipRZ);
   rig.torso.rotation.set(J.torsoX, J.torsoY - J.hipRY * 0.6, J.torsoZ); rig.head.rotation.set(J.headX, J.headY, J.headZ);
   rig.armL.sh.rotation.set(J.lax, J.lay, J.laz); rig.armR.sh.rotation.set(J.rax, J.ray, J.raz);
   rig.armL.el.rotation.set(J.lex, J.ley, 0); rig.armR.el.rotation.set(J.rex, J.rey, 0);

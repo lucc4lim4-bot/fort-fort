@@ -5,6 +5,7 @@ import { SKINS, RARITY, WEAPONS, CONSUMABLES, AMMO, MATS, MAT_INFO, BUILD_COST, 
 import { createCharacter, setRigWeapon, poseRig, createWeapon, createBusModel } from './models.js';
 import { buildSky, buildTerrain, buildStatics, createPieceMesh, createStorm, createItemMesh, createChestMesh } from './scene.js';
 import { initAudio, sfx, setVolume } from './audio.js';
+import { preloadAssets } from './assets.js';
 
 const $ = (id) => document.getElementById(id);
 const WID = ['pickaxe', 'pistol', 'smg', 'ar', 'shotgun', 'sniper', 'rocket'];
@@ -20,9 +21,10 @@ const store = {
 // ------------------------------------------------------------------ renderer / cena
 const canvas = $('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+const QUALITY = new URLSearchParams(location.search).get('q') || 'auto';
 const TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
 if (TOUCH) document.body.classList.add('touch');
-renderer.setPixelRatio(TOUCH ? 1 : Math.min(devicePixelRatio || 1, 1.5));
+renderer.setPixelRatio(QUALITY === 'low' ? 0.75 : TOUCH ? 1 : Math.min(devicePixelRatio || 1, 1.5));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.NoToneMapping;
 const scene = new THREE.Scene();
@@ -35,6 +37,9 @@ const sun = new THREE.DirectionalLight(0xfff3d6, 2.2);
 sun.position.set(80, 140, 50); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 400 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.05;
 scene.add(sun, sun.target);
+if (QUALITY === 'low') { renderer.shadowMap.enabled = false; scene.fog.far = 420; }
+// luz de recorte (rim) azulada vinda de trás: destaca silhuetas a distância
+const rimLight = new THREE.DirectionalLight(0xa8d8ff, 0.7); rimLight.position.set(-80, 60, -60); scene.add(rimLight);
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 
@@ -842,9 +847,10 @@ function makeThumbs() {
   stage.visible = true; stageRing.visible = true; if (pRig) pRig.root.visible = true;
   previewR.domElement.width = 1; // força o redimensionamento no próximo quadro
 }
-setPreviewSkin(); try { makeThumbs(); } catch (e) { console.warn(e); } requestAnimationFrame(previewLoop);
-
-// mundo de fundo (mesma semente padrão do servidor) para a órbita do lobby
-initWorld(1337);
-requestAnimationFrame(frame);
+preloadAssets().catch(() => 0).finally(() => {
+  setPreviewSkin(); try { makeThumbs(); } catch (e) { console.warn(e); } requestAnimationFrame(previewLoop);
+  // mundo de fundo (mesma semente padrão do servidor) para a órbita do lobby
+  initWorld(1337);
+  requestAnimationFrame(frame);
+});
 window.__game = { tp(x, y, z) { me.x = x; me.y = y; me.z = z; me.vx = me.vy = me.vz = 0; mode = 'ground'; me.alive = true; me.onGround = false; if (!me.rig) { me.rig = createCharacter(mySkin); scene.add(me.rig.root); setRigWeapon(me.rig, 'pickaxe'); } }, me, players, items, builds, inv, get mode() { return mode; }, set mode(v) { mode = v; }, get world() { return world; }, scene, camera, renderer, send, keys, setLocked(v) { locked = v; }, get phase() { return phase; }, get storm() { return storm; } };

@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { HALF, POIS, MAT_INFO, RARITY } from '/shared/data.js';
 import { M } from './models.js';
+import { getAsset, getInstanceParts, findNode } from './assets.js';
 
 const rngSeeded = (s) => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
 
@@ -103,6 +104,19 @@ export function buildStatics(scene, world) {
   // árvores, pedras e sucata
   const rnd = rngSeeded(5);
   const trees = world.nodes.filter((n) => n.t === 'tree'), rocks = world.nodes.filter((n) => n.t === 'rock'), scraps = world.nodes.filter((n) => n.t === 'scrap');
+  // árvores/pedras em GLB (se houver) substituem as procedurais, mantendo posição e escala
+  const assetInst = (kind, list, yOff) => {
+    const parts = getInstanceParts(kind); if (!parts) return false;
+    const r2 = rngSeeded(9);
+    for (const part of parts) {
+      const im = new THREE.InstancedMesh(part.geometry, part.material, list.length);
+      list.forEach((n, i) => { q.setFromEuler(new THREE.Euler(0, r2() * 6.28, 0)); p.set(n.x, n.y + yOff, n.z); s.setScalar(n.s); m4.compose(p, q, s); im.setMatrixAt(i, m4); });
+      im.castShadow = im.receiveShadow = true; scene.add(im);
+    }
+    return true;
+  };
+  const glbTrees = assetInst('tree', trees, 0), glbRocks = assetInst('rock', rocks, -0.1);
+  if (glbTrees) trees.length = 0;
   const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.34, 1, 7), new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 1 }), trees.length);
   const leafMat = new THREE.MeshStandardMaterial({ roughness: 0.9, flatShading: true });
   const cones = [0, 1, 2].map(() => new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 8), leafMat, trees.length));
@@ -120,6 +134,7 @@ export function buildStatics(scene, world) {
     m4.compose(p, q, s); blob.setMatrixAt(i, m4); blob.setColorAt(i, c); nb++;
   });
   [trunk, blob, ...cones].forEach((m) => { m.castShadow = true; m.receiveShadow = true; scene.add(m); });
+  if (glbRocks) rocks.length = 0;
   const rock = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ roughness: 1, flatShading: true }), rocks.length);
   rocks.forEach((r, i) => { q.setFromEuler(new THREE.Euler(rnd(), rnd() * 6, rnd())); p.set(r.x, r.y + 0.5 * r.s, r.z); s.set(1.2 * r.s, 0.95 * r.s, 1.1 * r.s); m4.compose(p, q, s); rock.setMatrixAt(i, m4); rock.setColorAt(i, c.setHSL(0.08, 0.06, 0.42 + rnd() * 0.15)); });
   rock.castShadow = rock.receiveShadow = true; scene.add(rock);
@@ -228,6 +243,8 @@ export function createItemMesh(kind, k, r, createWeapon) {
 }
 
 export function createChestMesh() {
+  const a = getAsset('chest', 'default');
+  if (a) { const g = new THREE.Group(); g.add(a); g.userData.lid = findNode(a, ['lid', 'Lid']) || new THREE.Object3D(); g.userData.glow = new THREE.Object3D(); return g; }
   const g = new THREE.Group();
   const gold = M(0xe8b83a, { metal: true }), wood = M(0x8a4f1f);
   const base = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.7), wood); base.position.y = 0.28; g.add(base);

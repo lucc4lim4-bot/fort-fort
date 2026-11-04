@@ -10,12 +10,13 @@ import { TICK } from '../shared/data.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const PORT = process.env.PORT || 3000;
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.glb': 'model/gltf-binary', '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream', '.ktx2': 'image/ktx2', '.webp': 'image/webp', '.jpg': 'image/jpeg' };
 
 function resolveFile(url) {
   let p = decodeURIComponent(url.split('?')[0]);
   if (p === '/') p = '/index.html';
   if (p === '/vendor/three.module.js') return path.join(ROOT, 'node_modules/three/build/three.module.js');
+  if (p.startsWith('/vendor/addons/')) { const f = path.join(ROOT, 'node_modules/three/examples/jsm', p.slice('/vendor/addons/'.length)); return f.startsWith(path.join(ROOT, 'node_modules/three/examples/jsm')) ? f : null; }
   if (p.startsWith('/shared/')) return path.join(ROOT, p);
   const f = path.join(ROOT, 'public', p);
   return f.startsWith(path.join(ROOT, 'public')) ? f : null;

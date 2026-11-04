@@ -1,3 +1,4 @@
+window.__NO_ASSETS = true;
 import { Game } from '../server/game.js';
 let game = null, timer = null;
 window.__LOCAL = () => {
