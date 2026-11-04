@@ -10,7 +10,7 @@ const r = await build({
 let js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 let html = fs.readFileSync('public/index.html', 'utf8');
 let css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
-const imports = (css.match(/@import[^;]+;/g) || []).join('\n'); css = css.replace(/@import[^;]+;/g, '');
+const imports = (css.match(/@import url\([^)]*\);/g) || []).join('\n'); css = css.replace(/@import url\([^)]*\);/g, '');
 let body = html.match(/<body>([\s\S]*?)<script type="module"/)[1];
 body = body.replace('compartilhe o endereço desta página para amigos entrarem na mesma sala.', 'esta é a versão de teste: roda tudo no seu navegador, sozinho contra bots. O multiplayer online usa o servidor Node do repositório.');
 const out = `<title>Fort Fort Battle Royale</title>
