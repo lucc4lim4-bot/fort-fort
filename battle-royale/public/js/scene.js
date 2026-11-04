@@ -86,7 +86,7 @@ export function buildStatics(scene, world) {
   });
   im.castShadow = true; im.receiveShadow = true; scene.add(im);
   // decoração (visual)
-  const dec = { pyr: [], cyl: [], cone: [], box: [] };
+  const dec = { pyr: [], cyl: [], cone: [], box: [], blob: [] };
   for (const d of world.decor) dec[d.t].push(d);
   const mk = (geo, list, rot) => {
     if (!list.length) return;
@@ -98,7 +98,7 @@ export function buildStatics(scene, world) {
     mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
   };
   const pyr = new THREE.ConeGeometry(0.7071, 1, 4); mk(pyr, dec.pyr, Math.PI / 4);
-  mk(new THREE.CylinderGeometry(0.5, 0.5, 1, 18), dec.cyl, 0); mk(new THREE.ConeGeometry(0.5, 1, 18), dec.cone, 0); mk(boxGeo, dec.box, 0);
+  mk(new THREE.CylinderGeometry(0.5, 0.5, 1, 18), dec.cyl, 0); mk(new THREE.ConeGeometry(0.5, 1, 18), dec.cone, 0); mk(boxGeo, dec.box, 0); mk(new THREE.IcosahedronGeometry(0.5, 1), dec.blob, 0);
 
   // árvores, pedras e sucata
   const rnd = rngSeeded(5);

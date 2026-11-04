@@ -180,12 +180,26 @@ export function createWorld(seed = 1337) {
       else if (len > 7) { ops.push({ c: (a0 + a1) / 2 - len * 0.22, w: 1.8, sill: 1.0, top: 2.3 }); if (len > 11) ops.push({ c: (a0 + a1) / 2 + len * 0.22, w: 1.8, sill: 1.0, top: 2.3 }); }
       else ops.push({ c: (a0 + a1) / 2, w: 1.6, sill: 1.0, top: 2.3 });
       wallLine(axis, fixed, a0, a1, base, H, th, col, ops);
+      for (const o of ops) {
+        const isDoor = o.sill === 0, h = o.top - o.sill, cy = base + o.sill + h / 2;
+        const D = (cx2, cy2, w2, h2, c2) => decor.push({ t: 'box', x: axis === 'x' ? cx2 : fixed, y: cy2, z: axis === 'x' ? fixed : cx2, sx: axis === 'x' ? w2 : th + 0.07, sy: h2, sz: axis === 'x' ? th + 0.07 : w2, col: c2 });
+        if (isDoor) {
+          D(o.c - o.w / 2 - 0.08, cy, 0.16, h + 0.1, 0xf4efe4); D(o.c + o.w / 2 + 0.08, cy, 0.16, h + 0.1, 0xf4efe4); D(o.c, base + o.top + 0.08, o.w + 0.32, 0.18, 0xf4efe4);
+          D(o.c, base + 0.08, o.w, 0.16, 0x6d4a2c);
+        } else {
+          D(o.c, cy, o.w + 0.3, h + 0.3, 0xf6f1e6);
+          decor.push({ t: 'box', x: axis === 'x' ? o.c : fixed, y: cy, z: axis === 'x' ? fixed : o.c, sx: axis === 'x' ? o.w : 0.1, sy: h, sz: axis === 'x' ? 0.1 : o.w, col: 0x9fd8f2 });
+          D(o.c, cy, 0.07, h, 0xf6f1e6);
+        }
+      }
     };
     mk(0, 'x', z0, x0, x1, sx); mk(2, 'x', z1, x0, x1, sx);
     mk(3, 'z', x0, z0 + th / 2, z1 - th / 2, sz); mk(1, 'z', x1, z0 + th / 2, z1 - th / 2, sz);
     // piso e teto
     box(x0, base - 3, z0, x1, base + 0.12, z1, opts.floor ?? 0x8b7355);
     box(x0 - 0.5, base + H, z0 - 0.5, x1 + 0.5, base + H + 0.35, z1 + 0.5, rcol);
+    decor.push({ t: 'box', x: cx, y: base + 0.2, z: cz, sx: sx + 0.3, sy: 0.55, sz: sz + 0.3, col: 0x8f8f87 });
+    if (!opts.flat) decor.push({ t: 'box', x: cx + sx * 0.25, y: base + H + 1.6, z: cz - sz * 0.2, sx: 0.9, sy: 2.6, sz: 0.9, col: 0xa4523a });
     if (!opts.flat) decor.push({ t: 'pyr', x: cx, y: base + H + 0.35, z: cz, sx: sx + 1.4, sy: Math.min(3.2, Math.max(sx, sz) * 0.28), sz: sz + 1.4, col: rcol });
     // loot dentro
     const spots = [[0, 0], [-sx * 0.25, sz * 0.2], [sx * 0.25, -sz * 0.2], [sx * 0.2, sz * 0.25]];
@@ -303,6 +317,28 @@ export function createWorld(seed = 1337) {
       house(p.x + 14, p.z + 8, 9, 8, { col: 0xc9d6dd });
       house(p.x - 14, p.z + 6, 9, 8, { col: 0xe2b9a0 });
     }
+  }
+
+  // ---------- Props: caixas, barris, postes, cercas ----------
+  function crate(x, z, sz = 1.4) { const y = heightAt(x, z); box(x - sz / 2, y - 0.5, z - sz / 2, x + sz / 2, y + sz, z + sz / 2, 0xb98550); decor.push({ t: 'box', x, y: y + sz / 2, z, sx: sz + 0.08, sy: 0.12, sz: sz + 0.08, col: 0x7a5530 }); }
+  function barrel(x, z, c) { const y = heightAt(x, z); box(x - 0.45, y - 0.5, z - 0.45, x + 0.45, y + 1.1, z + 0.45, c); decor.push({ t: 'cyl', x, y: y + 0.55, z, sx: 0.9, sy: 1.1, sz: 0.9, col: c }); decor.push({ t: 'cyl', x, y: y + 0.55, z, sx: 0.95, sy: 0.12, sz: 0.95, col: 0x333333 }); }
+  function lamp(x, z) { const y = heightAt(x, z); decor.push({ t: 'cyl', x, y: y + 2.2, z, sx: 0.14, sy: 4.4, sz: 0.14, col: 0x3a3f47 }); decor.push({ t: 'box', x, y: y + 4.5, z, sx: 0.5, sy: 0.35, sz: 0.5, col: 0xffe9a0 }); }
+  for (const p of pc) {
+    if (p.style === 'military' || p.style === 'factory' || p.style === 'port') {
+      for (let i = 0; i < 7; i++) crate(p.x + rr(-24, 24), p.z + rr(-24, 24), rr(1.1, 1.8));
+      for (let i = 0; i < 7; i++) barrel(p.x + rr(-24, 24), p.z + rr(-24, 24), pick([0xd23a2a, 0x2f6fb0, 0xe0b030, 0x4c7a3a]));
+    }
+    if (p.style === 'town' || p.style === 'suburb') for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283; lamp(p.x + Math.cos(a) * (p.r - 6), p.z + Math.sin(a) * (p.r - 6)); }
+    if (p.style === 'farm') {
+      for (let i = 0; i < 6; i++) crate(p.x + rr(-24, 24), p.z + rr(-24, 24), 1.5);
+      for (let i = -12; i <= 12; i++) { const x = p.x + i * 2, z = p.z - 27, y = heightAt(x, z); decor.push({ t: 'box', x, y: y + 0.6, z, sx: 0.15, sy: 1.2, sz: 0.15, col: 0x8a5a3c }); if (i < 12) decor.push({ t: 'box', x: x + 1, y: y + 0.9, z, sx: 2, sy: 0.1, sz: 0.08, col: 0xa8764c }); }
+    }
+  }
+  for (let i = 0, n = 0; i < 2500 && n < 300; i++) { // arbustos e flores (só visual)
+    const x = rr(-175, 175), z = rr(-175, 175), y = heightAt(x, z);
+    if (Math.hypot(x, z) > 165 || y < 1.4 || poiAt(x, z, 1)) continue; n++;
+    if (rng() < 0.7) { const s = rr(0.7, 1.5); decor.push({ t: 'blob', x, y: y + s * 0.3, z, sx: s * 1.3, sy: s * 0.9, sz: s * 1.2, col: pick([0x4f9a3a, 0x3f8a3a, 0x63a845, 0x57a04a]) }); }
+    else for (let k = 0; k < 4; k++) decor.push({ t: 'blob', x: x + rr(-0.6, 0.6), y: y + 0.18, z: z + rr(-0.6, 0.6), sx: 0.3, sy: 0.3, sz: 0.3, col: pick([0xff5a6a, 0xffd84a, 0xffffff, 0xb06bff]) });
   }
 
   // ---------- Árvores, pedras e sucata ----------

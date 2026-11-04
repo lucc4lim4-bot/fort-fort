@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fort Fort — Battle Royale</title>
 <script type="importmap">{ "imports": { "three": "/vendor/three.module.js" } }</script>
 <style>
@@ -135,6 +135,51 @@ input[type=range] { flex: 1; accent-color: var(--p2); }
 #victory { background: radial-gradient(circle, rgba(255,216,74,.25), rgba(30,20,0,.75)); }
 #victory .big { font-size: 90px; font-weight: 900; font-style: italic; color: var(--y); text-shadow: 0 6px 0 #a96b00, 0 0 40px rgba(255,216,74,.7); }
 #conn { z-index: 40; background: #0b0b1a; font-weight: 800; font-size: 20px; }
+
+/* ---------- toque / celular ---------- */
+#touch { position: fixed; inset: 0; z-index: 12; pointer-events: none; touch-action: none; }
+#touch > * { pointer-events: auto; touch-action: none; }
+#joyZone { position: absolute; left: 0; bottom: 0; width: 44%; height: 68%; }
+#joy { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); display: none; }
+#joy i { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: rgba(255,255,255,.4); }
+#lookZone { position: absolute; right: 0; top: 0; width: 56%; height: 100%; }
+.tb { position: absolute; width: 58px; height: 58px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.55); background: rgba(20,16,50,.55); color: #fff; font-size: 11px; font-weight: 900; letter-spacing: 0; text-transform: none; font-style: normal; box-shadow: none; display: grid; place-items: center; line-height: 1.05; -webkit-tap-highlight-color: transparent; }
+.tb:active, .tb.on { background: rgba(123,61,255,.8); transform: none; box-shadow: none; }
+.tb.big { width: 84px; height: 84px; font-size: 14px; background: rgba(255,60,60,.5); border-color: #fff; }
+.tb.sm { width: 46px; height: 46px; font-size: 10px; }
+#tFire { right: max(18px, env(safe-area-inset-right, 0px)); bottom: 72px; }
+#tJump { right: calc(max(18px, env(safe-area-inset-right, 0px)) + 96px); bottom: 24px; }
+#tAds { right: calc(max(18px, env(safe-area-inset-right, 0px)) + 96px); bottom: 100px; }
+#tReload { right: max(18px, env(safe-area-inset-right, 0px)); bottom: 170px; }
+#tUse { right: calc(max(18px, env(safe-area-inset-right, 0px)) + 100px); bottom: 170px; background: rgba(255,200,40,.45); }
+#tBuild { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 112px; display: grid; grid-template-columns: repeat(2, 46px); gap: 6px; width: auto; height: auto; }
+#tBuild .tb { position: static; }
+#tMisc { left: max(12px, env(safe-area-inset-left, 0px)); top: 56px; display: flex; gap: 6px; width: auto; height: auto; position: absolute; }
+#tMisc .tb { position: static; }
+body.touch .keys { display: none; }
+@media (max-width: 900px), (pointer: coarse) {
+  #lobby { flex-direction: column; overflow-y: auto; padding: 12px max(12px, env(safe-area-inset-left, 0px)); gap: 12px; background: rgba(8,6,28,.5); align-items: stretch; }
+  #lobby .left, #lobby .right { width: 100%; max-height: none; overflow: visible; }
+  #lobby .center { order: -1; flex: none; height: 300px; }
+  #previewWrap { min-height: 260px; height: 300px; }
+  .logo { font-size: 34px; }
+  #skinGrid { grid-template-columns: repeat(5, 1fr); }
+  .slot { width: 46px; height: 46px; font-size: 8px; padding: 1px; } .slot .ic { font-size: 16px; } .slot .k { font-size: 9px; } .slot .n { font-size: 11px; } .slot span[style] { display: none; }
+  #hotbar { gap: 4px; } .mat { width: 42px; padding: 2px; font-size: 8px; } .mat b { font-size: 13px; }
+  #minimap { width: 118px; height: 118px; } #killfeed { max-width: 220px; } #killfeed div { font-size: 11px; padding: 2px 6px; }
+  #bars { width: 210px; } .bar { height: 12px; } .bar span { font-size: 10px; top: -2px; }
+  #bottom { bottom: 6px; } #ammoBox { right: auto; left: 16px; bottom: 150px; text-align: left; } #ammoBox .mag { font-size: 30px; } #ammoBox .res { font-size: 14px; } #ammoBox .wn { font-size: 10px; }
+  #chatlog { display: none; } #prompt { top: 42%; font-size: 13px; } #stormInfo { font-size: 12px; padding: 4px 10px; } #topright { top: 8px; right: max(8px, env(safe-area-inset-right, 0px)); gap: 4px; }
+  #topcenter { top: 8px; } #toast { font-size: 16px; } .chip { font-size: 12px; padding: 2px 8px; }
+  #death .big { font-size: 40px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  #lobby { flex-direction: row; overflow: hidden; padding: 8px max(10px, env(safe-area-inset-left, 0px)); background: linear-gradient(90deg, rgba(8,6,28,.9), rgba(8,6,28,.15) 50%, rgba(8,6,28,.85)); }
+  #lobby .left { width: 270px; overflow-y: auto; } #lobby .right { width: 250px; overflow-y: auto; }
+  #lobby .center { order: 0; flex: 1; height: auto; } #previewWrap { height: 100%; min-height: 0; }
+  .logo { font-size: 26px; } .logo small { font-size: 11px; letter-spacing: 3px; }
+  #death .big { font-size: 34px; } #victory .big { font-size: 56px; }
+}
 </style>
 </head>
 <body>
@@ -203,6 +248,18 @@ input[type=range] { flex: 1; accent-color: var(--p2); }
 </div>
 <canvas id="bigmap" class="hidden" width="800" height="800"></canvas>
 
+
+<div id="touch" class="hidden">
+  <div id="joyZone"><div id="joy"><i></i></div></div>
+  <div id="lookZone"></div>
+  <button class="tb big" id="tFire">FOGO</button>
+  <button class="tb" id="tJump">PULAR</button>
+  <button class="tb" id="tAds">MIRAR</button>
+  <button class="tb sm" id="tReload">RECARR.</button>
+  <button class="tb" id="tUse">PEGAR</button>
+  <div id="tBuild"><button class="tb sm" data-k="KeyZ">PAREDE</button><button class="tb sm" data-k="KeyX">PISO</button><button class="tb sm" data-k="KeyC">RAMPA</button><button class="tb sm" data-k="KeyV">MATER.</button></div>
+  <div id="tMisc"><button class="tb sm" data-k="KeyM">MAPA</button><button class="tb sm" data-k="KeyG">DANÇAR</button></div>
+</div>
 <div id="pause" class="overlay hidden">Clique para jogar<small>Esc solta o mouse</small></div>
 <div id="death" class="overlay hidden">
   <div class="big">ELIMINADO</div>
