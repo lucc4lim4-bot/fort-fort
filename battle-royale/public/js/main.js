@@ -64,7 +64,7 @@ function connect() {
   initAudio(); sfx.click();
   const name = ($('nameIn').value.trim() || 'Jogador').slice(0, 16); myName = name; store.set('name', name);
   $('conn').classList.remove('hidden'); $('conn').textContent = 'Conectando ao servidor…';
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+  ws = window.__LOCAL ? window.__LOCAL() : new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
   ws.onopen = () => send({ t: 'join', name, skin: mySkin });
   ws.onmessage = (e) => { try { onMsg(JSON.parse(e.data)); } catch (err) { console.error(err); } };
   ws.onclose = () => { $('conn').classList.remove('hidden'); $('conn').innerHTML = 'Conexão perdida.<br><button id="rl">Recarregar</button>'; $('rl').onclick = () => location.reload(); document.exitPointerLock?.(); };
