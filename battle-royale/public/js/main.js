@@ -249,7 +249,8 @@ function renderHotbar() {
     if (it) {
       const nm = WEAPONS[it.k]?.n || CONSUMABLES[it.k]?.n || '';
       d.innerHTML = `<span class="k">${i + 1}</span><span class="ic">${ICON[it.k] || '?'}</span><span style="font-size:9px">${nm}</span>` + (it.k !== 'pickaxe' && WEAPONS[it.k] ? `<span class="n">${it.mag}</span>` : CONSUMABLES[it.k] ? `<span class="n">${it.n}</span>` : '') + (WEAPONS[it.k] && it.k !== 'pickaxe' ? `<span class="rb" style="background:${RARITY[it.r].c}"></span>` : '');
-      if (WEAPONS[it.k] && it.k !== 'pickaxe') d.style.borderColor = RARITY[it.r].c;
+      if (WEAPONS[it.k] && it.k !== 'pickaxe') d.style.background = `linear-gradient(160deg, ${RARITY[it.r].c} 0%, ${RARITY[it.r].c}aa 35%, rgba(14,18,36,.95) 100%)`;
+      else if (CONSUMABLES[it.k]) d.style.background = `linear-gradient(160deg, ${CONSUMABLES[it.k].color}cc 0%, rgba(14,18,36,.95) 100%)`;
     } else d.innerHTML = `<span class="k">${i + 1}</span>`;
     d.onclick = () => selectSlot(i); hb.appendChild(d);
   });
@@ -274,6 +275,7 @@ function onKill(m) {
   const wn = m.w === 'storm' ? 'a tempestade' : m.w === 'quit' ? 'desconexão' : WEAPONS[m.w]?.n || m.w;
   d.textContent = m.k < 0 ? `${nameOf(m.v)} foi eliminado (${wn})` : `${nameOf(m.k)} eliminou ${nameOf(m.v)}${m.h ? ' 🎯' : ''} · ${wn}`;
   if (m.k === myId || m.v === myId) d.className = 'me';
+  if (m.k === myId && m.v !== myId) { const eb = $('elimBanner'); eb.innerHTML = `ELIMINOU ${esc(nameOf(m.v))}${m.h ? ' 🎯' : ''}<small>${me.kills + 1} eliminação(ões)</small>`; eb.classList.remove('show'); void eb.offsetWidth; eb.classList.add('show'); }
   $('killfeed').appendChild(d); setTimeout(() => d.remove(), 6200); while ($('killfeed').children.length > 5) $('killfeed').firstChild.remove();
   const p = players.get(m.v); if (p) { p.alive = false; p.deadT = 0; }
 }
@@ -668,7 +670,7 @@ function updatePlayers(dt) {
     const fl = p.flags, mode2 = fl & 2 ? 'glide' : fl & 1 ? 'fall' : 'ground';
     const wk = p.held <= 6 ? WID[p.held] : null;
     setRigWeapon(rig, wk, 0);
-    poseRig(rig, { speed: p.speed, onGround: !(fl & 8) && mode2 === 'ground', mode: mode2, pitch: p.pitch, gun: p.held >= 1 && p.held <= 6, melee: p.held === 0, using: p.held >= 10, swing: p.swingT, emote: p.emote && p.speed < 0.5, dead: !p.alive, recoil: p.recoil }, dt);
+    poseRig(rig, { speed: p.speed, onGround: !(fl & 8) && mode2 === 'ground', mode: mode2, pitch: p.pitch, gun: p.held >= 1 && p.held <= 6, melee: p.held === 0, using: p.held >= 10, reload: !!(fl & 32), swing: p.swingT, emote: p.emote && p.speed < 0.5, dead: !p.alive, recoil: p.recoil }, dt);
     p.recoil = Math.max(0, p.recoil - dt * 6);
     if (rig.flashT !== undefined && rig.flash) { rig.flashT -= dt; if (rig.flashT <= 0) rig.flash.visible = false; }
     const d = Math.hypot(p.x - camera.position.x, p.z - camera.position.z);
@@ -691,7 +693,7 @@ function updatePlayers(dt) {
     const it = curItem();
     const gunOn = !buildPiece && it && WEAPONS[it.k] && !WEAPONS[it.k].melee, melee = !buildPiece && it && it.k === 'pickaxe';
     setRigWeapon(rig, buildPiece ? null : it && WEAPONS[it.k] ? it.k : null, it?.r || 0);
-    poseRig(rig, { speed: me.speed, onGround: me.onGround, mode: mode === 'glide' ? 'glide' : mode === 'fall' ? 'fall' : 'ground', pitch: me.pitch, gun: !!gunOn, melee: !!melee, using: !!(progress && progress.label !== 'Recarregando'), swing: me.swingT, emote: emoting, dead: !me.alive, recoil: me.recoil }, dt);
+    poseRig(rig, { speed: me.speed, onGround: me.onGround, mode: mode === 'glide' ? 'glide' : mode === 'fall' ? 'fall' : 'ground', pitch: me.pitch, gun: !!gunOn, melee: !!melee, using: !!(progress && progress.label !== 'Recarregando'), reload: !!(progress && progress.label === 'Recarregando'), vy: me.vy, swing: me.swingT, emote: emoting, dead: !me.alive, recoil: me.recoil }, dt);
     if (rig.flashT !== undefined && rig.flash) { rig.flashT -= dt; if (rig.flashT <= 0) rig.flash.visible = false; }
     rig.setOutline(true);
   }
@@ -724,6 +726,7 @@ function updateHud(now) {
   if (bus && phase === 'play') txt = '🚌 Ônibus de batalha — pule!';
   else if (storm) { const t = storm[7], mm = Math.floor(t / 60), ss = String(t % 60).padStart(2, '0'); txt = storm[6] ? `⚡ Tempestade fechando · ${mm}:${ss}` : `Próxima tempestade em ${mm}:${ss}`; }
   $('stormTxt').textContent = txt;
+  if (storm && storm[6] !== updateHud.lastPh) { if (updateHud.lastPh !== undefined) toast(storm[6] ? 'A TEMPESTADE ESTÁ SE FECHANDO!' : 'A TEMPESTADE PAROU — PRÓXIMO CÍRCULO NO MAPA', 3500); if (storm[6]) sfx.storm(); updateHud.lastPh = storm[6]; }
   if (storm && mode === 'ground') {
     const out = Math.hypot(me.x - storm[0], me.z - storm[1]) > storm[2];
     $('stormvig').style.opacity = out ? 1 : 0;
@@ -824,7 +827,22 @@ function previewLoop(now) {
   poseRig(pRig, { speed: 0, onGround: true, mode: 'ground', pitch: 0, gun: !pEmote, melee: false, swing: 9, emote: pEmote, dead: false }, 1 / 60);
   previewR.render(pScene, pCam);
 }
-setPreviewSkin(); requestAnimationFrame(previewLoop);
+function makeThumbs() {
+  const cells = [...document.querySelectorAll('#skinGrid div')]; if (!cells.length) return;
+  const cam = new THREE.PerspectiveCamera(26, 100 / 122, 0.1, 30); cam.position.set(0, 1.42, 3.4); cam.lookAt(0, 1.18, 0);
+  previewR.setSize(100, 122, false); stage.visible = false; stageRing.visible = false; if (pRig) pRig.root.visible = false;
+  SKINS.forEach((sk, i) => {
+    const r = createCharacter(i); setRigWeapon(r, null); r.root.rotation.y = 0.45; pScene.add(r.root);
+    for (let f = 0; f < 30; f++) poseRig(r, { speed: 0, onGround: true, mode: 'ground', pitch: 0 }, 1 / 30);
+    previewR.render(pScene, cam);
+    const url = previewR.domElement.toDataURL('image/png'); const c = RARITY[sk.rarity].c;
+    cells[i].style.backgroundImage = `url(${url}), radial-gradient(circle at 50% 35%, ${c} 0%, ${c}99 40%, #0b1650 100%)`;
+    pScene.remove(r.root);
+  });
+  stage.visible = true; stageRing.visible = true; if (pRig) pRig.root.visible = true;
+  previewR.domElement.width = 1; // força o redimensionamento no próximo quadro
+}
+setPreviewSkin(); try { makeThumbs(); } catch (e) { console.warn(e); } requestAnimationFrame(previewLoop);
 
 // mundo de fundo (mesma semente padrão do servidor) para a órbita do lobby
 initWorld(1337);

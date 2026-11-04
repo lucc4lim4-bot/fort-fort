@@ -12,7 +12,7 @@ export function M(color, o = {}) {
   if (!m) {
     if (o.glow) m = new THREE.MeshBasicMaterial({ color: o.glow === true ? color : o.glow, transparent: !!o.opacity, opacity: o.opacity ?? 1, side: o.side || THREE.FrontSide });
     else if (o.metal) m = new THREE.MeshStandardMaterial({ color, metalness: 0.75, roughness: 0.28, ...o.std });
-    else m = new THREE.MeshToonMaterial({ color, gradientMap: gradient, transparent: o.opacity !== undefined, opacity: o.opacity ?? 1, side: o.side || THREE.FrontSide });
+    else m = new THREE.MeshStandardMaterial({ color, roughness: o.rough ?? 0.62, metalness: 0, transparent: o.opacity !== undefined, opacity: o.opacity ?? 1, side: o.side || THREE.FrontSide });
     matCache.set(key, m);
   }
   return m;
@@ -20,7 +20,7 @@ export function M(color, o = {}) {
 const OUT = new THREE.MeshBasicMaterial({ color: 0x0c0c12, side: THREE.BackSide });
 
 const G = {
-  sph: new Map(), cap: new Map(), box: new Map(), cyl: new Map(), cone: new Map(),
+  sph: new Map(), cap: new Map(), box: new Map(), cyl: new Map(), cone: new Map(), lathe: new Map(),
 };
 function geo(cache, key, make) { let g = cache.get(key); if (!g) { g = make(); cache.set(key, g); } return g; }
 const sph = (r, m, ws = 18, hs = 14) => new THREE.Mesh(geo(G.sph, `${r}/${ws}`, () => new THREE.SphereGeometry(r, ws, hs)), m);
@@ -31,55 +31,75 @@ const cone = (r, h, m, s = 10) => new THREE.Mesh(geo(G.cone, `${r}/${h}/${s}`, (
 function put(parent, mesh, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
   mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz); parent.add(mesh); return mesh;
 }
-function outlined(mesh, rig, s = 1.07) {
-  const o = new THREE.Mesh(mesh.geometry, OUT); o.scale.setScalar(s); o.userData.outline = true; mesh.add(o); rig.outlines.push(o);
-  mesh.castShadow = true; return mesh;
-}
+function outlined(mesh) { mesh.castShadow = true; return mesh; } // visual sem contorno (sombreamento suave)
 function shadowAll(g) { g.traverse((o) => { if (o.isMesh && !o.userData.outline) o.castShadow = true; }); }
 
-// ---------------------------------------------------------------- rig base
+// ---------------------------------------------------------------- formas orgânicas
+function latheGeo(key, pts, segs = 16) {
+  return geo(G.lathe, key, () => { const g = new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), segs); g.computeVertexNormals(); return g; });
+}
+// membro afunilado com pontas arredondadas: origem na junta de cima, pendurado para -y
+function limbGeo(rTop, rBot, len) {
+  return latheGeo(`limb${rTop}/${rBot}/${len}`, (() => {
+    const p = [];
+    for (let k = 0; k <= 5; k++) { const a = (k / 5) * Math.PI / 2; p.push([Math.max(0.0001, rBot * Math.sin(a)), -len - rBot * Math.cos(a)]); }
+    for (let k = 0; k <= 5; k++) { const b = (k / 5) * Math.PI / 2; p.push([Math.max(0.0001, rTop * Math.cos(b)), rTop * Math.sin(b) * 0.6]); }
+    return p;
+  })(), 14);
+}
+const limb = (rT, rB, len, m) => new THREE.Mesh(limbGeo(rT, rB, len), m);
+const TORSO_PTS = [[0.0001, -0.02], [0.15, -0.01], [0.168, 0.05], [0.165, 0.12], [0.185, 0.24], [0.205, 0.36], [0.2, 0.44], [0.16, 0.52], [0.09, 0.565], [0.0001, 0.58]];
+const PELVIS_PTS = [[0.0001, -0.13], [0.11, -0.12], [0.165, -0.05], [0.17, 0.03], [0.15, 0.09], [0.0001, 0.1]];
+
+// ---------------------------------------------------------------- rig base (proporções estilo cartoon heroico)
 function buildRig(sp) {
-  const rig = { outlines: [], phase: 0, t: Math.random() * 10, swing: 0, dead: 0 };
+  const rig = { outlines: [], phase: 0, t: Math.random() * 10, swing: 0, dead: 0, land: 0, air: 0 };
   const root = new THREE.Group(); root.rotation.order = 'YXZ'; rig.root = root;
-  const hips = new THREE.Group(); hips.position.y = 0.82; root.add(hips); rig.hips = hips;
-  const pelvis = outlined(put(hips, box(0.34, 0.2, 0.22, M(sp.pants)), 0, -0.02, 0), rig, 1.1); rig.pelvis = pelvis;
-  const torso = new THREE.Group(); torso.position.y = 0.05; torso.scale.set(1.08, 1, 1.1); hips.add(torso); rig.torso = torso;
-  const chest = cap(0.19, 0.2, M(sp.shirt)); chest.scale.set(1.12, 1, 0.78); put(torso, chest, 0, 0.27, 0); outlined(chest, rig, 1.06); rig.chest = chest;
-  rig.back = new THREE.Group(); rig.back.position.set(0, 0.32, -0.17); torso.add(rig.back);
-  rig.front = new THREE.Group(); rig.front.position.set(0, 0.3, 0.16); torso.add(rig.front);
+  const hips = new THREE.Group(); hips.position.y = 0.84; root.add(hips); rig.hips = hips;
+  const pelvis = new THREE.Mesh(latheGeo('pelvis', PELVIS_PTS), M(sp.pants)); pelvis.scale.set(1, 1, 0.74); put(hips, pelvis, 0, 0, 0); rig.pelvis = pelvis;
+  put(hips, cyl(0.172, 0.172, 0.05, M(sp.belt ?? 0x2a2420), 18), 0, 0.06, 0).scale.set(1, 1, 0.76);
+  put(hips, box(0.06, 0.05, 0.02, M(0xd8c060, { metal: true })), 0, 0.06, 0.132);
+  const torso = new THREE.Group(); torso.position.y = 0.06; torso.rotation.order = 'YXZ'; hips.add(torso); rig.torso = torso;
+  const chest = new THREE.Mesh(latheGeo('torso', TORSO_PTS, 18), M(sp.shirt)); chest.scale.set(1.08, 1, 0.72); put(torso, chest, 0, 0, 0); rig.chest = chest;
+  rig.back = new THREE.Group(); rig.back.position.set(0, 0.32, -0.15); torso.add(rig.back);
+  rig.front = new THREE.Group(); rig.front.position.set(0, 0.3, 0.145); torso.add(rig.front);
+  put(torso, cyl(0.07, 0.085, 0.12, M(sp.skin), 12), 0, 0.6, 0); // pescoço
   // cabeça
-  const head = new THREE.Group(); head.position.y = 0.64; head.scale.setScalar(1.28); torso.add(head); rig.head = head;
-  const skull = sph(0.2, M(sp.skin)); skull.scale.set(1, 1.04, 1.02); put(head, skull, 0, 0.1, 0); outlined(skull, rig, 1.06); rig.skull = skull;
-  for (const e of [-1, 1]) { const ear = sph(0.05, M(sp.skin), 8, 6); ear.scale.set(0.5, 1, 0.8); put(head, ear, e * 0.2, 0.08, -0.01); }
-  put(head, cyl(0.075, 0.09, 0.1, M(sp.skin), 10), 0, -0.04, 0);
+  const head = new THREE.Group(); head.position.y = 0.64; head.scale.setScalar(1.28); head.rotation.order = 'YXZ'; torso.add(head); rig.head = head;
+  const skull = sph(0.2, M(sp.skin), 24, 18); skull.scale.set(0.98, 1.06, 1.0); put(head, skull, 0, 0.11, 0); rig.skull = skull;
+  const jaw = sph(0.165, M(sp.skin), 18, 12); jaw.scale.set(1, 0.78, 1); put(skull, jaw, 0, -0.07, 0.025);
+  for (const e of [-1, 1]) { const ear = sph(0.048, M(sp.skin), 10, 8); ear.scale.set(0.45, 1, 0.75); put(skull, ear, e * 0.195, -0.01, -0.01); }
   if (sp.hairStyle) {
     const hc = M(sp.hairColor || 0x4a2f1a);
-    const cap2 = new THREE.Mesh(geo(G.sph, 'hairCap', () => new THREE.SphereGeometry(0.218, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55)), hc);
-    put(head, cap2, 0, 0.115, -0.02, -0.25, 0, 0); outlined(cap2, rig, 1.04);
-    put(head, sph(0.1, hc, 10, 8), 0, 0.3, 0.1, 0, 0, 0).scale.set(1.2, 0.7, 1.3);
-    if (sp.hairStyle === 'long') put(head, box(0.34, 0.34, 0.08, hc), 0, -0.02, -0.17);
+    const capH = new THREE.Mesh(geo(G.sph, 'hairCap2', () => new THREE.SphereGeometry(0.212, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.56)), hc);
+    put(head, capH, 0, 0.125, -0.012, -0.28, 0, 0);
+    for (let i = 0; i < 5; i++) { const t = sph(0.07, hc, 10, 8); t.scale.set(1, 0.6, 1.3); put(head, t, -0.12 + i * 0.06, 0.29 - Math.abs(i - 2) * 0.012, 0.11, 0.5, 0, (i - 2) * 0.25); }
+    if (sp.hairStyle === 'long') { const l = sph(0.2, hc, 14, 10); l.scale.set(1, 1.3, 0.45); put(head, l, 0, 0.0, -0.13); }
   }
-  rig.face = new THREE.Group(); rig.face.position.set(0, 0.11, 0.185); head.add(rig.face);
+  rig.face = new THREE.Group(); rig.face.position.set(0, 0.105, 0.175); head.add(rig.face);
   if (!sp.noFace) {
-    const eyeM = M(sp.eye || 0xffffff), pup = M(sp.pupil || 0x1a1a22);
+    const white = M(0xffffff), iris = M(sp.iris ?? sp.eye ?? 0x5b3b22), pup = M(sp.pupil || 0x111114), shine = M(0xffffff, { glow: true });
     for (const s of [-1, 1]) {
-      put(rig.face, sph(0.042, eyeM, 10, 8), s * 0.075, 0.025, 0.01);
-      put(rig.face, sph(0.024, pup, 8, 6), s * 0.075, 0.025, 0.045);
-      put(rig.face, sph(0.009, M(0xffffff, { glow: true }), 6, 4), s * 0.075 + 0.008, 0.035, 0.066);
-      put(rig.face, box(0.09, 0.016, 0.02, M(sp.brow || sp.hair || 0x3a2a1c)), s * 0.075, 0.09, 0.015, 0, 0, -s * 0.12);
+      const ew = sph(0.046, sp.eye ? M(sp.eye) : white, 14, 10); ew.scale.set(0.9, 1.2, 0.55); put(rig.face, ew, s * 0.072, 0.03, 0.0);
+      const ir = sph(0.03, iris, 12, 8); ir.scale.set(1, 1.15, 0.5); put(rig.face, ir, s * 0.07, 0.026, 0.022);
+      put(rig.face, sph(0.016, pup, 8, 6), s * 0.07, 0.026, 0.033).scale.set(1, 1.1, 0.5);
+      put(rig.face, sph(0.008, shine, 6, 4), s * 0.07 + 0.01, 0.042, 0.04);
+      const br = box(0.085, 0.022, 0.025, M(sp.brow || sp.hairColor || 0x3a2a1c)); put(rig.face, br, s * 0.075, 0.1, 0.0, 0, 0, -s * 0.18);
     }
-    put(rig.face, box(0.07, 0.014, 0.02, M(0x7a2f2f)), 0, -0.07, 0.02);
-    put(rig.face, sph(0.028, M(sp.skin), 8, 6), 0, -0.02, 0.035);
+    const nose = sph(0.028, M(sp.skin), 10, 8); nose.scale.set(0.9, 0.8, 1); put(rig.face, nose, 0, -0.018, 0.035);
+    const mouth = new THREE.Mesh(geo(G.cyl, 'smile', () => new THREE.TorusGeometry(0.042, 0.009, 6, 14, Math.PI)), M(0x6a2626)); put(rig.face, mouth, 0, -0.06, 0.012, 0, 0, Math.PI);
+    rig.mouth = mouth;
   }
-  // braços (2 segmentos)
+  // braços
   const arms = [];
   for (const s of [-1, 1]) {
-    const sh = new THREE.Group(); sh.position.set(s * 0.26, 0.5, 0); sh.rotation.order = 'YXZ'; torso.add(sh);
-    put(sh, sph(0.085, M(sp.shirtB || sp.shirt), 12, 8), 0, 0, 0);
-    const up = cap(0.077, 0.16, M(sp.sleeve ?? sp.shirt)); put(sh, up, 0, -0.15, 0); outlined(up, rig, 1.1);
+    const sh = new THREE.Group(); sh.position.set(s * 0.225, 0.47, 0); sh.rotation.order = 'YXZ'; torso.add(sh);
+    put(sh, sph(0.095, M(sp.shirtB || sp.sleeve || sp.shirt), 14, 10), 0, 0, 0);
+    const up = limb(0.083, 0.068, 0.22, M(sp.sleeve ?? sp.shirt)); put(sh, up, 0, -0.02, 0);
     const el = new THREE.Group(); el.position.y = -0.29; el.rotation.order = 'YXZ'; sh.add(el);
-    const lo = cap(0.069, 0.14, M(sp.forearm ?? sp.skin)); put(el, lo, 0, -0.13, 0); outlined(lo, rig, 1.1);
-    const hand = sph(0.088, M(sp.glove ?? sp.skin), 12, 8); put(el, hand, 0, -0.29, 0); outlined(hand, rig, 1.1);
+    const lo = limb(0.068, 0.056, 0.2, M(sp.forearm ?? sp.skin)); put(el, lo, 0, 0, 0);
+    const hand = sph(0.074, M(sp.glove ?? sp.skin), 14, 10); hand.scale.set(0.9, 1.15, 0.75); put(el, hand, 0, -0.285, 0.005);
+    const thumb = limb(0.026, 0.022, 0.05, M(sp.glove ?? sp.skin)); put(hand, thumb, -s * 0.055, 0.02, 0.04, 0.6, 0, s * 0.6);
     arms.push({ sh, el, hand, up, lo });
   }
   rig.armL = arms[0]; rig.armR = arms[1];
@@ -87,21 +107,24 @@ function buildRig(sp) {
   // pernas
   const legs = [];
   for (const s of [-1, 1]) {
-    const hp = new THREE.Group(); hp.position.set(s * 0.12, -0.04, 0); hips.add(hp);
-    const th = cap(0.105, 0.22, M(sp.pants)); put(hp, th, 0, -0.2, 0); outlined(th, rig, 1.09);
-    const kn = new THREE.Group(); kn.position.y = -0.4; hp.add(kn);
-    const sn = cap(0.088, 0.24, M(sp.shin ?? sp.pants)); put(kn, sn, 0, -0.2, 0.01); outlined(sn, rig, 1.1);
-    const ft = box(0.17, 0.1, 0.32, M(sp.shoes)); put(kn, ft, 0, -0.395, 0.07); outlined(ft, rig, 1.12); put(kn, box(0.175, 0.03, 0.33, M(0xe8e8e8)), 0, -0.44, 0.07);
-    legs.push({ hp, kn, th, sn, ft });
+    const hp = new THREE.Group(); hp.position.set(s * 0.1, -0.03, 0); hp.rotation.order = 'XZY'; hips.add(hp);
+    const th = limb(0.112, 0.088, 0.33, M(sp.pants)); put(hp, th, 0, 0, 0);
+    const kn = new THREE.Group(); kn.position.y = -0.41; hp.add(kn);
+    const sn = limb(0.088, 0.07, 0.31, M(sp.shin ?? sp.pants)); put(kn, sn, 0, 0, 0);
+    const ftG = new THREE.Group(); ftG.position.y = -0.37; kn.add(ftG);
+    const ft = sph(0.1, M(sp.shoes), 16, 10); ft.scale.set(0.85, 0.55, 1.55); put(ftG, ft, 0, -0.01, 0.06);
+    put(ftG, box(0.16, 0.035, 0.31, M(sp.sole ?? 0xece8e0)), 0, -0.05, 0.06);
+    legs.push({ hp, kn, th, sn, ft, ftG });
   }
   rig.legL = legs[0]; rig.legR = legs[1];
-  // paraquedas (planador) e brilho
+  // planador
   const gl = new THREE.Group(); gl.visible = false; rig.glider = gl; root.add(gl);
-  for (let i = 0; i < 6; i++) {
-    const seg = new THREE.Mesh(new THREE.SphereGeometry(1.9, 6, 8, (i / 6) * Math.PI * 2, Math.PI / 3, 0, Math.PI / 2.3), M(i % 2 ? 0xffffff : (sp.gliderColor || 0xff4f6b), { glow: true, side: THREE.DoubleSide }));
-    seg.scale.set(1, 0.5, 1); put(gl, seg, 0, 2.5, 0);
+  for (let i = 0; i < 8; i++) {
+    const seg = new THREE.Mesh(new THREE.SphereGeometry(1.9, 6, 8, (i / 8) * Math.PI * 2, Math.PI / 4, 0, Math.PI / 2.3), M(i % 2 ? 0xffffff : (sp.gliderColor || 0xff4f6b), { side: THREE.DoubleSide }));
+    seg.scale.set(1, 0.48, 1); put(gl, seg, 0, 2.5, 0);
   }
-  for (let i = 0; i < 4; i++) { const ln = cyl(0.012, 0.012, 1.55, M(0x222222), 4); put(gl, ln, Math.cos(i * Math.PI / 2 + 0.78) * 0.55, 1.65, Math.sin(i * Math.PI / 2 + 0.78) * 0.55, 0.0, 0, 0); ln.rotation.set(Math.sin(i * Math.PI / 2 + 0.78) * 0.4, 0, -Math.cos(i * Math.PI / 2 + 0.78) * 0.4); }
+  put(gl, cyl(0.05, 0.05, 0.12, M(0x222222), 8), 0, 3.42, 0);
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.78; const ln = cyl(0.01, 0.01, 1.6, M(0x222222), 4); put(gl, ln, Math.cos(a) * 0.55, 1.65, Math.sin(a) * 0.55); ln.rotation.set(Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); }
   rig.spec = sp;
   return rig;
 }
@@ -350,69 +373,103 @@ export function setRigWeapon(rig, key, rarity = 0) {
   if (key) { rig.weapon = createWeapon(key, rarity); rig.mount.add(rig.weapon); rig.muzzle = rig.weapon.userData.muzzle; }
 }
 
-// st: {speed, onGround, mode:'ground'|'fall'|'glide'|'bus', pitch, gun:boolean, melee:boolean, using:boolean, swing:(seg desde o golpe), emote, dead, water}
+// st: {speed, onGround, mode:'ground'|'fall'|'glide'|'bus', pitch, gun, melee, using, reload, swing, emote, dead, recoil, weapon}
+const JKEYS = ['lax', 'lay', 'laz', 'lex', 'ley', 'rax', 'ray', 'raz', 'rex', 'rey', 'llx', 'llz', 'lkx', 'lfx', 'rlx', 'rlz', 'rkx', 'rfx', 'hipY', 'hipRX', 'hipRZ', 'hipRY', 'torsoX', 'torsoY', 'torsoZ', 'headX', 'headY', 'headZ'];
 export function poseRig(rig, st, dt) {
   rig.t += dt;
-  const J = rig.J || (rig.J = {
-    lax: 0, lay: 0, laz: 0, lex: 0, rax: 0, ray: 0, raz: 0, rex: 0, llx: 0, llz: 0, lkx: 0, rlx: 0, rlz: 0, rkx: 0,
-    hipY: 0.82, hipRX: 0, torsoX: 0, torsoZ: 0, headX: 0, headY: 0,
-  });
-  const T = { lax: 0, lay: 0, laz: 0, lex: 0, rax: 0, ray: 0, raz: 0, rex: 0, llx: 0, llz: 0, lkx: 0, rlx: 0, rlz: 0, rkx: 0, hipY: 0.82, hipRX: 0, torsoX: 0, torsoZ: 0, headX: 0, headY: 0 };
-  let k = 1 - Math.exp(-dt * 16);
+  const t = rig.t;
+  if (!rig.J) { rig.J = {}; JKEYS.forEach((k) => (rig.J[k] = 0)); rig.J.hipY = 0.84; }
+  const J = rig.J, T = {}; JKEYS.forEach((k) => (T[k] = 0)); T.hipY = 0.84;
+  let k = 1 - Math.exp(-dt * 14);
   const pitch = st.pitch || 0;
+  // aterrissagem: “amassa” ao tocar o chão
+  const grounded = st.mode === 'ground' && st.onGround;
+  if (!grounded) rig.air += dt; else { if (rig.air > 0.35) rig.land = Math.min(1, rig.air * 0.8); rig.air = 0; }
+  rig.land = Math.max(0, rig.land - dt * 3.2);
+
   if (st.mode === 'fall') {
-    T.hipRX = 1.38; T.headX = -1.15; T.torsoX = -0.2;
-    T.lax = -0.3; T.laz = -1.35; T.rax = -0.3; T.raz = 1.35; T.lex = -0.5; T.rex = -0.5;
-    T.llx = 0.15; T.llz = -0.35; T.rlx = 0.1; T.rlz = 0.35; T.lkx = 0.35; T.rkx = 0.35; T.hipY = 0.9;
-    T.hipRX += Math.sin(rig.t * 14) * 0.03;
+    const w = Math.sin(t * 13) * 0.05;
+    T.hipRX = 1.32 + w; T.headX = -1.1; T.torsoX = -0.25;
+    T.lax = -0.4; T.laz = -1.3 + w; T.rax = -0.4; T.raz = 1.3 - w; T.lex = -0.6; T.rex = -0.6;
+    T.llx = 0.25; T.llz = -0.4; T.rlx = 0.2; T.rlz = 0.4; T.lkx = 0.6; T.rkx = 0.5; T.hipY = 0.92;
   } else if (st.mode === 'glide') {
-    T.lax = -2.85; T.rax = -2.85; T.lay = 0.1; T.ray = -0.1; T.lex = -0.1; T.rex = -0.1;
-    T.llx = Math.sin(rig.t * 2) * 0.12; T.rlx = -Math.sin(rig.t * 2) * 0.12; T.lkx = 0.15; T.rkx = 0.15; T.hipRX = 0.1; T.hipY = 0.86;
+    const sw = Math.sin(t * 1.8);
+    T.lax = -2.9; T.rax = -2.9; T.lay = 0.15; T.ray = -0.15; T.lex = -0.25; T.rex = -0.25;
+    T.llx = sw * 0.18 - 0.1; T.rlx = -sw * 0.18 - 0.1; T.lkx = 0.25; T.rkx = 0.25; T.hipRZ = sw * 0.06; T.hipY = 0.88; T.headX = 0.15;
   } else if (st.mode === 'bus') {
-    T.lax = -0.2; T.rax = -0.2; T.llx = -1.45; T.rlx = -1.45; T.lkx = 1.45; T.rkx = 1.45;
-  } else if (st.emote) {
-    const s = Math.sin(rig.t * 9), c = Math.cos(rig.t * 9);
-    T.hipY = 0.82 - Math.abs(s) * 0.07; T.torsoZ = s * 0.28; T.headY = c * 0.4;
-    T.lax = -2.7 + s * 0.6; T.rax = -2.7 - s * 0.6; T.laz = -0.35; T.raz = 0.35; T.lex = -0.5; T.rex = -0.5;
-    T.llx = -0.3 + s * 0.6; T.rlx = -0.3 - s * 0.6; T.lkx = 0.6 + Math.max(0, s) * 0.8; T.rkx = 0.6 + Math.max(0, -s) * 0.8; T.hipRX = c * 0.1;
+    T.lax = -0.25; T.rax = -0.25; T.llx = -1.45; T.rlx = -1.45; T.lkx = 1.45; T.rkx = 1.45;
+  } else if (st.emote && !st.dead) {
+    // dança: passo lateral com braços alternados
+    const b = t * 8, s = Math.sin(b), c = Math.cos(b), s2 = Math.sin(b * 0.5);
+    T.hipY = 0.8 - Math.abs(s) * 0.07; T.hipRZ = s * 0.12; T.hipRY = s2 * 0.35; T.torsoZ = -s * 0.2; T.torsoY = -s2 * 0.25; T.headZ = s * 0.18; T.headY = c * 0.2;
+    T.lax = -1.6 + s * 1.2; T.rax = -1.6 - s * 1.2; T.laz = -0.5; T.raz = 0.5; T.lex = -1.2 - c * 0.3; T.rex = -1.2 + c * 0.3;
+    T.llx = -0.2 + s * 0.45; T.rlx = -0.2 - s * 0.45; T.llz = -0.12; T.rlz = 0.12;
+    T.lkx = 0.4 + Math.max(0, s) * 0.9; T.rkx = 0.4 + Math.max(0, -s) * 0.9; T.lfx = -0.2; T.rfx = -0.2;
   } else {
-    const sp = st.speed || 0, amp = Math.min(1, sp / 6.5);
-    if (st.onGround && sp > 0.4) rig.phase += dt * (4.2 + sp * 0.95);
-    else if (st.onGround) { rig.phase *= 0.9; }
+    const sp = st.speed || 0, amp = Math.min(1, sp / 6.5), run = Math.max(0, Math.min(1, (sp - 6.6) / 1.8));
+    if (grounded && sp > 0.35) rig.phase += dt * (4.6 + sp * 0.92);
     const p = rig.phase;
-    if (!st.onGround) { // no ar
-      T.llx = -0.7; T.rlx = 0.25; T.lkx = 0.9; T.rkx = 0.3; T.hipY = 0.82;
+    if (!grounded) {
+      const up = (st.vy || 0) > 0;
+      T.llx = up ? -0.9 : -0.5; T.rlx = up ? 0.2 : 0.35; T.lkx = up ? 1.2 : 0.7; T.rkx = up ? 0.45 : 0.25;
+      T.lax = -0.5; T.rax = -0.4; T.laz = -0.35; T.raz = 0.35; T.lex = -0.6; T.rex = -0.6; T.hipY = 0.84; T.torsoX = 0.12;
+    } else if (sp > 0.35) {
+      const sn = Math.sin(p), cs = Math.cos(p);
+      T.llx = -sn * (0.85 + run * 0.35) * amp; T.rlx = sn * (0.85 + run * 0.35) * amp;
+      T.lkx = (Math.max(0, cs) * (1.25 + run * 0.4) + 0.12) * amp; T.rkx = (Math.max(0, -cs) * (1.25 + run * 0.4) + 0.12) * amp;
+      T.lfx = Math.max(0, sn) * 0.4 * amp - 0.1; T.rfx = Math.max(0, -sn) * 0.4 * amp - 0.1;
+      T.hipY = 0.84 - Math.abs(cs) * 0.055 * amp + 0.02 * amp; T.hipRY = sn * 0.16 * amp; T.hipRZ = cs * 0.05 * amp;
+      T.torsoY = -sn * 0.2 * amp; T.torsoX = (0.12 + run * 0.18) * amp; T.headY = sn * 0.08 * amp;
+      T.lax = sn * (0.75 + run * 0.4) * amp; T.rax = -sn * (0.75 + run * 0.4) * amp; T.laz = -0.12; T.raz = 0.12;
+      T.lex = -0.35 - (0.6 + run * 0.4) * amp; T.rex = -0.35 - (0.6 + run * 0.4) * amp;
     } else {
-      T.llx = -Math.sin(p) * 0.95 * amp; T.rlx = Math.sin(p) * 0.95 * amp;
-      T.lkx = Math.max(0, Math.cos(p)) * 1.15 * amp; T.rkx = Math.max(0, -Math.cos(p)) * 1.15 * amp;
-      T.hipY = 0.82 - Math.abs(Math.sin(p)) * 0.04 * amp + Math.sin(rig.t * 1.6) * 0.004;
-      T.lax = Math.sin(p) * 0.75 * amp; T.rax = -Math.sin(p) * 0.75 * amp; T.lex = -0.25 - 0.5 * amp; T.rex = -0.25 - 0.5 * amp;
-      T.torsoX = 0.1 * amp; T.torsoZ = Math.sin(p) * 0.04 * amp;
+      // parado: respiração e peso no pé
+      const br = Math.sin(t * 1.9);
+      T.hipY = 0.84 + br * 0.006; T.torsoX = br * 0.015; T.headX = -br * 0.02; T.headY = Math.sin(t * 0.45) * 0.12;
+      T.lax = 0.05; T.rax = 0.05; T.laz = -0.12 - br * 0.02; T.raz = 0.12 + br * 0.02; T.lex = -0.18; T.rex = -0.18;
+      T.llz = -0.04; T.rlz = 0.06; T.hipRZ = 0.03; T.lkx = 0.05; T.rkx = 0.1;
     }
+    // parte de cima: armas e itens
     if (st.using) {
-      T.rax = -1.75; T.lax = -1.65; T.rex = -1.7; T.lex = -1.7; T.lay = 0.4; T.ray = -0.4;
+      const w = Math.sin(t * 9) * 0.12;
+      T.rax = -1.8 + w; T.lax = -1.7 - w; T.rex = -1.75; T.lex = -1.75; T.lay = 0.45; T.ray = -0.45; T.headX = 0.2;
     } else if (st.gun) {
-      const a = -1.42 - pitch * 0.85;
-      T.rax = a; T.ray = -0.12; T.rex = -0.22; T.lax = a + 0.06; T.lay = 0.62; T.lex = -0.55; T.torsoX = -pitch * 0.18; T.torsoZ = 0;
-      if (st.recoil) T.rax += st.recoil * 0.25;
+      const a = -1.45 - pitch * 0.9;
+      T.rax = a; T.ray = -0.1; T.rex = -0.25; T.lax = a + 0.08; T.lay = 0.68; T.lex = -0.6;
+      T.torsoX = -pitch * 0.25 + (grounded && sp > 0.35 ? 0.06 : 0); T.torsoY = 0.12 + T.torsoY * 0.4; T.headY = -0.1;
+      if (st.reload) { const r = Math.sin(t * 7); T.lax = -0.6 + r * 0.2; T.lay = 0.4; T.lex = -1.2; T.rax = a + 0.35; T.rey = 0.3; }
+      if (st.recoil) { T.rax += st.recoil * 0.22; T.lax += st.recoil * 0.18; T.torsoX -= st.recoil * 0.05; }
     } else if (st.melee) {
-      T.rax = -0.55; T.rex = -0.9; T.ray = -0.1;
-      if (st.swing < 0.34) { const u = st.swing / 0.34; T.rax = u < 0.3 ? -2.5 - u * 2 : -2.5 + (u - 0.3) / 0.7 * 3.2; T.rex = -0.4; T.torsoX = u > 0.3 ? 0.35 : -0.2; k = 1 - Math.exp(-dt * 40); }
+      T.rax = -0.5 + (sp > 0.35 ? T.rax * 0.3 : 0); T.rex = -0.95; T.ray = -0.1;
+      if (st.swing < 0.4) {
+        const u = st.swing / 0.4, e = u < 0.3 ? u / 0.3 : 1 - (u - 0.3) / 0.7;
+        T.rax = u < 0.3 ? -0.5 - e * 2.4 : -2.9 + (1 - e) * 3.4; T.rex = -0.3; T.lax = -0.6; T.torsoY = u < 0.3 ? 0.35 * e : -0.4 * (1 - e); T.torsoX = u < 0.3 ? -0.15 : 0.3 * e;
+        k = 1 - Math.exp(-dt * 45);
+      }
     }
-    T.headX = -pitch * 0.55;
+    T.headX += -pitch * 0.55;
+    // aterrissagem
+    if (rig.land > 0) { T.hipY -= rig.land * 0.14; T.lkx += rig.land * 0.6; T.rkx += rig.land * 0.6; T.llx -= rig.land * 0.35; T.rlx -= rig.land * 0.35; T.torsoX += rig.land * 0.25; }
   }
-  for (const key in T) J[key] += (T[key] - J[key]) * k;
-  const h = rig.hips; h.position.y = J.hipY; h.rotation.x = J.hipRX;
-  rig.torso.rotation.x = J.torsoX; rig.torso.rotation.z = J.torsoZ; rig.head.rotation.x = J.headX; rig.head.rotation.y = J.headY;
+  if (st.dead) { T.lax = -0.3; T.rax = -0.3; T.laz = -1.0; T.raz = 1.0; T.llz = -0.2; T.rlz = 0.2; T.headX = 0.3; }
+  for (const key of JKEYS) J[key] += (T[key] - J[key]) * k;
+  const h = rig.hips; h.position.y = J.hipY; h.rotation.set(J.hipRX, J.hipRY, J.hipRZ);
+  rig.torso.rotation.set(J.torsoX, J.torsoY - J.hipRY * 0.6, J.torsoZ); rig.head.rotation.set(J.headX, J.headY, J.headZ);
   rig.armL.sh.rotation.set(J.lax, J.lay, J.laz); rig.armR.sh.rotation.set(J.rax, J.ray, J.raz);
-  rig.armL.el.rotation.x = J.lex; rig.armR.el.rotation.x = J.rex;
+  rig.armL.el.rotation.set(J.lex, J.ley, 0); rig.armR.el.rotation.set(J.rex, J.rey, 0);
   rig.legL.hp.rotation.set(J.llx, 0, J.llz); rig.legR.hp.rotation.set(J.rlx, 0, J.rlz);
   rig.legL.kn.rotation.x = J.lkx; rig.legR.kn.rotation.x = J.rkx;
+  rig.legL.ftG.rotation.x = J.lfx - J.lkx * 0.25 - J.llx * 0.2; rig.legR.ftG.rotation.x = J.rfx - J.rkx * 0.25 - J.rlx * 0.2;
+  // respiração no peito
+  rig.chest.scale.y = 1 + Math.sin(t * 1.9) * 0.012;
   rig.glider.visible = st.mode === 'glide';
-  if (rig.tail) rig.tail.forEach((s, i) => { s.rotation.y = Math.sin(rig.t * 3 + i * 0.8) * 0.28; s.rotation.x = Math.sin(rig.t * 2 + i) * 0.06; });
-  if (rig.wings) rig.wings.forEach((w, i) => { const s = i ? 1 : -1; w.rotation.z = Math.sin(rig.t * (st.mode === 'glide' || st.mode === 'fall' ? 8 : 2.2)) * 0.2 * -s; });
-  if (rig.cape) rig.cape.rotation.x = 0.15 + Math.min(0.7, (st.speed || 0) * 0.07) + Math.sin(rig.t * 5) * 0.04;
-  // morte: cai para trás
-  rig.dead = st.dead ? Math.min(1, rig.dead + dt * 2.5) : 0;
-  rig.root.rotation.x = -rig.dead * 1.45; rig.root.position.y += 0;
+  if (rig.glider.visible) rig.glider.rotation.z = Math.sin(t * 1.8) * 0.06;
+  if (rig.tail) rig.tail.forEach((s, i) => { s.rotation.y = Math.sin(t * 3 + i * 0.8) * 0.28; s.rotation.x = Math.sin(t * 2 + i) * 0.06; });
+  if (rig.wings) rig.wings.forEach((w, i) => { const s = i ? 1 : -1; w.rotation.z = Math.sin(t * (st.mode === 'glide' || st.mode === 'fall' ? 8 : 2.2)) * 0.2 * -s; });
+  if (rig.cape) rig.cape.rotation.x = 0.15 + Math.min(0.7, (st.speed || 0) * 0.07) + Math.sin(t * 5) * 0.04;
+  // eliminação: cai para trás e se desfaz
+  if (st.dead) { rig.dead += dt; } else { rig.dead = 0; rig.root.scale.setScalar(1); }
+  const fall = Math.min(1, rig.dead * 2.4);
+  rig.root.rotation.x = -fall * fall * 1.45;
+  if (rig.dead > 1.1) { const s = Math.max(0.001, 1 - (rig.dead - 1.1) * 1.6); rig.root.scale.setScalar(s); }
 }
