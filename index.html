@@ -234,10 +234,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     </div>
     <div class="modes opts">
       <label><input type="checkbox" id="deep" checked> Forja caprichada: pesquisa profunda e modelos 3D detalhados (mais lenta)</label>
+      <label><input type="checkbox" id="rev" checked> Revisão visual: a IA olha imagens do modelo 3D e corrige (mais lenta)</label>
       <label><input type="checkbox" id="bal"> Balancear armas (desligado = sem limites)</label>
     </div>
     <div class="how">
-      <div><b>1 · Forje qualquer coisa</b>Escreva o que quiser: Omnitrix, Megazord, escopeta de 100 bocas. A IA pesquisa, projeta e modela em 3D na hora: armas, transformações com várias formas, aliados, torres, muralhas, minas e ataques aéreos.</div>
+      <div><b>1 · Forje qualquer coisa</b>Escreva o que quiser: Omnitrix, Megazord, escopeta de 100 bocas. A IA pesquisa, projeta e modela em 3D na hora: armas, transformações com várias formas, aliados, torres, muralhas, minas e ataques aéreos. Nem tudo é tiro: aliens socam, mordem e arranham, espadas cortam, martelos esmagam.</div>
       <div><b>2 · Duelo ou Sandbox</b>No duelo você tem 3 pedidos na 1ª rodada e 2 nas outras. No sandbox a forja é ilimitada (<kbd>B</kbd>), a munição é infinita e um boneco parado mede seu dano. Sem limites, a menos que você ligue o balanceamento.</div>
       <div><b>3 · Cinco mapas</b>A Fundição, Cidade Neon, Pico Gelado, Templo do Deserto e Base Lunar, com gravidade baixa. As plataformas azuis te lançam para o alto. No duelo vence quem levar 3 rodadas.</div>
       <div><b>Controles</b><kbd>WASD</kbd> andar · <kbd>Mouse</kbd> mirar · <kbd>Clique</kbd> atirar · <kbd>Botão direito</kbd> zoom · <kbd>Espaço</kbd> pular (2× no ar) · <kbd>C</kbd> dash · <kbd>Shift</kbd> correr · <kbd>V</kbd> trocar ombro · <kbd>T</kbd> 1ª/3ª pessoa · <kbd>B</kbd> forja no sandbox · <kbd>Q</kbd>/roda/<kbd>1-7</kbd> arma · <kbd>E</kbd> usar item · <kbd>R</kbd> trocar item · <kbd>Esc</kbd> soltar o mouse<br>Itens e aliens ganham um botão cada: <kbd>Z</kbd> <kbd>X</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd>, <kbd>Y</kbd> volta ao normal.<br><b style="display:inline;font-size:13px">Celular:</b> joystick à esquerda, arraste a tela para mirar, botões à direita, e a fileira do meio muda conforme o que você forjou.</div>
@@ -555,7 +556,7 @@ function toParts(list){
 }
 const LIB = {}; for (const k in RAW_LIB) LIB[k] = { parts: toParts(RAW_LIB[k].p), spin: RAW_LIB[k].spin, axis: RAW_LIB[k].axis || 'x', tracer: !!RAW_LIB[k].tracer };
 const LIB_LABEL = { elephant:'elefante', shark:'tubarão', pineapple:'abacaxi', banana:'banana', chicken:'galinha', duck:'pato', fish:'peixe', pizza:'pizza', watermelon:'melancia', donut:'rosquinha', star:'estrela', heart:'coração', skull:'caveira', ghost:'fantasma', cat:'gato', dog:'cachorro', dino:'dinossauro', robot:'robô', bomb:'bomba', arrow:'flecha', popcorn:'pipoca', car:'carro', bee:'abelha', penguin:'pinguim', apple:'maçã', cow:'vaca', pig:'porco', burger:'hambúrguer', cannonball:'bala de canhão',
-  bullet:'bala', fireball:'bola de fogo', iceshard:'cristal de gelo', goo:'gosma', bat:'morcego', grenade:'granada', sword:'espada', knife:'faca', axe:'machado', hammer:'martelo', shuriken:'shuriken', lightning:'raio', rock:'pedra', brick:'tijolo', coin:'moeda', diamond:'diamante', soccer:'bola de futebol', basketball:'bola de basquete', snowball:'bola de neve', egg:'ovo', carrot:'cenoura', icecream:'sorvete', cake:'bolo', hotdog:'cachorro-quente', cheese:'queijo', shoe:'sapato', toilet:'privada', tv:'televisão', phone:'celular', guitar:'guitarra', bulb:'lâmpada', plane:'avião', ufo:'disco voador', anchor:'âncora', crown:'coroa', moon:'lua', sun:'sol', planet:'planeta', mushroom:'cogumelo', cactus:'cacto', bone:'osso', fist:'soco', turtle:'tartaruga', rabbit:'coelho', frog:'sapo', snake:'cobra', spider:'aranha', octopus:'polvo', whale:'baleia', crab:'caranguejo', bear:'urso', panda:'panda', unicorn:'unicórnio', dragon:'dragão', mouse:'rato', strawberry:'morango', cookie:'biscoito', coffee:'café', bottle:'garrafa', gift:'presente', book:'livro', tire:'pneu', vox:'objeto 3D' };
+  bullet:'bala', fireball:'bola de fogo', iceshard:'cristal de gelo', goo:'gosma', bat:'morcego', grenade:'granada', sword:'espada', knife:'faca', axe:'machado', hammer:'martelo', shuriken:'shuriken', lightning:'raio', rock:'pedra', brick:'tijolo', coin:'moeda', diamond:'diamante', soccer:'bola de futebol', basketball:'bola de basquete', snowball:'bola de neve', egg:'ovo', carrot:'cenoura', icecream:'sorvete', cake:'bolo', hotdog:'cachorro-quente', cheese:'queijo', shoe:'sapato', toilet:'privada', tv:'televisão', phone:'celular', guitar:'guitarra', bulb:'lâmpada', plane:'avião', ufo:'disco voador', anchor:'âncora', crown:'coroa', moon:'lua', sun:'sol', planet:'planeta', mushroom:'cogumelo', cactus:'cacto', bone:'osso', fist:'soco', turtle:'tartaruga', rabbit:'coelho', frog:'sapo', snake:'cobra', spider:'aranha', octopus:'polvo', whale:'baleia', crab:'caranguejo', bear:'urso', panda:'panda', unicorn:'unicórnio', dragon:'dragão', mouse:'rato', strawberry:'morango', cookie:'biscoito', coffee:'café', bottle:'garrafa', gift:'presente', book:'livro', tire:'pneu', proc:'modelo gerado' };
 const MODEL_WORDS = [
   [/cachorro.?quente|hot.?dog/,'hotdog'],[/bola de fogo|fireball|meteoro|cometa/,'fireball'],[/bola de neve|snowball/,'snowball'],[/bola de basquete|basquete/,'basketball'],[/bola de futebol|futebol|\bbola\b/,'soccer'],
   [/bala de canhao|cannonball/,'cannonball'],[/estrela ninja|shuriken/,'shuriken'],[/disco voador|\bovni|\bnave\b|\bdrone/,'ufo'],[/urso panda|\bpanda/,'panda'],[/missil|misseis|foguete/,'missile'],
@@ -576,7 +577,7 @@ function detectEmoji(t){ for (const [w, e] of EMOJI_DICT){ if (new RegExp(w.incl
 const GUN_TYPES = ['pistol','rifle','sniper','shotgun','minigun','bazooka','laser','railgun','flamethrower','launcher','sword','bow'];
 const GUN_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', bazooka:'bazuca', laser:'arma laser', railgun:'railgun', flamethrower:'lança-chamas', launcher:'lançador', sword:'arma branca', bow:'arco' };
 const ARCH_LABEL = { pistol:'pistola', rifle:'rifle', sniper:'rifle de precisão', shotgun:'escopeta', minigun:'metralhadora', rocket:'bazuca', laser:'arma laser', railgun:'railgun', sprayer:'lança-chamas', launcher:'lançador', melee:'arma branca', bow:'arco' };
-const GUN_WORDS = [[/bazuca|bazooka|lanca.?(foguete|missil|misseis)|\brpg\b/,'bazooka'],[/sniper|franco.?atirador|rifle de precisao/,'sniper'],[/metralhadora|minigun|gatling/,'minigun'],[/escopeta|espingarda|shotgun|\bdoze\b/,'shotgun'],[/lanca.?chamas|macarico|flamethrower/,'flamethrower'],[/railgun|canhao de plasma|eletromagnetic/,'railgun'],[/pistola|revolver|pistol|garrucha/,'pistol'],[/rifle|fuzil|carabina|\bak\b|\bm4\b/,'rifle'],[/\blaser\b|blaster/,'laser'],[/espada|katana|machado|martelo|faca|adaga|sabre|tridente/,'sword'],[/\barco\b|besta\b|crossbow|\bbow\b/,'bow'],[/canhao|lancador|lanca.?\w|catapulta|estilingue|bodoque|arremessador/,'launcher']];
+const GUN_WORDS = [[/bazuca|bazooka|lanca.?(foguete|missil|misseis)|\brpg\b/,'bazooka'],[/sniper|franco.?atirador|rifle de precisao/,'sniper'],[/metralhadora|minigun|gatling/,'minigun'],[/escopeta|espingarda|shotgun|\bdoze\b/,'shotgun'],[/lanca.?chamas|macarico|flamethrower/,'flamethrower'],[/railgun|canhao de plasma|eletromagnetic/,'railgun'],[/pistola|revolver|pistol|garrucha/,'pistol'],[/rifle|fuzil|carabina|\bak\b|\bm4\b/,'rifle'],[/\blaser\b|blaster/,'laser'],[/espada|katana|machado|martelo|faca|adaga|sabre|tridente|\bsoco|punho|luva|garra|marreta|\bmaca\b|clava|porrete|murro|boxe|foice|nunchaku/,'sword'],[/\barco\b|besta\b|crossbow|\bbow\b/,'bow'],[/canhao|lancador|lanca.?\w|catapulta|estilingue|bodoque|arremessador/,'launcher']];
 function detectGun(t){ for (const [re, k] of GUN_WORDS) if (re.test(t)) return k; return null; }
 function detectModel(t){ for (const [re, k] of MODEL_WORDS) if (re.test(t)) return k; return null; }
 function normModel(m){
@@ -592,42 +593,68 @@ function normModel(m){
 }
 function archOf(item){ const t = item.gunType; if (!t) return gunArch(item.weapon); return { bazooka: 'rocket', flamethrower: 'sprayer', sword: 'melee' }[t] || t; }
 function libMdl(k){ return { parts: LIB[k].parts, spin: LIB[k].spin, axis: LIB[k].axis, tracer: LIB[k].tracer, key: k }; }
-// Applies what the request literally asks for (weapon type, projectile object) on top of what the forge returned.
-// Projectile priority: hand-made 3D model > emoji word turned into 3D voxels > model drawn by Claude > Claude's emoji as voxels > a default that fits the weapon.
+// Applies what the request literally asks for (weapon type, melee, projectile object) on top of what the forge returned.
+// Visual priority: hand-made 3D model > model drawn by Claude > procedural 3D model. Never an emoji, never voxels.
+const CREATURE_LIBS = ['elephant','shark','chicken','duck','fish','cat','dog','dino','robot','bee','penguin','cow','pig','turtle','rabbit','frog','snake','spider','octopus','whale','crab','bear','panda','unicorn','dragon','mouse','ghost','fourarms','heatman','crystalman','speedster','insectoid','phantom','brute','wrecker','greymatter','jawman','megazord'];
+function meleeFlavor(t, w){
+  if (/\bsoco|punho|luva|tapa|punch|murro|boxe/.test(t)){ w.anim = 'punch'; w.reach = Math.min(w.reach, 2.6); w.count = Math.max(w.count, 2); w.arc = Math.min(w.arc, 130); }
+  else if (/martelo|marreta|\bmaca\b|hammer|clava|porrete/.test(t)){ w.anim = 'smash'; w.reach = Math.max(w.reach, 3); if (!w.explosion) w.explosion = 55; w.fireRate = Math.min(w.fireRate, 1.3); w.arc = Math.max(w.arc, 190); }
+  else if (/faca|adaga|garra|navalha|punhal|claw/.test(t)){ w.anim = 'claw'; w.count = Math.max(w.count, 3); w.reach = Math.min(w.reach, 2.5); w.fireRate = Math.max(w.fireRate, 2.2); }
+  else if (!w.anim || w.anim === 'auto') w.anim = 'slash';
+}
+function finishFormWeapon(w, f){
+  if (w.melee){ w.arch = 'melee'; return; }
+  if (w.shape === 'emoji') w.shape = 'orb';
+  if (!w.mdl && (w.shape === 'orb' || (w.shape === 'bullet' && w.size > 9))){
+    const fxk = { fire: 'fireball', freeze: 'iceshard', poison: 'goo', lifesteal: 'bat' }[w.effect];
+    w.mdl = fxk ? libMdl(fxk) : procObject(f.name, f.color); w.shape = 'model';
+  }
+  if (w.shape === 'model' && w.mdl) w.size = Math.max(w.size, 10);
+  w.arch = gunArch(w);
+}
 function finalize(it, req){
   const t = strip(req || '');
   if (it.kind === 'transform'){
-    const mk0 = detectModel(t);
-    it.forms.forEach(f => { if (!f.mdl){ const nm = strip(f.name), fk = detectModel(nm), em = detectEmoji(nm);
-      f.mdl = fk && LIB[fk] ? libMdl(fk) : em ? { vox: em, spin: false, key: 'vox' } : it.mdl || (mk0 && LIB[mk0] ? libMdl(mk0) : { vox: f.emoji || it.emoji, spin: false, key: 'vox' }); } });
+    it.forms.forEach(f => {
+      if (!f.mdl){ const fk = detectModel(strip(f.name)); f.mdl = fk && CREATURE_LIBS.includes(fk) ? libMdl(fk) : procCreature(f.name, f.desc, f.color); }
+      if (f.weapon) finishFormWeapon(f.weapon, f);
+    });
     it.mdl = it.forms[0].mdl; return it;
   }
   it.reqGun = false;
+  if (it.weapon && it.kind === 'turret') it.weapon.melee = false;
   if (it.kind === 'weapon' || it.kind === 'turret'){ const gt = detectGun(t); if (gt){ it.gunType = gt; it.reqGun = true; } }
-  const w = it.weapon, g = it.gunType;
+  const g = it.gunType;
+  if (it.weapon && it.kind === 'weapon' && g === 'sword') it.weapon.melee = true;
+  if (it.kind === 'minion' && it.weapon && it.weapon.melee){ it.contactDamage = Math.max(it.contactDamage, it.weapon.damage * Math.min(it.weapon.count, 6) * it.weapon.fireRate * .6); it.weapon = null; }
+  const w = it.weapon, mk = detectModel(t), melee = !!(w && w.melee);
+  if (melee){
+    w.arch = 'melee'; w.reach = clamp(w.reach, 1.2, 14); meleeFlavor(t, w); w.range = Math.round(w.reach * 20);
+    if (mk && ['sword','knife','axe','hammer','fist'].includes(mk)) it.meleeModel = libMdl(mk);
+    it.mdl = null; return it;
+  }
   if (w){
     if (g === 'bazooka') w.shape = 'rocket';
     if (g === 'laser' || g === 'railgun') w.shape = 'laser';
     if (g === 'flamethrower'){ w.shape = 'orb'; if (w.effect === 'none') w.effect = 'fire'; w.range = Math.min(w.range, 420); }
-    if (g === 'sword'){ w.range = Math.min(w.range, 220); w.shape = 'orb'; }
     w.arch = archOf(it);
   }
   const claudeMdl = it.mdl; it.mdl = null;
-  const mk = detectModel(t);
-  if (it.kind === 'transform' && claudeMdl && !mk){ it.mdl = claudeMdl; return it; }
-  const selfMelee = it.gunType === 'sword' && ['sword','knife','axe','hammer'].includes(mk);
-  const sprayer = w && w.arch === 'sprayer' && it.kind !== 'minion';
-  if (mk === 'missile'){ if (w && it.kind !== 'minion' && !sprayer) w.shape = 'rocket'; }
-  else if (mk && !selfMelee && !(sprayer && ['fireball','iceshard','goo'].includes(mk))) it.mdl = libMdl(mk);
-  if (!it.mdl && !selfMelee && !sprayer && mk !== 'missile'){ const em = detectEmoji(t); if (em) it.mdl = { vox: em, spin: true, axis: 'y', key: 'vox' }; }
+  if (it.kind === 'minion'){
+    it.mdl = claudeMdl || (mk && CREATURE_LIBS.includes(mk) ? libMdl(mk) : procCreature(it.name, (it.desc || '') + ' ' + (req || ''), it.color));
+    if (w) finishFormWeapon(w, it); return it;
+  }
+  const sprayer = w && w.arch === 'sprayer';
+  if (mk === 'missile'){ if (w && !sprayer) w.shape = 'rocket'; }
+  else if (mk && !(sprayer && ['fireball','iceshard','goo'].includes(mk))) it.mdl = libMdl(mk);
+  if (!it.mdl && !sprayer && mk !== 'missile'){ const em = detectEmoji(t); if (em) it.mdl = procFromEmoji(em, req, it.color, 'projectile'); }
   if (!it.mdl && !sprayer && claudeMdl) it.mdl = claudeMdl;
-  if (!it.mdl && w && !sprayer && w.shape === 'emoji' && w.projEmoji) it.mdl = { vox: w.projEmoji, spin: true, axis: 'y', key: 'vox' };
-  if (!it.mdl && (it.kind === 'minion' || it.kind === 'transform')) it.mdl = { vox: it.emoji, spin: false, key: 'vox' };
-  if (w && it.kind !== 'minion'){
+  if (!it.mdl && w && !sprayer && w.shape === 'emoji' && w.projEmoji) it.mdl = procFromEmoji(w.projEmoji, it.name, it.color, 'projectile');
+  if (w){
     const a = w.arch, fxk = { fire: 'fireball', freeze: 'iceshard', poison: 'goo', lifesteal: 'bat' }[w.effect];
     if (!it.mdl && !['laser','railgun','rocket','sprayer','melee'].includes(a) && w.shape !== 'rocket'){
       const dk = a === 'bow' ? 'arrow' : fxk || (a === 'launcher' ? 'grenade' : ['pistol','rifle','sniper','minigun','shotgun'].includes(a) ? 'bullet' : null);
-      if (dk) it.mdl = libMdl(dk);
+      if (dk) it.mdl = libMdl(dk); else if (w.shape === 'orb' || w.shape === 'emoji') it.mdl = procObject(it.name, it.color);
     }
     if (it.mdl){ w.shape = 'model'; w.mdl = it.mdl; if (it.mdl.key !== 'bullet') w.size = Math.max(w.size, 10); }
     else if (w.shape === 'emoji') w.shape = 'orb';
@@ -635,6 +662,197 @@ function finalize(it, req){
   applyGunSpec(it, t);
   return it;
 }
+
+/* ================= procedural 3D models =================
+   Used whenever there is no hand-made or AI model. They are real 3D meshes with a rig (arms, legs, wings, tail, head),
+   never emoji sprites and never voxels. */
+function h32(str){ let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const rgb2hex = (r, g, b) => '#' + [r, g, b].map(v => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
+function shade(hx, a){ const [r, g, b] = hex2rgb(hx); return a >= 0 ? rgb2hex(r + (255 - r) * a, g + (255 - g) * a, b + (255 - b) * a) : rgb2hex(r * (1 + a), g * (1 + a), b * (1 + a)); }
+function mixHex(a, b, t){ const A = hex2rgb(a), B = hex2rgb(b); return rgb2hex(A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t); }
+function hueShift(hx, deg){ const c = new THREE.Color(hx), o = {}; c.getHSL(o); c.setHSL(((o.h + deg / 360) % 1 + 1) % 1, Math.max(.35, o.s), clamp(o.l, .35, .65)); return '#' + c.getHexString(); }
+const okHex = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '#8a7bd0';
+function PB(){
+  const out = [], add = (s, sz, pos, rot, c, o) => { out.push({ s, sz, pos, rot: rot || [0, 0, 0], c, glow: !!(o && o.g), rig: (o && o.rig) || '' }); };
+  const addM = (s, sz, pos, rot, c, o) => { add(s, sz, pos, rot, c, o); const r = rot || [0, 0, 0]; add(s, sz, [-pos[0], pos[1], pos[2]], [r[0], -r[1], -r[2]], c, o && Object.assign({}, o, { rig: swapLR(o.rig || '') })); };
+  return { out, add, addM };
+}
+const toArr = p => [p.s, p.sz, p.pos, p.rot, p.c, p.rig || '', !!p.glow];
+
+/* ---- emoji only gives us a word dictionary and a color/category hint; nothing emoji-shaped is ever drawn ---- */
+const emojiInfoCache = new Map();
+function emojiInfo(e){
+  if (emojiInfoCache.has(e)) return emojiInfoCache.get(e);
+  let color = null;
+  try {
+    const N = 24, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d');
+    x.font = `${N - 3}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, N / 2, N / 2 + 1);
+    const d = x.getImageData(0, 0, N, N).data; let r = 0, g = 0, b = 0, ws = 0;
+    for (let i = 0; i < d.length; i += 4){ if (d[i + 3] < 140) continue; const w = .25 + (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2])) / 255; r += d[i] * w; g += d[i + 1] * w; b += d[i + 2] * w; ws += w; }
+    if (ws > 0) color = rgb2hex(r / ws, g / ws, b / ws);
+  } catch(_){}
+  const cp = e.codePointAt(0);
+  const animal = (cp >= 0x1F400 && cp <= 0x1F43F) || (cp >= 0x1F980 && cp <= 0x1F9AF) || (cp >= 0x1FAB0 && cp <= 0x1FAB9);
+  const human = (cp >= 0x1F9D0 && cp <= 0x1F9DF) || cp === 0x1F47D || cp === 0x1F47E || cp === 0x1F916 || cp === 0x1F977 || (cp >= 0x1F479 && cp <= 0x1F47C) || cp === 0x1F921;
+  const info = { color, cat: animal ? 'animal' : human ? 'humanoid' : 'object' }; emojiInfoCache.set(e, info); return info;
+}
+
+function creatureTraits(text, color, opts, R){
+  const has = re => re.test(text);
+  let body = 'biped';
+  if (has(/\brobo|mecha|androide|ciborg|maquina|\bdrone|cyber|automato|megazord|\bzord/)) body = 'robot';
+  else if (has(/dragao|wyvern|\bdraco\b|dragon/)) body = 'dragon';
+  else if (has(/passaro|\bave\b|aguia|coruja|galinha|\bgalo\b|\bpato|pinguim|papagaio|corvo|pombo|falcao|fenix|\bperu\b|cisne|flamingo/)) body = 'bird';
+  else if (has(/inseto|abelha|vespa|\bmosca|borboleta|besouro|formiga|libelula|louva|mosquito|aranha|escorpiao|barata|grilo|insectoid/)) body = 'insect';
+  else if (has(/cobra|serpente|minhoca|\bverme|enguia|lagarta|\bnaga|snake/)) body = 'serpent';
+  else if (has(/peixe|tubarao|baleia|golfinho|piranha|\borca|\braia\b|mandibula|\bfish|\bshark/)) body = 'fish';
+  else if (has(/fantasma|espectro|assombr|espirito|ghost|spectr/)) body = 'ghost';
+  else if (has(/polvo|\blula\b|gosma|slime|geleia|\bblob|\blodo|ameba|gelatina|medusa/)) body = 'blob';
+  else if (has(/\bbola\b|esfera|\bovo\b|\bpneu|\bball\b|demolicao|rolante/)) body = 'ball';
+  else if (has(/planta|arvore|\bflor\b|cacto|cogumelo|vegetal|\bvine|\braiz|\bfolha/)) body = 'plant';
+  else if (has(/gato|cachorr|\bcao\b|lobo|leao|tigre|cavalo|\bvaca|porco|\burso|elefante|rinoceronte|girafa|coelho|\brato\b|raposa|\bboi\b|cabra|ovelha|jacare|crocodilo|tartaruga|\bsapo|lagarto|dinossauro|\bdino|\bbesta|\bfera|animal|pantera|onca|hiena|veado|camelo|zebra|hipopotamo|canguru|panda|touro|javali|mamute|t-?rex|dente de sabre/)) body = 'quad';
+  else if (has(/pedra|rocha|golem|cristal|mineral|\bgelo\b|\bterra\b|montanha|diamante|obsidiana|\blava\b|magma/)) body = 'rock';
+  const tag = { fire: has(/fogo|chama|lava|magma|inferno|ardente|brasa|fire/), ice: has(/gelo|neve|congel|glacial|\bfrio|\bice\b/), poison: has(/veneno|toxic|acido|gosma|slime/), elec: has(/raio|eletric|trovao|tesla|energia|plasma|\bvolt/), water: has(/\bagua|\bmar\b|oceano|aquatic/) };
+  const main = okHex(color);
+  const accent = tag.fire ? '#ffb030' : tag.ice ? '#bfefff' : tag.poison ? '#8cff4a' : tag.elec ? '#ffe14d' : tag.water ? '#4cc3ff' : shade(hueShift(main, 150), .2);
+  return { body, arms: (opts.arms === 4 || has(/quatro bracos|4 bracos|four arms|multiplos bracos/)) ? 4 : 2, big: opts.big || has(/gigante|enorme|titan|brutamontes|\bultra|\bhulk|\bogro|\btroll|colosso|brute|pesad/), slim: has(/rapido|veloz|ninja|speed|agil|magro|leve/),
+    horns: has(/chifre|demonio|diabo|minotauro|touro|\bboi\b|dragao|\bbode\b|cervo|alce/) || R() < .28, wings: opts.wings || has(/\basa|voa|voador|inseto|\banjo|dragao|morcego|fenix|borboleta/), tail: has(/cauda|lagarto|dragao|dino|gato|lobo|leao|tigre|cavalo|rato|diabo|demonio/) || R() < .4,
+    spikes: has(/espinho|ourico|cacto|spike/) || R() < .22, eyes: has(/ciclope|um olho/) ? 1 : has(/aranha|multi|insectoid/) ? 3 : 2, mane: has(/leao|\bjuba|mane/), fire: tag.fire, tag,
+    main, dark: shade(main, -.45), light: shade(main, .38), belly: shade(main, .55), accent };
+}
+
+function procCreature(name, desc, color, opts){
+  opts = opts || {};
+  const text = strip((name || '') + ' ' + (desc || '')), R = rng(h32(text + okHex(color)));
+  const T = creatureTraits(text, color, opts, R), b = PB(), { add, addM } = b, { main, dark, light, belly, accent } = T;
+  const W = T.big ? 1.28 : T.slim ? .86 : 1;
+  const eyes = (y, z, spread, sz, rig, c) => { const col = c || accent; if (T.eyes === 1) add('sphere', [sz * 1.5, sz * 1.2, sz], [0, y, z], 0, col, { g: 1, rig }); else { addM('sphere', [sz, sz * .8, sz * .6], [spread, y, z], [0, 0, .25], col, { g: 1, rig }); addM('sphere', [sz * .45, sz * .5, sz * .3], [spread, y, z + sz * .45], 0, '#101018', { rig }); if (T.eyes === 3) add('sphere', [sz * .8, sz * .7, sz * .5], [0, y + sz * 2.6, z - .01], 0, col, { g: 1, rig }); } };
+  const horns = (y, z, rig) => { if (T.horns) addM('cone', [.028, .15, .028], [.075, y, z], [-.15, 0, -.45], T.body === 'robot' ? dark : '#efe6d0', { rig }); };
+  const glowC = T.fire || T.tag.elec || T.tag.poison;
+  const wings = (y, span) => { addM('sphere', [.03, .03, .03], [.1, y, -.1], 0, dark, { rig: 'wingL' }); addM('capsule', [.012, span, .012], [.1 + span * .5, y + .02, -.12], [0, 0, 1.45], dark, { rig: 'wingL' }); addM('box', [span * .85, .01, .24], [.1 + span * .5, y, -.14], [0, .12, .25], T.tag.fire ? '#ff7a2a' : light, { rig: 'wingL' }); addM('box', [span * .6, .01, .17], [.1 + span * .42, y - .02, -.3], [0, .35, .15], main, { rig: 'wingL' }); };
+  const tail = (y, len, col) => { add('cone', [.07 * W, len, .07 * W], [0, y, -len * .5 - .1], [-1.75, 0, 0], col || dark, { rig: 'tail' }); add('cone', [.04 * W, len * .6, .04 * W], [0, y - .06, -len - .05], [-2.2, 0, 0], col || main, { rig: 'tail' }); if (T.fire) add('sphere', [.04, .05, .04], [0, y - .1, -len * 1.4], 0, '#ffb030', { g: 1, rig: 'tail' }); };
+  const spikes = (y, n, z) => { if (T.spikes) for (let i = 0; i < n; i++) add('cone', [.03, .1 + R() * .05, .03], [0, y - i * .09, z - i * .01], [-.6, 0, 0], light); };
+  const arm = (p, y0, sw, pairShort) => { const rig = `armL${p + 1}`, L = pairShort ? .16 : .2;
+    addM('sphere', [.07 * W, .07 * W, .07 * W], [sw, y0, 0], 0, light, { rig });
+    addM('capsule', [.058 * W, L, .058 * W], [sw + .04, y0 - L * .6, .02], [0, 0, .12], main, { rig });
+    addM('capsule', [.062 * W, L, .062 * W], [sw + .065, y0 - L * 1.55, .05], 0, T.body === 'robot' ? dark : belly, { rig });
+    addM('sphere', [.07 * W, .06, .07 * W], [sw + .07, y0 - L * 2.4, .07], 0, dark, { rig });
+    for (let k = -1; k <= 1; k++) addM('cone', [.014, .06, .014], [sw + .07 + k * .02, y0 - L * 2.4 - .06, .11], [.5, 0, 0], '#efe6d0', { rig }); };
+  const legs = (y0, sp) => { addM('capsule', [.078 * W, .27, .078 * W], [sp, y0, 0], 0, dark, { rig: 'legL' }); addM('capsule', [.07 * W, .22, .07 * W], [sp, y0 - .21, .01], 0, main, { rig: 'legL' }); addM('box', [.1 * W, .05, .19], [sp, -.475, .05], 0, dark, { rig: 'legL' }); for (let k = -1; k <= 1; k++) addM('cone', [.015, .05, .015], [sp + k * .025, -.485, .15], [1.57, 0, 0], '#efe6d0', { rig: 'legL' }); };
+
+  if (T.body === 'biped' || T.body === 'robot' || T.body === 'rock'){
+    const rob = T.body === 'robot', rk = T.body === 'rock', sh = rk ? 'rock' : rob ? 'box' : 'sphere';
+    legs(-.2, .1 * W);
+    add(sh, rob ? [.3 * W, .3, .2 * W] : rk ? [.22 * W, .24, .17 * W] : [.2 * W, .24, .15 * W], [0, .06, 0], rk ? [.2, .3, 0] : 0, main);
+    add(rob ? 'box' : 'sphere', rob ? [.26 * W, .16, .04] : [.16 * W, .15, .08], [0, .1, .105 * W + (rob ? .02 : .01)], 0, rob ? dark : light);
+    add(rob ? 'box' : 'sphere', rob ? [.22 * W, .08, .17] : [.17 * W, .1, .13], [0, -.12, 0], 0, dark);
+    add('torus', [.045, .045, .045], [0, .12, .18 * W], 0, accent, { g: 1 });
+    if (rk) for (let i = 0; i < 4; i++) add('box', [.01, .09, .01], [-.08 + i * .055, .04, .17], [0, 0, .3], accent, { g: 1 });
+    for (let p = 0; p < T.arms / 2; p++) arm(p, .2 - p * .17, (.25 + p * .02) * W, p > 0);
+    const hy = .34;
+    add(rob ? 'box' : rk ? 'rock' : 'sphere', rob ? [.2, .16, .17] : [.115, .105, .12], [0, hy, .01], 0, rob ? light : main, { rig: 'head' });
+    if (rob) add('box', [.17, .045, .02], [0, hy + .005, .095], 0, accent, { g: 1, rig: 'head' }); else eyes(hy + .02, .105, .05, .03, 'head');
+    add('box', [.07, .012, .01], [0, hy - .06, .11], 0, dark, { rig: 'head' }); if (!rob) addM('cone', [.012, .03, .012], [.025, hy - .075, .115], [3.14, 0, 0], '#ffffff', { rig: 'head' });
+    horns(hy + .1, 0, 'head');
+    if (!rob && !T.horns && R() < .6) add('cone', [.02, .14, .11], [0, hy + .1, -.03], [-.3, 0, 0], accent, { g: glowC, rig: 'head' });
+    if (rob){ add('cylinder', [.01, .15, .01], [.06, hy + .17, 0], 0, dark, { rig: 'head' }); add('sphere', [.025, .025, .025], [.06, hy + .26, 0], 0, accent, { g: 1, rig: 'head' }); }
+    if (T.tail) tail(-.12, .3);
+    if (T.wings) wings(.22, .36);
+    spikes(.28, 4, -.14);
+    if (T.mane) for (let i = 0; i < 7; i++){ const a = i / 7 * 6.28; add('sphere', [.06, .06, .06], [Math.cos(a) * .12, hy + Math.sin(a) * .1, -.05], 0, shade(main, -.2), { rig: 'head' }); }
+  } else if (T.body === 'quad' || T.body === 'dragon'){
+    const dr = T.body === 'dragon';
+    add('capsule', [.17, .56, .15], [0, -.1, 0], [1.5708, 0, 0], main); add('capsule', [.13, .44, .1], [0, -.17, .02], [1.5708, 0, 0], belly);
+    add('sphere', [.15, .16, .15], [0, -.02, .2], 0, main);
+    if (dr) add('capsule', [.07, .3, .07], [0, .1, .3], [.8, 0, 0], main, { rig: 'head' });
+    const hz = dr ? .26 : .06;
+    add('sphere', [.115, .105, .12], [0, hz, .34], 0, main, { rig: 'head' }); add('box', [.1, .07, .12], [0, hz - .04, .44], 0, belly, { rig: 'head' }); add('sphere', [.025, .02, .02], [0, hz - .02, .5], 0, '#1b1b22', { rig: 'head' });
+    eyes(hz + .03, .43, .055, .028, 'head');
+    addM('cone', [.035, .1, .02], [.075, hz + .1, .31], [0, 0, -.35], main, { rig: 'head' }); horns(hz + .1, .3, 'head');
+    if (T.mane) for (let i = 0; i < 9; i++){ const a = i / 9 * 6.28; add('sphere', [.07, .07, .06], [Math.cos(a) * .15, hz + Math.sin(a) * .13, .28], 0, shade(main, -.25), { rig: 'head' }); }
+    addM('capsule', [.065, .28, .065], [.1, -.35, .17], 0, dark, { rig: 'legL' }); addM('capsule', [.07, .28, .07], [.1, -.35, -.17], 0, dark, { rig: 'legL2' });
+    addM('capsule', [.06, .2, .06], [.1, -.28, .17], 0, main, { rig: 'legL' }); addM('capsule', [.065, .2, .065], [.1, -.28, -.17], 0, main, { rig: 'legL2' });
+    addM('box', [.09, .04, .13], [.1, -.48, .2], 0, dark, { rig: 'legL' }); addM('box', [.09, .04, .13], [.1, -.48, -.14], 0, dark, { rig: 'legL2' });
+    tail(-.02, dr ? .45 : .34); if (dr || T.wings) wings(.12, dr ? .56 : .4); spikes(.12, 5, -.05);
+  } else if (T.body === 'bird' || T.body === 'insect'){
+    const ins = T.body === 'insect';
+    add('sphere', [.15, .16, .22], [0, 0, 0], [.35, 0, 0], main); add('sphere', [.1, .1, .14], [0, -.06, .05], [.35, 0, 0], belly);
+    if (ins) add('sphere', [.12, .13, .2], [0, -.08, -.28], [.2, 0, 0], light, { rig: 'tail' });
+    add('sphere', [.095, .09, .1], [0, .2, .17], 0, ins ? dark : main, { rig: 'head' });
+    if (ins){ eyes(.22, .23, .06, .045, 'head', '#e8442a'); addM('cylinder', [.008, .17, .008], [.04, .34, .2], [.3, 0, -.4], dark, { rig: 'head' }); } else { add('cone', [.04, .14, .04], [0, .19, .3], [1.5708, 0, 0], '#f2a13a', { rig: 'head' }); eyes(.23, .22, .05, .025, 'head', '#101018'); add('cone', [.03, .12, .06], [0, .3, .1], [-.5, 0, 0], accent, { rig: 'head' }); }
+    const spd = ins && /aranha|escorpiao/.test(text); if (!spd) wings(.1, ins ? .5 : .46);
+    const n = spd ? 4 : ins ? 3 : 1; for (let k = 0; k < n; k++){ addM('capsule', [.018, .26, .018], [.08, -.28, .1 - k * .12], [0, 0, ins ? .6 : .12], dark, { rig: k % 2 ? 'legL2' : 'legL' }); }
+    if (!ins) add('box', [.2, .02, .24], [0, -.05, -.3], [.1, 0, 0], light, { rig: 'tail' });
+  } else if (T.body === 'serpent'){
+    for (let i = 0; i < 9; i++){ const z = .38 - i * .095, r = .1 - i * .006, x = Math.sin(i * .9) * .1; add('sphere', [r, r * .95, r * 1.15], [x, -.4 + r, z], 0, i % 2 ? main : light, i > 4 ? { rig: 'tail' } : {}); }
+    add('sphere', [.115, .09, .14], [0, -.28, .46], 0, main, { rig: 'head' }); eyes(-.23, .52, .05, .028, 'head'); add('box', [.012, .004, .1], [0, -.33, .6], 0, '#e0312f', { rig: 'head' });
+  } else if (T.body === 'fish'){
+    add('sphere', [.2, .22, .42], [0, 0, 0], 0, main); add('sphere', [.16, .14, .34], [0, -.07, .04], 0, belly);
+    add('cone', [.04, .24, .12], [0, .26, -.02], [-.3, 0, 0], dark); add('cone', [.2, .3, .03], [0, 0, -.52], [1.5708, 0, 0], light, { rig: 'tail' });
+    addM('sphere', [.2, .03, .09], [.22, -.1, .12], [0, 0, -.5], dark, { rig: 'armL1' }); eyes(.08, .34, .1, .04, '', '#ffd23f');
+    add('box', [.18, .035, .12], [0, -.1, .4], 0, '#5a1f2a'); for (let k = -2; k <= 2; k++) add('cone', [.014, .05, .014], [k * .03, -.07, .45], [3.14, 0, 0], '#ffffff');
+  } else if (T.body === 'ghost'){
+    add('cone', [.22, .8, .2], [0, -.1, 0], 0, main); add('sphere', [.16, .2, .14], [0, .2, 0], 0, light); add('sphere', [.115, .13, .11], [0, .38, .02], 0, shade(main, .65), { rig: 'head' });
+    eyes(.4, .12, .05, .034, 'head', '#ff2a2a'); add('box', [.09, .015, .02], [0, .33, .12], 0, '#3a2a50', { rig: 'head' });
+    for (let p = 0; p < T.arms / 2; p++) { const y0 = .22 - p * .15; addM('sphere', [.05, .05, .05], [.18, y0, 0], 0, main, { rig: `armL${p + 1}` }); addM('capsule', [.035, .32, .035], [.27, y0 - .14, .08], [.5, 0, .5], light, { rig: `armL${p + 1}` }); }
+    add('cone', [.05, .3, .05], [0, -.5, -.05], [3.14, 0, 0], dark, { rig: 'tail' });
+  } else if (T.body === 'blob'){
+    add('sphere', [.36, .3, .34], [0, -.18, 0], 0, main); add('sphere', [.28, .2, .26], [0, -.1, .05], 0, shade(main, .3)); eyes(-.02, .26, .1, .06, '');
+    add('sphere', [.12, .03, .06], [0, -.2, .33], [0, 0, 0], dark);
+    for (let p = 0; p < 2; p++) { addM('sphere', [.05, .05, .05], [.3, -.1 + p * .02, 0], 0, light, { rig: `armL${p + 1}` }); addM('capsule', [.045, .22, .045], [.38, -.22 + p * .02, .05], [0, 0, .7], main, { rig: `armL${p + 1}` }); }
+    for (let i = 0; i < 5; i++) addM('sphere', [.07, .05, .07], [.1 + i * .05, -.47, .1 - i * .06], 0, dark, i % 2 ? { rig: 'legL' } : { rig: 'legL2' });
+    add('sphere', [.05, .08, .05], [.15, .15, .05], 0, main); add('sphere', [.04, .06, .04], [-.12, .1, -.1], 0, light);
+  } else if (T.body === 'ball'){
+    add('sphere', [.38, .38, .38], [0, 0, 0], 0, main, { rig: 'roll' }); [[0, 1.57, 0], [1.57, 0, 0], [0, .8, 0]].forEach((r, i) => add('ring', [.385, .385, .385], [0, 0, 0], r, i == 2 ? accent : dark, { g: i == 2, rig: 'roll' }));
+    for (let i = 0; i < 6; i++){ const a = i / 6 * 6.28; add('cone', [.06, .12, .06], [Math.cos(a) * .4, Math.sin(a) * .4, 0], [0, 0, a - 1.57], dark, { rig: 'roll' }); }
+    add('sphere', [.07, .05, .03], [.12, .1, .36], 0, accent, { g: 1, rig: 'roll' }); add('sphere', [.07, .05, .03], [-.12, .1, .36], 0, accent, { g: 1, rig: 'roll' });
+  } else if (T.body === 'plant'){
+    add('cylinder', [.08, .5, .08], [0, -.15, 0], 0, '#4a7a2a'); add('sphere', [.2, .2, .2], [0, .2, 0], 0, main, { rig: 'head' }); eyes(.22, .17, .06, .035, 'head', '#101018');
+    for (let i = 0; i < 8; i++){ const a = i / 8 * 6.28; add('sphere', [.07, .14, .03], [Math.cos(a) * .24, .2 + Math.sin(a) * .24, 0], [0, 0, a], T.tag.fire ? '#ff7a2a' : light, { rig: 'head' }); }
+    for (let p = 0; p < 2; p++){ addM('sphere', [.04, .04, .04], [.1, -.05 - p * .15, 0], 0, '#4a7a2a', { rig: 'armL1' }); addM('box', [.28, .02, .13], [.26, -.06 - p * .15, 0], [0, 0, .4], '#3e9b3a', { rig: 'armL1' }); }
+    for (let i = 0; i < 3; i++) addM('capsule', [.04, .22, .04], [.08 + i * .04, -.43, .04 - i * .05], [0, 0, .7], '#6a4a2a', { rig: i % 2 ? 'legL' : 'legL2' });
+  }
+  const fitted = autoFit(b.out.map(toArr), 'creature').map(a => ({ s: a[0], sz: a[1], pos: a[2], rot: a[3], c: a[4], rig: a[5], glow: !!a[6] }));
+  return { parts: fitted, spin: false, key: 'proc' };
+}
+
+function procObject(name, color, opts){
+  opts = opts || {};
+  const text = strip(name || ''), R = rng(h32(text + okHex(color) + (opts.salt || ''))), main = okHex(color), dark = shade(main, -.45), light = shade(main, .4), accent = shade(hueShift(main, 150), .2);
+  const has = re => re.test(text);
+  let type = null;
+  if (has(/espinho|ourico|cacto|mace\b|maca\b|\bspike/)) type = 'spikeball';
+  else if (has(/cristal|gelo|diamante|\bgema|joia|vidro|estilhac/)) type = 'gem';
+  else if (has(/faca|lamina|corte|navalha|\bserra|bumerangue|foice|machado|\bsabre/)) type = 'blade';
+  else if (has(/fogo|meteoro|cometa|lava|chama|magma|\bsol\b|\bfire/)) type = 'comet';
+  else if (has(/energia|plasma|magia|\braio|eletric|\bluz\b|arcano|feitico|quantic|vazio|\bnuvem|\bgas\b/)) type = 'orbrings';
+  else if (has(/missil|torpedo|foguete|\bbala\b|dardo|agulha|\blanca\b|flecha|\bpilula|capsula/)) type = 'pill';
+  else if (has(/barril|\blata\b|garrafa|\bpote\b|bomba|\btnt\b|dinamite|granada/)) type = 'barrel';
+  else if (has(/caixa|\bcubo|\bdado\b|tijolo|bloco|\bpedra/)) type = 'cube';
+  else if (has(/broca|furadeira|parafuso|espiral|tornado|furacao|redemoinho/)) type = 'drill';
+  if (!type) type = ['gem', 'orbrings', 'spikeball', 'comet', 'pill', 'cube', 'drill', 'blade'][Math.floor(R() * 8)];
+  const b = PB(), { add } = b; let spin = true, axis = 'x', tracer = false;
+  switch (type){
+    case 'gem': add('octcone', [.26, .3, .26], [0, .15, 0], 0, main); add('octcone', [.26, .3, .26], [0, -.15, 0], [3.14, 0, 0], light); add('sphere', [.1, .1, .1], [0, 0, 0], 0, '#ffffff', { g: 1 }); add('oct', [.27, .04, .27], [0, 0, 0], 0, accent, { g: 1 }); axis = 'y'; break;
+    case 'spikeball': add('sphere', [.24, .24, .24], [0, 0, 0], 0, main); for (let i = 0; i < 14; i++){ const a = Math.acos(1 - 2 * (i + .5) / 14), p = Math.PI * (1 + Math.sqrt(5)) * i, x = Math.sin(a) * Math.cos(p), y = Math.cos(a), z = Math.sin(a) * Math.sin(p); add('cone', [.05, .2, .05], [x * .3, y * .3, z * .3], [Math.atan2(z, y) * 1, 0, -Math.atan2(x, Math.hypot(y, z))], light); } add('sphere', [.1, .1, .1], [0, 0, 0], 0, accent, { g: 1 }); break;
+    case 'blade': add('box', [.05, .018, .62], [0, 0, .05], 0, '#dfe5ee'); add('cone', [.04, .16, .018], [0, 0, .46], [1.5708, 0, 0], '#dfe5ee'); add('box', [.05, .02, .55], [0, .012, .03], 0, main, { g: 1 }); add('box', [.2, .03, .05], [0, 0, -.27], 0, dark); add('cylinder', [.025, .18, .025], [0, 0, -.38], [1.5708, 0, 0], light); spin = false; break;
+    case 'comet': add('sphere', [.2, .2, .2], [0, 0, .12], 0, main, { g: 1 }); add('sphere', [.12, .12, .12], [0, 0, .16], 0, '#ffffff', { g: 1 }); for (let i = 0; i < 3; i++) add('cone', [.15 - i * .03, .55 - i * .1, .15 - i * .03], [0, 0, -.32 - i * .02], [-1.5708, 0, 0], i ? accent : light, { g: 1 }); spin = false; tracer = true; break;
+    case 'orbrings': add('sphere', [.17, .17, .17], [0, 0, 0], 0, main, { g: 1 }); add('sphere', [.09, .09, .09], [0, 0, 0], 0, '#ffffff', { g: 1 }); add('ring', [.3, .3, .3], [0, 0, 0], [1.2, 0, 0], light, { g: 1 }); add('ring', [.34, .34, .34], [0, 0, 0], [0, 1.2, .6], accent, { g: 1 }); for (let i = 0; i < 3; i++){ const a = i * 2.09; add('sphere', [.04, .04, .04], [Math.cos(a) * .3, Math.sin(a) * .3, 0], 0, '#ffffff', { g: 1 }); } break;
+    case 'pill': add('capsule', [.1, .6, .1], [0, 0, 0], [1.5708, 0, 0], main); add('cone', [.1, .18, .1], [0, 0, .38], [1.5708, 0, 0], light); add('cylinder', [.102, .06, .102], [0, 0, -.05], [1.5708, 0, 0], accent, { g: 1 }); for (let k = 0; k < 4; k++){ const a = k * 1.5708; add('box', [.02, .13, .16], [Math.cos(a) * .1, Math.sin(a) * .1, -.3], [0, 0, a], dark); } add('cone', [.07, .22, .07], [0, 0, -.45], [-1.5708, 0, 0], accent, { g: 1 }); spin = false; tracer = true; break;
+    case 'barrel': add('cylinder', [.17, .36, .17], [0, 0, 0], 0, main); [-.14, .14].forEach(y => add('cylinder', [.178, .03, .178], [0, y, 0], 0, dark)); add('cylinder', [.05, .08, .05], [0, .22, 0], 0, light); add('cylinder', [.012, .1, .012], [.02, .3, 0], [0, 0, .4], '#c9a36b'); add('sphere', [.03, .03, .03], [.05, .35, 0], 0, '#ffb030', { g: 1 }); break;
+    case 'cube': add('box', [.32, .32, .32], [0, 0, 0], 0, main); add('box', [.2, .2, .2], [0, 0, 0], [.6, .6, 0], accent, { g: 1 }); for (const [x, y] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add('box', [.04, .04, .36], [x * .16, y * .16, 0], 0, dark); axis = 'y'; break;
+    case 'drill': add('cone', [.14, .4, .14], [0, 0, .25], [1.5708, 0, 0], main); for (let i = 0; i < 5; i++) add('torus', [.13 - i * .02, .13 - i * .02, .13 - i * .02], [0, 0, .08 + i * .08], [0, 0, 0], i % 2 ? light : accent, { g: i % 2 === 0 }); add('cylinder', [.12, .2, .12], [0, 0, -.15], [1.5708, 0, 0], dark); axis = 'z'; break;
+  }
+  return { parts: b.out, spin, axis, tracer, key: 'proc' };
+}
+function procFromEmoji(e, name, color, purpose){
+  const info = emojiInfo(e), col = info.color ? mixHex(info.color, okHex(color), .25) : okHex(color);
+  if (purpose === 'minion' || info.cat !== 'object') return Object.assign(procCreature(name, info.cat === 'object' ? '' : (info.cat === 'animal' ? 'animal' : 'alien'), col, purpose === 'projectile' ? { big: false } : {}), purpose === 'projectile' ? { spin: false } : {});
+  return procObject(name, col);
+}
+function flameSprite(size){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: FXT.flame, color: lin('#ffb347'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.set(size, size * 1.15, 1); return s; }
 
 /* ================= item model (shared with 2D) ================= */
 const KINDS = ['weapon','turret','minion','wall','shield','heal','boost','mine','strike','transform'];
@@ -651,7 +869,8 @@ function normWeapon(w){
   const o = { damage:num(w.damage,.1,5000,10), fireRate:num(w.fireRate,.1,40,2), speed:num(w.speed,50,4000,600),
     count:Math.round(num(w.count,1,256,1)), spread:num(w.spread,0,180,5), size:num(w.size,2,120,6), range:num(w.range,50,6000,600),
     homing:num(w.homing,0,1,0), bounce:Math.round(num(w.bounce,0,10,0)), explosion:num(w.explosion,0,800,0), pierce:!!w.pierce,
-    effect:EFFECTS.includes(w.effect)?w.effect:'none', ammo:Math.round(num(w.ammo,1,99999,60)), shape:SHAPES.includes(w.shape)?w.shape:'bullet', projEmoji:glyph(w.projEmoji) };
+    effect:EFFECTS.includes(w.effect)?w.effect:'none', ammo:Math.round(num(w.ammo,1,99999,60)), shape:SHAPES.includes(w.shape)?w.shape:'bullet', projEmoji:glyph(w.projEmoji),
+    melee: w.melee === true || w.attack === 'melee' || w.type === 'melee' || w.tipo === 'melee', reach: num(w.reach, .6, 40, 2.8), arc: num(w.arc, 20, 360, 140), anim: ['punch','slash','smash','bite','claw','ram'].includes(w.anim) ? w.anim : 'auto', knock: w.knock != null ? num(w.knock, 0, 40, 4) : null };
   if (o.shape === 'emoji' && !o.projEmoji) o.shape = 'orb';
   return o;
 }
@@ -667,6 +886,7 @@ function normForm(f, it){
     else if (f.weapon.lib && LIB[f.weapon.lib]){ o.weapon.shape = 'model'; o.weapon.mdl = libMdl(f.weapon.lib); }
     o.weapon.arch = gunArch(o.weapon);
   }
+  if (!o.weapon) o.weapon = { damage: Math.max(8, o.contactDamage * .7 + 6), fireRate: 2, speed: 700, count: 1, spread: 0, size: 12, range: 100, homing: 0, bounce: 0, explosion: 0, pierce: false, effect: 'none', ammo: 99999, shape: 'orb', projEmoji: '', melee: true, reach: 2 + o.scale * .55, arc: 150, anim: 'auto', knock: null, arch: 'melee' };
   return o;
 }
 function normItem(r, req, source){
@@ -720,10 +940,10 @@ function statLine(it){
   const f = n => (Math.round(n*10)/10).toString().replace('.', ',');
   const w = it.weapon, parts = [];
   if (w && it.kind !== 'minion') parts.push('modelo: ' + ARCH_LABEL[w.arch || gunArch(w)]);
-  if (it.mdl && ['weapon','turret','minion','transform'].includes(it.kind)) parts.push(it.kind === 'minion' || it.kind === 'transform' ? 'criatura 3D' : 'projétil 3D: ' + (it.mdl.vox ? it.mdl.vox + ' em cubinhos' : LIB_LABEL[it.mdl.key] || 'feito pela IA'));
+  if (it.mdl && ['weapon','turret','minion','transform'].includes(it.kind)) parts.push(it.kind === 'minion' || it.kind === 'transform' ? 'criatura 3D' : 'projétil 3D: ' + (LIB_LABEL[it.mdl.key] || (it.mdl.key === 'proc' ? 'modelo gerado' : 'feito pela IA')));
   if (it.gunSpec && it.gunSpec.barrels > 1) parts.push(`${it.gunSpec.barrels} canos`);
-  if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, `alcance ${Math.round(w.range*S)} m`);
-    if (it.kind === 'weapon') parts.push(`munição ${w.ammo}`);
+  if (w){ parts.push(`dano ${f(w.damage)}${w.count>1?' ×'+w.count:''}`, `${f(w.fireRate)}/s`, w.melee ? `corpo a corpo · alcance ${f(w.reach)} m${w.count > 1 ? ' · ' + Math.round(w.count) + ' golpes' : ''}` : `alcance ${Math.round(w.range*S)} m`);
+    if (it.kind === 'weapon' && !w.melee) parts.push(`munição ${w.ammo}`);
     if (w.explosion) parts.push('explode'); if (w.homing > .2) parts.push('teleguiado'); if (w.pierce) parts.push('atravessa');
     if (w.bounce) parts.push(`ricocheteia ${w.bounce}×`); if (w.effect !== 'none') parts.push(EFFECT_LABEL[w.effect]); }
   if (it.kind==='turret') parts.unshift(`vida ${Math.round(it.hp)}`);
@@ -748,7 +968,7 @@ setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); 
 const q = s => String(s).replace(/"/g, "'").replace(/`/g, "'");
 function itemSchemaText(deep){
   return `Escolha o "kind" que melhor representa o pedido:
-- weapon: arma que o personagem segura e dispara onde mira.
+- weapon: arma que o personagem segura: de tiro (dispara onde mira) ou corpo a corpo (espada, machado, martelo, soco inglês, garras).
 - turret: torre parada que atira sozinha (usa "weapon" e "hp").
 - minion: aliado/criatura/veículo/robô que persegue o inimigo (hp, speed, contactDamage por segundo, "weapon" opcional se ele atirar).
 - wall: muralha/barreira que bloqueia tiros (hp, length).
@@ -757,8 +977,10 @@ function itemSchemaText(deep){
 - boost: aumento de velocidade (speed multiplicador, duration).
 - mine: minas no chão (count, damage, radius).
 - strike: ataque do céu em volta do inimigo (count, damage, radius, delay).
-- transform: o personagem vira outra(s) forma(s): alienígenas, monstros, robôs gigantes (ex.: Megazord), super-heróis. Use "forms": lista de 1 a 10 formas (um relógio com vários alienígenas tem uma forma para cada alien); cada forma vira um botão na tela e o jogador escolhe qual usar. Cada forma: {"name","emoji","color","desc","duration" (segundos),"speed" (multiplicador),"damageMult","amount" (escudo),"scale" (tamanho: 1 = humano, 6 = robô gigante),"contactDamage" (dano por segundo ao encostar),"flight" (true se voa),"weapon" (ataque próprio da forma, opcional, mesmos campos de weapon)${deep ? ',"modelDesc" (descrição MUITO detalhada do corpo 3D dessa forma: partes, número de braços/pernas, proporções, cores hex, símbolos)' : ',"model" (peças 3D da forma)'}}.
-Campos de "weapon": damage, fireRate (tiros/s), speed (20 = 1 m/s), count (projéteis por tiro, até 256), spread (graus), size (tamanho do projétil), range (20 = 1 m), homing 0-1, bounce, explosion (raio, 20 = 1 m), pierce true/false, effect: none|fire|freeze|poison|knockback|lifesteal, ammo (99999 = infinita), shape: bullet|laser|orb|rocket|emoji, projEmoji (um emoji do projétil)${deep ? ', modelDesc (descrição detalhada do projétil 3D, se não for uma bala/laser comum)' : ''}.
+- transform: o personagem vira outra(s) forma(s): alienígenas, monstros, robôs gigantes (ex.: Megazord), super-heróis. Use "forms": lista de 1 a 10 formas (um relógio com vários alienígenas tem uma forma para cada alien); cada forma vira um botão na tela e o jogador escolhe qual usar. Cada forma: {"name","emoji","color","desc","duration" (segundos),"speed" (multiplicador),"damageMult","amount" (escudo),"scale" (tamanho: 1 = humano, 6 = robô gigante),"contactDamage" (dano por segundo ao encostar),"flight" (true se voa),"weapon" (OBRIGATÓRIO: o ataque da forma, mesmos campos de weapon; veja CORPO A CORPO abaixo)${deep ? ',"modelDesc" (descrição MUITO detalhada do corpo 3D dessa forma: partes, número de braços/pernas, proporções, cores hex, símbolos)' : ',"model" (peças 3D da forma)'}}.
+Campos de "weapon": damage, fireRate (tiros/s), speed (20 = 1 m/s), count (projéteis por tiro, até 256), spread (graus), size (tamanho do projétil), range (20 = 1 m), homing 0-1, bounce, explosion (raio, 20 = 1 m), pierce true/false, effect: none|fire|freeze|poison|knockback|lifesteal, ammo (99999 = infinita), shape: bullet|laser|orb|rocket (para qualquer outro objeto descreva-o em modelDesc/model: o projétil é SEMPRE um modelo 3D, nunca emoji)${deep ? ', modelDesc (descrição detalhada do projétil 3D, se não for uma bala/laser comum)' : ''}.
+CORPO A CORPO (nem tudo é arma de tiro!): criaturas, super-heróis e armas brancas lutam de perto. Para isso o "weapon" leva "melee": true, "reach" (alcance em METROS, ex.: 2.5; gigantes 4 a 8), "arc" (ângulo do golpe em graus, ex.: 150), "anim" (punch = soco com os braços | slash = espada | smash = martelada com onda de choque, use também "explosion" | bite = mordida | claw = garras | ram = investida), "count" = golpes por combo (um por braço: Quatro Braços = 4), "damage" = dano POR golpe, "fireRate" = combos por segundo. Quem tem braços fortes (Quatro Braços, Hulk, Ultra T) SOCA; quem tem espada ou machado CORTA; feras MORDEM ou ARRANHAM; bolas e carros ATROPELAM. Só use projétil quando o poder for realmente à distância (fogo, raio, teia, tiro).
+Não use emoji em lugar nenhum do visual: tudo é modelo 3D.
 NÃO HÁ LIMITES: os números podem ser tão grandes quanto o pedido exigir (uma arma lendária pode ter dano 500, um Megazord escala 6). Seja fiel ao pedido acima de tudo; o jogo tem um modo de balanceamento separado.
 Campos extras:
 - "gunType" (weapon e turret): pistol|rifle|sniper|shotgun|minigun|bazooka|laser|railgun|flamethrower|launcher|sword|bow.
@@ -783,7 +1005,7 @@ Faça uma pesquisa profunda usando todo o seu conhecimento:
 1) O que é exatamente: origem (desenho, filme, série, anime, jogo, quadrinho, mitologia ou vida real), quem usa, para que serve.
 2) Aparência detalhada parte por parte: formato, proporções, materiais e cores (em hex), símbolos e detalhes que tornam reconhecível.
 3) Poderes, habilidades, variações e formas. Se tiver transformações (ex.: Omnitrix), liste as principais formas e descreva o corpo de cada uma (número de braços e pernas, cabeça, cores, poderes).
-4) Como deveria funcionar num jogo de tiro 3D para ficar fiel (tipo de item, ataques, efeitos).
+4) COMO ELE ATACA: corpo a corpo (soco, garra, mordida, espada, martelada, investida) ou à distância (projétil, raio, fogo)? Quantos golpes por combo (ex.: quatro braços = 4 socos)? Alcance aproximado. Nem tudo é arma de tiro.
 Seja específico, em português, em até 400 palavras. Se não reconhecer, invente algo coerente com o nome.`;
 }
 function designPrompt(req, research){
@@ -792,71 +1014,178 @@ Pesquisa profunda sobre o pedido (use tudo para ser fiel):
 ${q(research).slice(0, 6000)}
 Projete UM item jogável fiel ao pedido e à pesquisa, com toda a criatividade, sem limites.
 ${itemSchemaText(true)}
-Não escreva as peças 3D agora: elas serão modeladas depois a partir das suas descrições em "modelSlots", "forms[].modelDesc" e "forms[].weapon.modelDesc". Capriche nas descrições.
+Para o projétil de uma arma de fogo comum escreva "bala" em modelSlots.projectile. Não escreva as peças 3D agora: elas serão modeladas depois a partir das suas descrições em "modelSlots", "forms[].modelDesc" e "forms[].weapon.modelDesc". Capriche nas descrições.
 Responda SOMENTE com um objeto JSON, sem texto fora dele. "name" em português (até 30 letras), "desc" uma frase em português, "color" hex.`;
 }
 const PURPOSE = {
-  projectile: 'projétil voando para a frente (+z). Pode ter partes que pareçam se mover, mas sem "rig".',
+  projectile: 'projétil voando para a frente (+z), do tamanho de uma bola de basquete; deve parecer exatamente o objeto pedido. Sem "rig".',
   held: 'objeto segurado na mão ou vestido no braço. A ponta que dispara/ativa fica em +z. Sem "rig".',
   decor: 'enfeite colocado em cima de uma arma. Sem "rig".',
-  creature: 'criatura/forma jogável em pé: pés em y = -0.5, topo da cabeça perto de y = 0.5, frente para +z, braços ao lado do corpo. Use "rig" em cada peça móvel.',
+  creature: 'criatura/forma jogável em pé: pés em y = -0.5, topo da cabeça perto de y = 0.5, frente para +z, braços ao lado do corpo apontando para baixo (prontos para socar). Use "rig" em cada peça móvel. Se tiver 4 braços use armL1/armR1 (par de cima) e armL2/armR2 (par de baixo).',
 };
+const SHAPE_ALIAS = { esfera: 'sphere', caixa: 'box', cubo: 'box', cilindro: 'cylinder', capsula: 'capsule', toro: 'torus', anel: 'ring', hemisferio: 'hemisphere', piramide: 'octcone', pedra: 'rock', prisma: 'tri' };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* Parses the model text. Preferred format is one part per line (a cut-off answer still keeps every complete line);
+   JSON arrays are accepted too, and also salvaged part by part when the answer was truncated. */
+function parsePartsText(text){
+  text = String(text || '');
+  const out = [], nums = s => (String(s).match(/-?\d*\.?\d+(?:e-?\d+)?/gi) || []).map(Number);
+  for (const raw of text.split(/\r?\n/)){
+    const line = raw.replace(/^[\s>*\-\d.)]+(?=[a-zA-Z])/, '').trim();
+    if (!line.includes('|')) continue;
+    const f = line.split('|').map(x => x.trim());
+    let shape = f[0].toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); shape = SHAPE_ALIAS[shape] || shape;
+    if (!PART_SHAPES.includes(shape)) continue;
+    const sz = nums(f[1]), pos = nums(f[2]), rot = nums(f[3] || '');
+    if (sz.length < 3 || pos.length < 3) continue;
+    const col = (f[4] || '').match(/#[0-9a-fA-F]{6}/);
+    out.push([shape, sz.slice(0, 3), pos.slice(0, 3), rot.length >= 3 ? rot.slice(0, 3) : [0, 0, 0], col ? col[0] : '#cccccc', (f[5] || '').replace(/[^A-Za-z0-9]/g, ''), /^(g|1|true|sim|brilha)/i.test((f[6] || '').trim())]);
+    if (out.length >= 160) break;
+  }
+  if (out.length >= 4) return out;
+  const re = /\[\s*"(\w+)"\s*,\s*\[([^\]]*)\]\s*,\s*\[([^\]]*)\]\s*,\s*\[([^\]]*)\]\s*,\s*"(#[0-9a-fA-F]{6})"(?:\s*,\s*"([^"]*)")?(?:\s*,\s*(true|false))?\s*\]/g;
+  const js = []; let m;
+  while ((m = re.exec(text)) && js.length < 160){ if (!PART_SHAPES.includes(m[1])) continue; const sz = nums(m[2]), pos = nums(m[3]), rot = nums(m[4]); if (sz.length < 3 || pos.length < 3) continue; js.push([m[1], sz.slice(0, 3), pos.slice(0, 3), rot.length >= 3 ? rot.slice(0, 3) : [0, 0, 0], m[5], m[6] || '', m[7] === 'true']); }
+  return js.length > out.length ? js : out;
+}
+function partsToLines(parts){ const f = a => a.map(n => +Number(n).toFixed(3)).join(' '); return parts.map(p => [p[0], f(p[1]), f(p[2]), f(p[3] || [0, 0, 0]), p[4], p[5] || '', p[6] ? 'g' : ''].join('|')).join('\n'); }
+/* Rescales and recenters a model so a badly scaled answer can never break the game. */
+function autoFit(parts, purpose){
+  const half = p => { const [sx, sy, sz] = p[1]; let h; switch (p[0]){ case 'sphere': case 'hemisphere': case 'rock': h = [sx, sy, sz]; break; case 'box': h = [sx / 2, sy / 2, sz / 2]; break; case 'torus': case 'ring': h = [sx * 1.35, sy * 1.35, sz * .35]; break; default: h = [sx, sy / 2, sz]; }
+    const r = p[3] || [0, 0, 0]; if (Math.abs(r[0]) + Math.abs(r[1]) + Math.abs(r[2]) > .2){ const m = Math.max(h[0], h[1], h[2]); h = [m, m, m]; } return h; };
+  let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+  for (const p of parts){ const h = half(p); for (let k = 0; k < 3; k++){ mn[k] = Math.min(mn[k], p[2][k] - h[k]); mx[k] = Math.max(mx[k], p[2][k] + h[k]); } }
+  const w = mx[0] - mn[0], hh = mx[1] - mn[1], d = mx[2] - mn[2]; if (!(w > 0 && hh > 0 && d > 0) || !isFinite(w + hh + d)) return parts;
+  const creature = purpose === 'creature';
+  let s = creature ? 1 / Math.max(hh, w * .8, d * .8) : 1 / Math.max(w, hh, d);
+  if (Math.abs(s - 1) < .12) s = 1;
+  const cx = (mn[0] + mx[0]) / 2, cy = (mn[1] + mx[1]) / 2, cz = (mn[2] + mx[2]) / 2;
+  return parts.map(p => { const pos = [(p[2][0] - cx) * s, creature ? (p[2][1] - mn[1]) * s - .5 : (p[2][1] - cy) * s, (p[2][2] - cz) * s]; return [p[0], p[1].map(v => v * s), pos, p[3], p[4], p[5], p[6]]; });
+}
 function modelPrompt(req, research, slot){
-  return `Você é um modelador 3D excelente. Modele, com primitivas, um modelo 3D bem feito, fiel e reconhecível de:
+  return `Você é um modelador 3D excelente. Modele com primitivas um modelo 3D bem feito, fiel e reconhecível de:
 ${q(slot.desc).slice(0, 3000)}
 Contexto: pedido do jogador "${q(req).slice(0, 2000)}". Pesquisa: ${q(research).slice(0, 2500)}
 Uso no jogo: ${PURPOSE[slot.purpose]}
 Regras:
-- 40 a 140 peças, proporções corretas, cores certas, simetria, detalhes marcantes (olhos, símbolos, armaduras, faixas, dedos, garras, luzes).
+- 30 a 90 peças; proporções corretas, cores certas, simetria; detalhes marcantes (olhos, símbolos, armaduras, garras, dedos, luzes). Só formas lisas: nada de emoji, nada de blocos pixelados.
 - Tudo dentro de -0.5..0.5 em cada eixo, centrado na origem, y para cima.
-- Formas: sphere|box|cylinder|cone|capsule|hemisphere|torus|ring|tri|octcone|rock. sphere e hemisphere: size = raios; box = largura, altura, profundidade; cylinder, cone e capsule = [raio, altura, raio] com eixo em y; torus e ring = [raio, raio, raio] no plano XY; rot em radianos (ordem XYZ).
-- "rig" (só criaturas): "" para tronco/corpo; "head" para a cabeça; braços: "armL1","armR1" (e "armL2","armR2" se tiver 4 braços, etc.); pernas: "legL","legR" (ou "legL2"...); "wingL","wingR"; "tail"; "spin" para partes que giram; "roll" para um corpo inteiro que rola. Todas as peças de um mesmo membro usam o mesmo rig. L = lado +x.
-Responda SOMENTE JSON: {"parts":[["forma",[sx,sy,sz],[x,y,z],[rx,ry,rz],"#cor","rig",brilha], ...]} (brilha = true/false, opcional).`;
+- Formas: sphere|box|cylinder|cone|capsule|hemisphere|torus|ring|tri|octcone|rock. sphere e hemisphere: tamanho = raios; box = largura, altura, profundidade; cylinder, cone e capsule = raio, altura, raio com eixo em y; torus e ring = raio, raio, raio no plano XY; rotação em radianos (ordem XYZ).
+- "rig" (só criaturas): vazio para tronco/corpo; "head" para a cabeça; braços armL1/armR1 (par de cima), armL2/armR2 (segundo par); pernas legL/legR (legL2/legR2 se houver mais); wingL/wingR; tail; spin para partes que giram; roll para um corpo inteiro que rola. Todas as peças de um mesmo membro usam o mesmo rig. L = lado +x.
+FORMATO: responda SOMENTE com linhas, UMA peça por linha, campos separados por "|":
+forma|sx sy sz|x y z|rx ry rz|#cor|rig|g
+Exemplos:
+sphere|0.20 0.24 0.15|0 0.06 0|0 0 0|#c8322a||
+capsule|0.06 0.20 0.06|0.29 0.08 0.02|0 0 0.12|#c8322a|armL1|
+sphere|0.03 0.03 0.015|0.05 0.35 0.10|0 0 0|#ffd23f|head|g
+(o último campo "g" = a peça brilha; deixe vazio nas outras). Comece pelo corpo e termine nos detalhes. Sem texto antes ou depois, sem cercas de código.`;
 }
-function collectSlots(raw){
+function reviewPrompt(req, slot, parts, n){
+  return `Você é o revisor de modelos 3D. ${n === 1 ? 'A imagem mostra' : 'As ' + n + ' imagens mostram, de ângulos diferentes,'} o modelo 3D de "${q(slot.desc).slice(0, 1500)}" (pedido do jogador: "${q(req).slice(0, 800)}") que um modelador montou com primitivas.
+Compare com o que o objeto DEVERIA parecer. Procure: proporções erradas, partes que faltam (cabeça, braços, pernas, olhos, detalhes marcantes), cores erradas, partes soltas, flutuando ou enterradas, simetria quebrada, escala estranha, aparência pobre. Depois devolva o modelo COMPLETO e corrigido (todas as peças, não só as alteradas), 30 a 110 peças, no mesmo formato de linhas e com as mesmas regras (dentro de -0.5..0.5; ${slot.purpose === 'creature' ? 'pés em y=-0.5, frente +z, braços para baixo; mantenha os nomes de rig' : 'frente +z'}).
+Formato de cada linha: forma|sx sy sz|x y z|rx ry rz|#cor|rig|g
+Modelo atual:
+${partsToLines(parts)}
+Responda SOMENTE com as linhas do modelo corrigido, sem texto antes ou depois.`;
+}
+let rv = null;
+async function renderViews(parts, purpose, count){
+  if (!rv){
+    const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(512, 384, false); r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.3; r.setClearColor(0x252a33, 1);
+    const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xfff0e0, 0x383848, .95)); const dl = new THREE.DirectionalLight(0xffffff, 1.2); dl.position.set(2, 3, 2.5); sc.add(dl); const rl = new THREE.DirectionalLight(0x88aaff, .6); rl.position.set(-3, 1, -2); sc.add(rl);
+    rv = { r, sc, cam: new THREE.PerspectiveCamera(32, 512 / 384, .1, 50), grid: new THREE.GridHelper(3, 12, 0x5a606c, 0x3a3f49) }; rv.sc.add(rv.grid);
+  }
+  const obj = buildModel(normModel(parts) || []); rv.sc.add(obj); obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj), c = box.getCenter(new THREE.Vector3()), dist = Math.max(1.4, box.getSize(new THREE.Vector3()).length() * 1.7); rv.grid.position.set(c.x, box.min.y, c.z);
+  const views = [[.62, .2], [2.2, .12], [3.9, .2]].slice(0, Math.max(1, count || 2)), blobs = [];
+  for (const [az, el] of views){ rv.cam.position.set(c.x + Math.sin(az) * dist * Math.cos(el), c.y + Math.sin(el) * dist, c.z + Math.cos(az) * dist * Math.cos(el)); rv.cam.lookAt(c); rv.r.render(rv.sc, rv.cam); blobs.push(await new Promise(res => rv.r.domElement.toBlob(b => res(b), 'image/png'))); }
+  rv.sc.remove(obj); return blobs.filter(Boolean);
+}
+let canImages = null;
+async function imagesOk(){ if (canImages !== null) return canImages; try { const l = await sampleFn.limits(); canImages = !!(l && l.images); } catch(_){ canImages = false; } return canImages; }
+async function modelWithAI(req, research, sl, tick){
+  for (let k = 0; k < 2; k++){
+    try {
+      const r = await sampleFn(modelPrompt(req, research, sl) + (k ? '\nIMPORTANTE: use no máximo 45 peças e termine todas as linhas.' : ''), { modelTier: 'complex', cache: false, onText: ({ text }) => tick(text) });
+      const parts = parsePartsText(r.text); if (parts.length >= 6) return parts;
+    } catch(e){
+      if (e && PERMANENT.includes(e.code)) throw e;
+      if (e && e.text){ const parts = parsePartsText(e.text); if (parts.length >= 6) return parts; }
+      if (e && e.code === 'rate_limited') await sleep(5000);
+    }
+  }
+  return null;
+}
+async function reviewModel(req, sl, parts){
+  try {
+    const lim = await sampleFn.limits(); if (!lim || !lim.images) return null;
+    const blobs = await renderViews(parts, sl.purpose, Math.min(3, lim.images.maxCount || 2)); if (!blobs.length) return null;
+    const r = await sampleFn(reviewPrompt(req, sl, parts, blobs.length), { modelTier: 'complex', images: blobs, cache: false });
+    const nu = parsePartsText(r.text);
+    return nu.length >= Math.max(8, Math.floor(parts.length * .6)) ? autoFit(nu, sl.purpose) : null;
+  } catch(e){ if (e && PERMANENT.includes(e.code)) throw e; if (e && (e.code === 'images_unavailable' || e.code === 'image_rejected')) canImages = false; return null; }
+}
+function collectSlots(raw, req){
   const slots = [], ms = raw && raw.modelSlots && typeof raw.modelSlots === 'object' ? raw.modelSlots : {};
-  const add = (desc, purpose, apply) => { if (typeof desc === 'string' && desc.trim().length > 3 && slots.length < 24) slots.push({ desc, purpose, apply }); };
-  const k = raw.kind;
-  if (k === 'minion') add(ms.creature || ms.projectile, 'creature', p => raw.model = p);
-  else if (k !== 'transform') add(ms.projectile, 'projectile', p => raw.model = p);
-  add(ms.held, 'held', p => raw.heldModel = p);
-  if (raw.gunSpec && typeof raw.gunSpec === 'object') add(ms.decor, 'decor', p => raw.gunSpec.extra = p);
-  if (Array.isArray(raw.forms)) raw.forms.slice(0, 10).forEach(f => { if (!f || typeof f !== 'object') return; add(f.modelDesc, 'creature', p => f.model = p); if (f.weapon && typeof f.weapon === 'object') add(f.weapon.modelDesc, 'projectile', p => f.weapon.model = p); });
+  const col = hexOr(raw.color, '#8a7bd0'), nm = raw.name || req;
+  const add = (desc, purpose, apply, name, color, fallback) => { if (typeof desc === 'string' && desc.trim().length > 3 && slots.length < 24) slots.push({ desc: desc.trim(), purpose, apply, name: name || nm, color: hexOr(color, col), fallback }); };
+  const plain = s => /^\s*(bala|bullet|tiro comum|projetil comum|projétil comum)/i.test(s || '');
+  const k = raw.kind, melee = !!(raw.weapon && raw.weapon.melee);
+  if (k === 'minion') add(ms.creature || raw.modelDesc || `${nm}. ${raw.desc || ''}`, 'creature', p => raw.model = p, nm, col, () => procCreature(nm, raw.desc, col));
+  else if (k === 'transform' && !Array.isArray(raw.forms)) add(ms.creature || raw.modelDesc || `${nm}. ${raw.desc || ''}`, 'creature', p => raw.model = p, nm, col, () => procCreature(nm, raw.desc, col));
+  else if ((k === 'weapon' || k === 'turret') && !melee){ const d = ms.projectile || ms.projetil; if (d ? !plain(d) : !!(raw.weapon && (raw.weapon.projEmoji || raw.weapon.shape === 'emoji'))) add(d || `Projétil disparado por "${nm}": ${raw.desc || req}`, 'projectile', p => raw.model = p, nm, col, () => procObject(nm, col)); }
+  if (ms.held) add(ms.held, 'held', p => raw.heldModel = p, nm, col, () => procObject(nm, col));
+  if (raw.gunSpec && typeof raw.gunSpec === 'object' && ms.decor) add(ms.decor, 'decor', p => raw.gunSpec.extra = p, nm, col, null);
+  if (Array.isArray(raw.forms)) raw.forms.slice(0, 10).forEach(f => {
+    if (!f || typeof f !== 'object') return; const fc = hexOr(f.color, col), fn = f.name || nm;
+    add(f.modelDesc || f.model_desc || f.modeldesc || `${fn}. ${f.desc || ''}`, 'creature', p => f.model = p, fn, fc, () => procCreature(fn, f.desc, fc));
+    if (f.weapon && typeof f.weapon === 'object' && !f.weapon.melee && f.weapon.modelDesc && !plain(f.weapon.modelDesc)) add(f.weapon.modelDesc, 'projectile', p => f.weapon.model = p, fn, fc, () => procObject(fn, fc));
+  });
   return slots;
 }
 const PERMANENT = ['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','session_expired'];
 const shortReq = r => r.length > 80 ? r.slice(0, 77).trimEnd() + '…' : r;
+async function deepForgeRun(req, say){
+  say(`🔎 1/3 Pesquisando a fundo “${shortReq(req)}”…`);
+  const r1 = await sampleFn(researchPrompt(req), { modelTier: 'complex', onText: ({ text }) => say('🔎 1/3 ' + text.slice(-160)) });
+  const research = r1.text.trim().slice(0, 6000);
+  say('📐 2/3 Projetando o item a partir da pesquisa…');
+  const raw = await sampleFn.json(designPrompt(req, research), { modelTier: 'complex' });
+  const slots = collectSlots(raw || {}, req);
+  if (slots.length){
+    let done = 0, next = 0, fatal = null, reviews = reviewOn ? 8 : 0;
+    const total = slots.length, prog = (extra) => say(`🧱 3/3 Modelando ${total} modelo(s) 3D… ${done}/${total}${extra ? ' · ' + extra : ''}`);
+    prog('');
+    const worker = async () => { while (next < slots.length && !fatal){
+      const sl = slots[next++]; let parts = null, fb = false;
+      try {
+        parts = await modelWithAI(req, research, sl, text => { const n = (text.match(/\n/g) || []).length + 1; prog(`${sl.name}: ${n} peças`); });
+        if (parts) parts = autoFit(parts, sl.purpose);
+        if (parts && reviews > 0 && sl.purpose !== 'decor' && parts.length >= 8 && await imagesOk()){ reviews--; prog(`revisando ${sl.name}…`); const better = await reviewModel(req, sl, parts); if (better) parts = better; }
+      } catch(e){ if (e && PERMANENT.includes(e.code)){ fatal = e; return; } }
+      if (!parts && sl.fallback){ parts = sl.fallback().parts.map(toArr); fb = true; }
+      if (parts) sl.apply(parts);
+      done++; prog(fb ? 'usei um modelo gerado por código' : '');
+    } };
+    await Promise.all([worker(), worker(), worker()]);
+    if (fatal) throw fatal;
+  }
+  const it = finalize(normItem(raw, req, 'claude'), req); it.research = research; return it;
+}
 async function forgeItem(req, opts){
   opts = opts || {}; const say = opts.status || (() => {});
   await aiReady;
   if (sampleFn && aiMode === 'claude'){
+    if (opts.research && deepForge){
+      try { return await deepForgeRun(req, say); }
+      catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); return localForge(req); } say('⚠️ A forja detalhada falhou, tentando um caminho mais simples…'); }
+    }
     try {
-      if (opts.research && deepForge){
-        say(`🔎 1/3 Pesquisando a fundo “${shortReq(req)}”…`);
-        const r1 = await sampleFn(researchPrompt(req), { modelTier: 'complex', onText: ({ text }) => say('🔎 1/3 ' + text.slice(-160)) });
-        const research = r1.text.trim().slice(0, 6000);
-        say('📐 2/3 Projetando o item a partir da pesquisa…');
-        const raw = await sampleFn.json(designPrompt(req, research), { modelTier: 'complex' });
-        const slots = collectSlots(raw || {});
-        if (slots.length){
-          let done = 0; say(`🧱 3/3 Modelando ${slots.length} modelo(s) 3D… 0/${slots.length}`);
-          let nextSlot = 0, fatal = null;
-          const worker = async () => { while (nextSlot < slots.length && !fatal){ const sl = slots[nextSlot++];
-            for (let tries = 0; tries < 2; tries++){
-              try { const res = await sampleFn.json(modelPrompt(req, research, sl), { modelTier: 'complex' }); const parts = Array.isArray(res) ? res : res && res.parts; if (Array.isArray(parts)) sl.apply(parts); break; }
-              catch(e){ if (e && PERMANENT.includes(e.code)){ fatal = e; return; } if (e && e.code === 'rate_limited' && tries === 0) await new Promise(r => setTimeout(r, 5000)); else break; }
-            }
-            done++; say(`🧱 3/3 Modelando ${slots.length} modelo(s) 3D… ${done}/${slots.length}`); } };
-          await Promise.all([worker(), worker(), worker()]);
-          if (fatal) throw fatal;
-        }
-        const it = finalize(normItem(raw, req, 'claude'), req); it.research = research; return it;
-      }
       let research = '';
       if (opts.research){
         say(`🔎 Pesquisando “${shortReq(req)}”…`);
         const r = await sampleFn(`Você é o pesquisador da forja de um jogo 3D. O jogador pediu: "${q(req).slice(0, 20000)}".
-Em até 4 frases em português: o que é (origem), aparência (formato, partes, cores) e poderes. Se não reconhecer, imagine pelo nome. Responda só o texto.`, { modelTier: 'quick', onText: ({ text }) => say('🔎 ' + text.slice(-150)) });
+Em até 4 frases em português: o que é (origem), aparência (formato, partes, cores), poderes e COMO ATACA (corpo a corpo ou à distância). Se não reconhecer, imagine pelo nome. Responda só o texto.`, { modelTier: 'quick', onText: ({ text }) => say('🔎 ' + text.slice(-150)) });
         research = r.text.trim().slice(0, 3000);
         say('⚒️ Modelando em 3D…');
       }
@@ -871,7 +1200,7 @@ Em até 4 frases em português: o que é (origem), aparência (formato, partes, 
 const strip = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const EMOJI_WORDS = [[/tubara/,'🦈'],[/abacaxi/,'🍍'],[/pipoca/,'🍿'],[/pizza/,'🍕'],[/banana/,'🍌'],[/gato/,'🐈'],[/cachorr|\bcao\b/,'🐕'],[/lobo/,'🐺'],[/dinossaur|t-?rex/,'🦖'],[/zumbi/,'🧟'],[/abelha/,'🐝'],[/ninja/,'🥷'],[/robo/,'🤖'],[/drone|ovni|disco voador/,'🛸'],[/golem|pedra/,'🗿'],[/galinha|frango/,'🐔'],[/pato/,'🦆'],[/fantasma/,'👻'],[/caveira|esqueleto/,'💀'],[/estrela/,'⭐'],[/coracao|amor/,'💖'],[/chocolate/,'🍫'],[/sorvete/,'🍦'],[/tomate/,'🍅'],[/melancia/,'🍉'],[/bola/,'⚽'],[/dragao/,'🐉'],[/polvo/,'🐙'],[/cobra/,'🐍'],[/aranha/,'🕷️'],[/sapo/,'🐸'],[/macaco/,'🐒'],[/urso/,'🐻'],[/peixe/,'🐟'],[/cafe/,'☕'],[/hamburguer/,'🍔'],[/tanque/,'🪖']];
 const W_TPL = [
-  [/espada|sword|machado|axe|martelo|hammer|katana|soco|punch|faca|knife|luva|taco|bastao|chicote|tapa/, {emoji:'⚔️',color:'#e6e6e6',desc:'Corpo a corpo, com entusiasmo.',weapon:{damage:20,fireRate:2,speed:700,count:3,spread:40,size:14,range:160,effect:'knockback',ammo:200,shape:'orb'}}],
+  [/espada|sword|machado|\baxe\b|martelo|hammer|katana|soco|punch|faca|knife|luva|taco|bastao|chicote|tapa|garra|marreta|\bmaca\b|clava|adaga|sabre|porrete|murro|boxe|nunchaku|tridente|foice/, {emoji:'⚔️',color:'#e6e6e6',desc:'Corpo a corpo: golpes em arco que empurram o inimigo.',weapon:{damage:26,fireRate:2,count:1,melee:true,reach:2.7,arc:150,anim:'slash',effect:'knockback',ammo:99999,range:100,speed:700,size:14,shape:'orb'}}],
   [/lanca.?chamas|fogo|fire|flame|dragao|dragon|inferno|lava|chama|pimenta/, {emoji:'🔥',color:'#ff6a2b',desc:'Cozinha o oponente em fogo alto.',weapon:{damage:3,fireRate:12,speed:380,spread:18,size:10,range:300,effect:'fire',ammo:160,shape:'orb'}}],
   [/gelo|ice|frio|freez|congel|neve|snow|glacial|picole/, {emoji:'🧊',color:'#9ee7ff',desc:'Deixa o inimigo lento como segunda-feira.',weapon:{damage:9,fireRate:2.5,speed:750,size:8,range:700,effect:'freeze',ammo:60,shape:'laser'}}],
   [/sniper|precis|franco|rifle|longo alcance/, {emoji:'🎯',color:'#f2f2f2',desc:'Um tiro, um problema a menos.',weapon:{damage:40,fireRate:0.6,speed:1200,size:5,range:1100,pierce:true,ammo:10,shape:'laser'}}],
@@ -886,19 +1215,20 @@ const W_TPL = [
   [/arco|flecha|bow|arrow|besta|crossbow|dardo|lanca\b/, {emoji:'🏹',color:'#c9e265',desc:'Atravessa tudo no caminho.',weapon:{damage:16,fireRate:1.4,speed:950,pierce:true,range:850,size:5,ammo:30,shape:'laser'}}],
 ];
 const G_TPL = [
+  [/^(?!.*(aliad|torre|robo|drone)).*(alien|extraterrestre|criatura|mutante|\bhulk\b|lobisomem|super.?heroi|\bvirar\b|transforma|\bvira\b)/, {kind:'transform',emoji:'👽',color:'@h',desc:'Vira uma criatura 3D que luta de perto.',forms:[{name:'@req',emoji:'👽',color:'@h',desc:'Forma de combate corpo a corpo.',duration:12,speed:1.25,damageMult:1.6,amount:40,scale:1.9,contactDamage:12}]}],
   [/omnitrix|ben ?10|relogio alien/, {kind:'transform',emoji:'⌚',color:'#3ddc84',desc:'Cada botão do mostrador vira um alienígena diferente.', forms:[
-    {name:'Quatro Braços',emoji:'💪',color:'#c8322a',lib:'fourarms',desc:'Quatro braços gigantes e socos que empurram.',duration:12,speed:1.1,damageMult:2,amount:60,scale:2,contactDamage:20,weapon:{damage:28,fireRate:2.2,speed:700,count:4,spread:50,size:22,range:220,effect:'knockback',ammo:99999,shape:'orb'}},
+    {name:'Quatro Braços',emoji:'💪',color:'#c8322a',lib:'fourarms',desc:'Quatro braços gigantes e socos que empurram.',duration:12,speed:1.1,damageMult:2,amount:60,scale:2,contactDamage:20,weapon:{damage:16,fireRate:1.5,count:4,melee:true,reach:3.2,arc:160,anim:'punch',effect:'knockback',ammo:99999}},
     {name:'Chama',emoji:'🔥',color:'#ff6a1a',lib:'heatman',desc:'Voa e lança bolas de fogo explosivas.',duration:12,speed:1.3,damageMult:1.3,amount:20,scale:1.4,contactDamage:10,flight:true,weapon:{damage:14,fireRate:4,speed:800,size:14,range:900,explosion:50,effect:'fire',ammo:99999,lib:'fireball'}},
     {name:'Diamante',emoji:'💎',color:'#3ddc84',lib:'crystalman',desc:'Corpo de cristal, muito escudo e estilhaços.',duration:12,speed:1,damageMult:1.4,amount:120,scale:1.5,contactDamage:8,weapon:{damage:9,fireRate:6,speed:1000,count:3,spread:12,size:10,range:800,pierce:true,ammo:99999,lib:'diamond'}},
-    {name:'XLR8',emoji:'💨',color:'#3ab0ff',lib:'speedster',desc:'Velocidade absurda e atropelamento.',duration:10,speed:3,damageMult:1.2,amount:10,scale:1.3,contactDamage:25},
+    {name:'XLR8',emoji:'💨',color:'#3ab0ff',lib:'speedster',desc:'Velocidade absurda e atropelamento.',duration:10,speed:3,damageMult:1.2,amount:10,scale:1.3,contactDamage:6,weapon:{damage:7,fireRate:2.6,count:4,melee:true,reach:2.4,arc:170,anim:'claw',ammo:99999}},
     {name:'Insectóide',emoji:'🦋',color:'#93bd3c',lib:'insectoid',desc:'Voa com asas e cospe gosma venenosa.',duration:12,speed:1.25,damageMult:1.2,amount:15,scale:1.5,contactDamage:6,flight:true,weapon:{damage:12,fireRate:3,speed:700,size:14,range:800,effect:'poison',ammo:99999,lib:'goo'}},
     {name:'Fantasmático',emoji:'👻',color:'#8a6bb8',lib:'phantom',desc:'Flutua e solta fantasmas que perseguem e roubam vida.',duration:12,speed:1.1,damageMult:1.3,amount:30,scale:1.7,contactDamage:14,flight:true,weapon:{damage:10,fireRate:4,speed:650,count:3,spread:20,homing:.5,size:14,range:800,effect:'lifesteal',ammo:99999,lib:'ghost'}},
-    {name:'Ultra T',emoji:'🦖',color:'#6a4a9c',lib:'brute',desc:'Gigante: cada golpe é uma onda de choque.',duration:14,speed:.95,damageMult:2.2,amount:150,scale:3.2,contactDamage:35,weapon:{damage:55,fireRate:1.2,speed:600,size:40,range:200,explosion:60,effect:'knockback',ammo:99999,shape:'orb'}},
-    {name:'Bola de Demolição',emoji:'⚽',color:'#ff8a1a',lib:'wrecker',desc:'Vira uma bola blindada e atropela tudo.',duration:10,speed:2.2,damageMult:1.5,amount:100,scale:1.7,contactDamage:55},
+    {name:'Ultra T',emoji:'🦖',color:'#6a4a9c',lib:'brute',desc:'Gigante: cada golpe é uma onda de choque.',duration:14,speed:.95,damageMult:2.2,amount:150,scale:3.2,contactDamage:35,weapon:{damage:50,fireRate:1,count:1,melee:true,reach:4,arc:200,anim:'smash',explosion:70,effect:'knockback',ammo:99999}},
+    {name:'Bola de Demolição',emoji:'⚽',color:'#ff8a1a',lib:'wrecker',desc:'Vira uma bola blindada e atropela tudo.',duration:10,speed:2.2,damageMult:1.5,amount:100,scale:1.7,contactDamage:25,weapon:{damage:30,fireRate:1.6,count:1,melee:true,reach:2.6,arc:200,anim:'ram',effect:'knockback',ammo:99999}},
     {name:'Massa Cinzenta',emoji:'🧠',color:'#52e07a',lib:'greymatter',desc:'Minúsculo, rapidíssimo, difícil de acertar e com laser fino.',duration:12,speed:1.5,damageMult:1.1,amount:10,scale:.85,contactDamage:4,weapon:{damage:6,fireRate:8,speed:1100,size:6,range:900,ammo:99999,shape:'laser'}},
-    {name:'Mandíbulas',emoji:'🦈',color:'#3f6f9f',lib:'jawman',desc:'Mordida brutal e piranhas teleguiadas.',duration:12,speed:1.2,damageMult:1.8,amount:60,scale:2,contactDamage:28,weapon:{damage:12,fireRate:6,speed:800,count:2,spread:10,homing:.4,size:12,range:500,ammo:99999,lib:'fish'}}]}],
+    {name:'Mandíbulas',emoji:'🦈',color:'#3f6f9f',lib:'jawman',desc:'Mordida brutal e piranhas teleguiadas.',duration:12,speed:1.2,damageMult:1.8,amount:60,scale:2,contactDamage:28,weapon:{damage:32,fireRate:1.8,count:1,melee:true,reach:2.6,arc:110,anim:'bite',ammo:99999}}]}],
   [/megazord|mecha|robo gigante|\bzord|gundam|transformer|power ranger/, {kind:'transform',emoji:'🤖',color:'#c0392b',desc:'Os zords se unem num robô gigante com espada de energia.', forms:[
-    {name:'Megazord',emoji:'🤖',color:'#c0392b',lib:'megazord',duration:20,speed:.9,damageMult:3,amount:400,scale:5.5,contactDamage:60,weapon:{damage:90,fireRate:1.2,speed:900,count:3,spread:30,size:80,range:250,effect:'knockback',ammo:99999,shape:'orb'}}]}],
+    {name:'Megazord',emoji:'🤖',color:'#c0392b',lib:'megazord',duration:20,speed:.9,damageMult:3,amount:400,scale:5.5,contactDamage:60,weapon:{damage:90,fireRate:1.1,count:1,melee:true,reach:7,arc:180,anim:'slash',effect:'knockback',ammo:99999}}]}],
   [/omnitrix|transforma|\bvirar\b|\bvira\b|hulk|lobisomem|sayajin|saiyajin|metamorf|mutante|alien ?x\b/, {kind:'transform',emoji:'👽',color:'#3ddc84',desc:'Aperta o botão e vira outra criatura por alguns segundos.',duration:9,speed:1.4,damageMult:1.6,amount:25,scale:1.7,contactDamage:10}],
   [/torre|turret|torreta|sentinela|canhao|canon|cannon|bunker/, {kind:'turret',emoji:'🗼',color:'#b0b8c4',desc:'Fica parada e atira sem reclamar.',hp:70,weapon:{damage:6,fireRate:1.6,speed:650,size:6,range:650}}],
   [/muro|muralha|parede|wall|barreira|fortaleza|forte|barricada|trincheira|castelo/, {kind:'wall',emoji:'🧱',color:'#c97b4a',desc:'Tiro inimigo não passa.',hp:140,length:180}],
@@ -941,6 +1271,7 @@ function localForge(req){
       weapon:{ damage: 6 + (h % 9), fireRate: 1.5 + ((h >>> 4) % 35)/10, speed: 500 + ((h >>> 8) % 500), count: 1 + ((h >>> 12) % 3), spread: 3 + ((h >>> 14) % 12),
         size: 5 + ((h >>> 18) % 8), range: 500 + ((h >>> 20) % 500), effect: pick(EFFECTS, 22), ammo: 60, shape: emo ? 'emoji' : pick(['bullet','orb','laser'], 25), projEmoji: emo || '' } }; }
   r.name = titleCase(req) || 'Coisa Misteriosa';
+  if (r.kind === 'transform'){ const hc = hslHex(hashStr(t) % 360); r = JSON.parse(JSON.stringify(r).split('@h').join(hc).split('@req').join(r.name.replace(/"/g, ''))); if (/voa|voador|asas?|fantasma|inseto|passaro/.test(t)) r.forms.forEach(f => f.flight = true); }
   return finalize(normItem(r, req, 'local'), req);
 }
 
@@ -991,14 +1322,6 @@ function limb(parent, a, b, r, mat){ // cylinder from point a to point b
   const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A), len = d.length();
   const m = mesh(G.cyl, mat, r, len, r); m.position.copy(A).addScaledVector(d, .5); m.quaternion.setFromUnitVectors(_upV, d.normalize()); parent.add(m); return m;
 }
-const emojiTexCache = new Map();
-function emojiTex(e){
-  if (emojiTexCache.has(e)) return emojiTexCache.get(e);
-  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
-  x.font = '100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 64, 72);
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; emojiTexCache.set(e, t); return t;
-}
-function emojiSprite(e, size){ const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex(e), transparent: true, depthWrite: false })); s.scale.set(size, size, 1); return s; }
 function canvasTex(w, h, draw, rep){ const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; if (rep){ t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); } return t; }
 const TEX = {
   hazard: canvasTex(128, 32, (x, w, h) => { x.fillStyle = '#1b1c20'; x.fillRect(0, 0, w, h); x.fillStyle = '#e8b231'; for (let i = -2; i < 8; i++){ x.beginPath(); x.moveTo(i * 24, h); x.lineTo(i * 24 + 12, h); x.lineTo(i * 24 + 12 + h, 0); x.lineTo(i * 24 + h, 0); x.fill(); } }),
@@ -1075,7 +1398,7 @@ function makeBrazier(g, x, z){
   b.add(mesh(G.cyl, MAT.dark, .45, 2.2, .45, 0, 1.1, 0)); b.add(mesh(G.cyl, MAT.panel, .6, .2, .6, 0, .1, 0));
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.85, .45, .5, 12), MAT.dark); bowl.position.y = 2.4; bowl.castShadow = true; b.add(bowl);
   b.add(mesh(G.cyl, MAT.molten, .75, .05, .75, 0, 2.62, 0, false));
-  const flame = emojiSprite('🔥', 1.6); flame.position.y = 3.25; b.add(flame);
+  const flame = flameSprite(1.7); flame.position.y = 3.2; b.add(flame);
   const light = new THREE.PointLight(0xff8a3a, 1.3, 16, 2); light.position.y = 3.2; b.add(light);
   g.add(b); world.fires.push({ flame, light, seed: rand(0, 10) });
   staticBoxes.push({ minX: x - .6, maxX: x + .6, minZ: z - .6, maxZ: z + .6, minY: 0, maxY: 2.7 });
@@ -1112,7 +1435,8 @@ const MAPS = {
       for (let k = 0; k < 34; k++){ const a = k / 34 * 6.28 + rand(-.05, .05), r = rand(150, 210), h = rand(25, 70), m = new THREE.Mesh(new THREE.ConeGeometry(rand(25, 45), h, 6), rock); m.position.set(Math.cos(a) * r, h / 2 - 6, Math.sin(a) * r); m.rotation.y = rand(0, 3); g.add(m); }
       const volc = new THREE.Mesh(new THREE.CylinderGeometry(16, 75, 85, 10, 1, true), rock); volc.position.set(-40, 30, -230); g.add(volc);
       const crater = new THREE.Mesh(new THREE.CircleGeometry(16, 20), new THREE.MeshBasicMaterial({ color: 0xff6a1a, fog: false })); crater.rotation.x = -Math.PI / 2; crater.position.set(-40, 72.4, -230); g.add(crater);
-      const plume = emojiSprite('🔥', 40); plume.position.set(-40, 84, -230); plume.material.fog = false; plume.material.opacity = .55; g.add(plume);
+      for (let k = 0; k < 5; k++){ const sm = new THREE.Sprite(new THREE.SpriteMaterial({ map: FXT.smoke, color: lin(k % 2 ? '#5a2a22' : '#7a3a2a'), transparent: true, opacity: .55, depthWrite: false, fog: false })); sm.scale.setScalar(50 + k * 18); sm.position.set(-40 + rand(-12, 12), 90 + k * 22, -230); g.add(sm); }
+      const eruption = new THREE.Sprite(new THREE.SpriteMaterial({ map: FXT.glow, color: lin('#ff6a1a'), transparent: true, opacity: .8, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); eruption.scale.setScalar(55); eruption.position.set(-40, 76, -226); g.add(eruption);
       const lavaTex = canvasTex(256, 256, (x, w, h) => { x.fillStyle = '#7a1e05'; x.fillRect(0, 0, w, h); for (let k = 0; k < 90; k++){ const cx = Math.random() * w, cy = Math.random() * h, r = rand(8, 40); const rg = x.createRadialGradient(cx, cy, 0, cx, cy, r); rg.addColorStop(0, k % 3 ? '#ffb030' : '#ffe070'); rg.addColorStop(1, 'rgba(200,50,5,0)'); x.fillStyle = rg; x.fillRect(cx - r, cy - r, r * 2, r * 2); } }, [24, 24]);
       const lava = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshBasicMaterial({ map: lavaTex })); lava.rotation.x = -Math.PI / 2; lava.position.y = -2.2; g.add(lava);
       const glow = new THREE.PointLight(0xff5a1a, 1.2, 70); glow.position.set(0, -1, 0); g.add(glow);
@@ -1129,8 +1453,9 @@ const MAPS = {
       const cru = new THREE.Mesh(new THREE.CylinderGeometry(1.25, .95, 1.4, 16), MAT.dark); cru.position.set(0, 2.2, 0); cru.castShadow = true; g.add(cru);
       g.add(mesh(G.cyl, MAT.molten, 1.12, .06, 1.12, 0, 2.92, 0, false));
       const cl = new THREE.PointLight(0xff7a2a, 2.2, 26, 2); cl.position.set(0, 4, 0); g.add(cl);
-      const anvil = emojiSprite('⚒️', 1.4); anvil.position.set(0, 4.2, 0); g.add(anvil);
-      world.anim.push(now => { cl.intensity = 2.1 + Math.sin(now * 5) * .25; anvil.position.y = 4.2 + Math.sin(now * 1.5) * .15; });
+      const anvil = new THREE.Group(); anvil.add(mesh(G.box, MAT.dark, .9, .22, .5, 0, 0, 0)); anvil.add(mesh(G.box, MAT.dark, .5, .3, .34, 0, .26, 0)); anvil.add(mesh(G.box, std('#5a6270', { metalness: .7, roughness: .3 }), 1.1, .16, .6, 0, .5, 0));
+      const horn = mesh(G.cone, MAT.dark, .2, .5, .2, .8, .5, 0); horn.rotation.z = -Math.PI / 2; anvil.add(horn); anvil.add(mesh(G.box, basic('#ff8a2a'), 1.02, .02, .52, 0, .59, 0, false)); anvil.position.set(0, 4.4, 0); g.add(anvil);
+      world.anim.push(now => { cl.intensity = 2.1 + Math.sin(now * 5) * .25; anvil.position.y = 4.4 + Math.sin(now * 1.5) * .15; anvil.rotation.y = now * .5; });
       both(s => {
         const tx = -22 * s, tz = -11 * s;
         B(tx, tz, 4.5, 4.5, 2.1, MAT.panel, 0, PCOL[s > 0 ? 0 : 1]);
@@ -1263,7 +1588,7 @@ function setMap(id){
     pg.add(mesh(G.cyl, MAT.dark, 1.1, .12, 1.1, 0, .04, 0));
     const ring = new THREE.Mesh(G.ring, basic('#6fe0ff', { transparent: true, opacity: .9, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .12; pg.add(ring);
     const core = new THREE.Mesh(G.disc, basic('#6fe0ff', { transparent: true, opacity: .35, side: THREE.DoubleSide, depthWrite: false })); core.rotation.x = -Math.PI / 2; core.position.y = .11; pg.add(core);
-    const arrow = emojiSprite('⏫', .9); arrow.position.y = 1; pg.add(arrow);
+    const arrow = new THREE.Group(); [0, .3].forEach(o => arrow.add(mesh(G.cone, basic('#6fe0ff'), .3, .24, .3, 0, o, 0, false))); arrow.position.y = 1; pg.add(arrow);
     world.group.add(pg); world.padMeshes.push({ ring, core, arrow, p });
   }
 }
@@ -1312,7 +1637,7 @@ function makeCharacter(color, opts){
   torso.add(mesh(G.box, trim, .36, .4, .16, 0, .44, -.24));
   const jets = [];
   [-1, 1].forEach(s => { torso.add(mesh(G.cyl, armor2, .07, .34, .07, s * .12, .42, -.34)); const nz = mesh(G.cone, MAT.dark, .08, .1, .08, s * .12, .2, -.34); nz.rotation.x = Math.PI; torso.add(nz);
-    torso.add(mesh(G.box, glow, .02, .26, .02, s * .12, .44, -.415, false)); const fl = emojiSprite('🔥', .35); fl.position.set(s * .12, .02, -.34); fl.visible = false; torso.add(fl); jets.push(fl); });
+    torso.add(mesh(G.box, glow, .02, .26, .02, s * .12, .44, -.415, false)); const fl = flameSprite(.35); fl.position.set(s * .12, .02, -.34); fl.visible = false; torso.add(fl); jets.push(fl); });
   torso.add(mesh(G.cyl, trim, .015, .3, .015, .16, .78, -.28)); torso.add(mesh(G.sph, glow, .03, .03, .03, .16, .94, -.28, false));
   [-1, 1].forEach(s => { const pad = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8, 0, 6.283, 0, Math.PI / 2), armor); pad.scale.set(.17, .12, .19); pad.position.set(s * .39, .62, 0); pad.rotation.z = -s * .35; pad.castShadow = true; torso.add(pad);
     torso.add(mesh(G.box, glow, .02, .02, .14, s * .5, .6, 0, false)); });
@@ -1386,49 +1711,21 @@ function buildModel(parts, shadow){
   if (rigs.length) g.userData.rigs = rigs;
   return g;
 }
-function animateRig(model, t, walk, amp, act, dt){
+function animateRig(model, t, walk, amp, act, dt, atk){
   const rigs = model && model.userData.rigs; if (!rigs) return;
+  const wu = atk && atk.t < atk.wind ? clamp(atk.t / atk.wind, 0, 1) : 0;
   for (const r of rigs){
     const ph = walk + (r.side < 0 ? Math.PI : 0) + (r.idx % 2 === 0 ? Math.PI : 0);
     if (r.type === 'leg') r.node.rotation.x = Math.sin(ph) * .7 * amp;
-    else if (r.type === 'arm') r.node.rotation.x = -Math.sin(ph) * .55 * amp + Math.sin(t * 2 + r.idx) * .06 - act * (r.idx % 2 ? 1.4 : .9);
+    else if (r.type === 'arm'){ r.kick = Math.max(0, (r.kick || 0) - dt * 3.6); r.node.rotation.x = -Math.sin(ph) * .55 * amp + Math.sin(t * 2 + r.idx) * .06 - act * (r.idx % 2 ? 1.4 : .9) + wu * .8 - r.kick * 2.0; r.node.rotation.z = -r.side * r.kick * .3; }
     else if (r.type === 'wing') r.node.rotation.z = r.side * (Math.sin(t * 9) * .55 + .1);
     else if (r.type === 'tail') r.node.rotation.y = Math.sin(t * 3) * .45;
-    else if (r.type === 'head'){ r.node.rotation.y = Math.sin(t * .8) * .15; r.node.rotation.x = Math.sin(t * 1.3) * .05; }
+    else if (r.type === 'head'){ r.kick = Math.max(0, (r.kick || 0) - dt * 3.6); r.node.rotation.y = Math.sin(t * .8) * .15; r.node.rotation.x = Math.sin(t * 1.3) * .05 + r.kick * .8; }
     else if (r.type === 'spin') r.node.rotation.y += dt * 5;
     else if (r.type === 'roll') r.node.rotation.x = walk * 1.6;
   }
 }
-const voxCache = new Map(), voxMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .55, metalness: .05 });
-function voxTemplate(e){
-  if (voxCache.has(e)) return voxCache.get(e);
-  let tpl = null;
-  try {
-    const N = 22, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d');
-    x.font = `${Math.round(N * .86)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, N / 2, N / 2 + N * .06);
-    const d = x.getImageData(0, 0, N, N).data, solid = (i, j) => i >= 0 && j >= 0 && i < N && j < N && d[(j * N + i) * 4 + 3] > 110;
-    const L = new Array(N * N).fill(-1); let count = 0;
-    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (solid(i, j)){
-      let r = 1; outer: for (; r < 4; r++){ for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) if (!solid(i + di, j + dj)) break outer; }
-      L[j * N + i] = r - 1; count += 2 * (r - 1) + 1; }
-    if (count > 20){
-      const im = new THREE.InstancedMesh(G.box, voxMat, count), m4 = new THREE.Matrix4(), col = new THREE.Color(), s = 1 / N; let k = 0;
-      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){ const l = L[j * N + i]; if (l < 0) continue; const p = (j * N + i) * 4;
-        col.setRGB(d[p] / 255, d[p + 1] / 255, d[p + 2] / 255).convertSRGBToLinear();
-        for (let z = -l; z <= l; z++){ m4.makeScale(s * 1.02, s * 1.02, s * 1.02).setPosition((i - N / 2 + .5) * s, (N / 2 - j - .5) * s, z * s); im.setMatrixAt(k, m4); im.setColorAt(k, col); k++; } }
-      tpl = { im, count };
-    }
-  } catch(err){ tpl = null; }
-  voxCache.set(e, tpl); return tpl;
-}
-function voxelModel(e){
-  const t = voxTemplate(e), g = new THREE.Group();
-  if (!t){ g.add(buildModel(LIB.star.parts)); return g; }
-  const m = new THREE.InstancedMesh(G.box, voxMat, t.count); m.instanceMatrix = t.im.instanceMatrix; m.instanceColor = t.im.instanceColor; m.frustumCulled = false; g.add(m);
-  return g;
-}
-function buildMdl(mdl, shadow){ return mdl.vox ? voxelModel(mdl.vox) : buildModel(mdl.parts, shadow); }
-/* ================= procedural gun generator (any number of barrels, made on the fly) ================= */
+function buildMdl(mdl, shadow){ return buildModel(mdl.parts, shadow); }
 const LAYOUTS = ['single','row','grid','ring','cluster','fan','stack'];
 const NUM_WORDS = { dupla: 2, duplo: 2, tripla: 3, triplo: 3, quadrupla: 4, quadruplo: 4, quintupla: 5, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, doze: 12, quinze: 15, vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cem: 100, cento: 100, duzentos: 128, mil: 128, milhao: 128 };
 function parseBarrels(t){
@@ -1561,7 +1858,7 @@ function buildSpecGun(item){
   return g;
 }
 function gunArch(w){
-  if (w.range <= 260) return 'melee';
+  if (w.melee) return 'melee';
   if (w.shape === 'rocket' || (w.explosion > 0 && w.homing > .3)) return 'rocket';
   if (w.shape === 'laser') return (w.damage >= 22 || w.range >= 950) ? 'railgun' : 'laser';
   if (w.fireRate > 8) return 'minigun';
@@ -1582,7 +1879,7 @@ function buildHeld(item){
   return g;
 }
 function buildGun(item){
-  if (item.held && !item.reqGun) return buildHeld(item);
+  if (item.held && (!item.reqGun || (item.weapon && item.weapon.melee))) return buildHeld(item);
   if (item.gunSpec) return buildSpecGun(item);
   const w = item.weapon, g = new THREE.Group(), col = item.color, arch = w.arch || archOf(item);
   const main = std(col, { metalness: .55, roughness: .32 }), dark = std('#1a1d23', { metalness: .6, roughness: .42 }), chrome = std('#c8ced8', { metalness: .95, roughness: .18 });
@@ -1667,7 +1964,6 @@ function buildGun(item){
       P(G.box, dark, .05, .1, .16, -.16, .16, .05); P(G.sph, glow, .025, .025, .01, -.16, .17, .135, 0, 0, 0, false);
       grip(-.1); P(G.box, dark, .07, .17, .09, 0, -.12, .3, .2);
       if (w.mdl){ war.visible = false; const mm = buildMdl(w.mdl); mm.scale.setScalar(.24); mm.position.set(0, .07, .7); g.add(mm); ticks.push((dt, f) => { mm.visible = !(f.recoil > .3); }); }
-      else if (w.shape === 'emoji'){ war.visible = false; const em = emojiSprite(w.projEmoji, .22); em.position.set(0, .07, .66); g.add(em); ticks.push((dt, f) => { em.visible = !(f.recoil > .3); }); }
       else ticks.push((dt, f) => { war.visible = !(f.recoil > .3); });
       end = .8; break; }
     case 'sprayer': {
@@ -1677,7 +1973,7 @@ function buildGun(item){
       [-.29, .05].forEach(z => tube(.12, .03, 0, .17, z, chrome));
       const hose = mesh(G.torus, dark, .12, .12, .12, .02, .05, .1); hose.rotation.y = Math.PI / 2; g.add(hose);
       ticks.push((dt, f, t) => { liquid.position.y = .15 + Math.sin(t * 3) * .01; liquid.scale.y = .28 * (.85 + .15 * Math.sin(t * 2)); });
-      if (w.effect === 'fire'){ const pilot = emojiSprite('🔥', .16); pilot.position.set(0, -.04, .66); g.add(pilot); ticks.push((dt, f, t) => pilot.scale.setScalar(.13 + .04 * Math.sin(t * 22))); }
+      if (w.effect === 'fire'){ const pilot = flameSprite(.16); pilot.position.set(0, -.04, .66); g.add(pilot); ticks.push((dt, f, t) => pilot.scale.setScalar(.13 + .04 * Math.sin(t * 22))); }
       const halo = glowSprite(col, .25, .7); halo.position.set(0, 0, .66); g.add(halo);
       grip(-.12); end = .64; break; }
     case 'launcher': {
@@ -1685,11 +1981,15 @@ function buildGun(item){
       const drum = mesh(G.cyl, dark, .16, .14, .16, 0, -.05, -.12); drum.rotation.z = Math.PI / 2; g.add(drum);
       for (let k = 0; k < 6; k++){ const a = k / 6 * 6.28; P(G.sph, chrome, .025, .025, .025, .08, -.05 + Math.cos(a) * .1, -.12 + Math.sin(a) * .1); }
       P(G.box, dark, .16, .12, .2, 0, .17, -.05);
-      const mk = (sz) => { if (w.mdl){ const mm = buildMdl(w.mdl); mm.scale.setScalar(sz); return mm; } return emojiSprite(w.projEmoji || item.emoji, sz * 1.1); };
+      const mk = (sz) => { if (w.mdl){ const mm = buildMdl(w.mdl); mm.scale.setScalar(sz); return mm; } return new THREE.Group(); };
       const peek = mk(.18); peek.position.set(0, .3, -.05); g.add(peek); ticks.push((dt, f, t) => { peek.position.y = .29 + Math.abs(Math.sin(t * 3)) * .04; });
       const inMuzzle = mk(.16); inMuzzle.position.set(0, .03, .64); g.add(inMuzzle); ticks.push((dt, f) => { inMuzzle.visible = !(f.recoil > .3); });
       grip(-.15); P(G.box, dark, .07, .16, .08, 0, -.12, .3, .2); end = .66; break; }
     case 'melee': {
+      if (item.meleeModel){ const mm = buildMdl(item.meleeModel); mm.rotation.x = Math.PI / 2; mm.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(mm), sz = bx.getSize(new THREE.Vector3()); const sc = .95 / Math.max(.05, sz.x, sz.y, sz.z); mm.scale.setScalar(sc); mm.updateMatrixWorld(true); mm.position.z = -.1 - new THREE.Box3().setFromObject(mm).min.z; g.add(mm); end = .95; break; }
+      if (w.anim === 'punch'){ P(G.sph, main, .15, .13, .17, 0, 0, .12); P(G.sph, chrome, .06, .05, .06, .1, -.03, .06); P(G.cyl, dark, .1, .1, .1, 0, 0, -.1, Math.PI / 2); P(G.torus, glow, .11, .11, .11, 0, 0, -.02); P(G.sph, glow, .05, .04, .02, 0, .04, .27, 0, 0, 0, false); end = .35; break; }
+      if (w.anim === 'smash'){ tube(.035, .72, 0, 0, -.36, std('#5a3b1a', { roughness: .8 })); P(G.box, main, .27, .21, .36, 0, 0, .44); P(G.box, chrome, .28, .05, .37, 0, .13, .44); P(G.box, chrome, .28, .05, .37, 0, -.13, .44); [-1, 1].forEach(s => P(G.sph, glow, .04, .04, .04, s * .15, 0, .44, 0, 0, 0, false)); end = .66; break; }
+      if (w.anim === 'claw'){ P(G.box, dark, .2, .08, .16, 0, 0, -.02); for (let k = -1; k <= 1; k++){ const c = P(G.cone, chrome, .022, .46, .03, k * .06, 0, .3, Math.PI / 2); } P(G.box, glow, .2, .02, .02, 0, .045, .08, 0, 0, 0, false); end = .55; break; }
       tube(.032, .26, 0, 0, -.3, std('#3b2b22', { roughness: .8 })); P(G.sph, chrome, .045, .045, .045, 0, 0, -.31);
       P(G.box, main, .3, .06, .07, 0, 0, -.02); [-1, 1].forEach(s => P(G.sph, glow, .035, .035, .035, s * .15, 0, -.02, 0, 0, 0, false));
       const blade = P(G.box, chrome, .035, .13, .82, 0, 0, .43); const edge = P(G.box, addMat(col, .9), .04, .025, .82, 0, .07, .43, 0, 0, 0, false);
@@ -1702,9 +2002,9 @@ function buildGun(item){
   if (w.effect === 'poison'){ const v = P(G.cyl, addMat('#8cff4a', .9), .035, .1, .035, .08, .08, -.05, 0, 0, 0, false); ticks.push((dt, f, t) => v.scale.y = .1 + .02 * Math.sin(t * 4)); }
   if (w.effect === 'lifesteal') P(G.sph, addMat('#ff2a4a', .95), .045, .06, .045, 0, .12, -.05, 0, 0, 0, false);
   if (w.effect === 'knockback' && arch !== 'melee') ring(.075, 0, .02, end - .02, chrome);
-  if (w.effect === 'fire' && arch !== 'sprayer'){ const pf = emojiSprite('🔥', .14); pf.position.set(0, .05, end); g.add(pf); ticks.push((dt, f, t) => pf.scale.setScalar(.1 + .04 * Math.sin(t * 20))); }
+  if (w.effect === 'fire' && arch !== 'sprayer'){ const pf = flameSprite(.14); pf.position.set(0, .05, end); g.add(pf); ticks.push((dt, f, t) => pf.scale.setScalar(.1 + .04 * Math.sin(t * 20))); }
   if (w.homing > .25 && arch !== 'melee'){ const dish = mesh(G.sph, chrome, .05, .05, .02, -.08, .12, .05); g.add(dish); P(G.sph, addMat('#ff3030', .9), .015, .015, .015, -.08, .17, .05, 0, 0, 0, false); }
-  const badge = w.mdl ? (() => { const mm = buildMdl(w.mdl); mm.scale.setScalar(.13); return mm; })() : emojiSprite(w.shape === 'emoji' ? w.projEmoji : item.emoji, .2); badge.userData.badge = true; badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
+  const badge = w.mdl ? (() => { const mm = buildMdl(w.mdl); mm.scale.setScalar(.13); return mm; })() : mesh(G.sph, glow, .035, .035, .035, 0, 0, 0, false); badge.userData.badge = true; badge.position.set(arch === 'melee' ? .1 : .12, arch === 'minigun' ? .2 : .18, arch === 'melee' ? -.15 : -.1); g.add(badge);
   const muzzle = new THREE.Object3D(); muzzle.position.set(0, arch === 'rocket' ? .07 : arch === 'sprayer' || arch === 'laser' || arch === 'melee' ? 0 : .02, end + .04); g.add(muzzle);
   g.userData.muzzle = muzzle; g.userData.arch = arch;
   g.userData.tick = (dt, f, t) => { for (const fn of ticks) fn(dt, f, t); };
@@ -1723,8 +2023,8 @@ function itemPreview(it){
       pv = { r, sc, cam };
     }
     let obj, size;
-    if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildMdl(it.mdl); mm.scale.setScalar(.42); if (it.mdl.vox) mm.rotation.y = Math.PI / 2 - .45; mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
-    else if (it.kind !== 'turret'){ obj = buildMdl(it.mdl); obj.rotation.y = it.mdl.vox ? 0 : .7; }
+    if (it.kind === 'weapon'){ obj = buildGun(it); if (it.mdl){ const mm = buildMdl(it.mdl); mm.scale.setScalar(.42); mm.position.copy(obj.userData.muzzle.position).add(new THREE.Vector3(0, .05, .5)); obj.add(mm); } obj.rotation.y = -Math.PI / 2 + .45; obj.rotation.x = .12; }
+    else if (it.kind !== 'turret'){ obj = buildMdl(it.mdl); obj.rotation.y = .7; }
     else { obj = makeTurretModel(0, it); obj.rotation.y = .6; }
     obj.traverse(o => { if (o.isSprite) o.visible = o.scale.x < .21; });
     pv.sc.add(obj); obj.updateMatrixWorld(true);
@@ -1788,7 +2088,7 @@ function buildCrates(){
 function loadout(f){
   const sb = gameMode === 'sandbox';
   if (f.dummy){ f.weapons = []; f.gadgets = []; return; } // the test dummy never gets a weapon
-  f.weapons = [{ item: BASE_ITEM, ammo: Infinity }, ...f.inv.filter(it => it.kind === 'weapon').map(it => { const b = balanced(it); return { item: b, ammo: sb || b.weapon.ammo >= 9999 ? Infinity : b.weapon.ammo }; })];
+  f.weapons = [{ item: BASE_ITEM, ammo: Infinity }, ...f.inv.filter(it => it.kind === 'weapon').map(it => { const b = balanced(it); return { item: b, ammo: sb || b.weapon.melee || b.weapon.ammo >= 9999 ? Infinity : b.weapon.ammo }; })];
   f.gadgets = f.inv.filter(it => it.kind !== 'weapon').map(it => ({ item: balanced(it), used: false, cd: 0, cdMax: 0 }));
 }
 function refreshLoadout(f){
@@ -1891,10 +2191,10 @@ function checkReady(){ if (phase === 'forge' && fighters.every(p => p.ready && !
 /* ================= flow ================= */
 function show(id){ ['menu','forge','banner'].forEach(k => $('#' + k).hidden = k !== id); }
 function hideAll(){ ['menu','forge','banner'].forEach(k => $('#' + k).hidden = true); }
-let gameMode = 'duel', deepForge = true, sandboxLive = false, pendingMap = null;
+let reviewOn = true, gameMode = 'duel', deepForge = true, sandboxLive = false, pendingMap = null;
 function startGame(mode){
   if (typeof mode === 'string') gameMode = mode;
-  initAudio(); diff = Number($('#diff').value); balanceOn = $('#bal').checked; deepForge = $('#deep').checked; round = 1; score = [0, 0]; sandboxLive = false;
+  initAudio(); diff = Number($('#diff').value); balanceOn = $('#bal').checked; deepForge = $('#deep').checked; reviewOn = $('#rev').checked; round = 1; score = [0, 0]; sandboxLive = false;
   const mv = $('#mapSel').value; setMap(mv === 'random' ? Object.keys(MAPS)[Math.floor(Math.random() * Object.keys(MAPS).length)] : mv); pendingMap = null;
   fighters.forEach(f => scene.remove(f.model)); fighters = [makeFighter(0), makeFighter(1, gameMode === 'sandbox')];
   $('#n1').textContent = fighters[1].name; $('#n1').style.color = fighters[1].color;
@@ -2071,7 +2371,7 @@ function casing(pos, side){
   parts.push({ mesh: m, v, life: 1.2, max: 1.2, size: 0, g: 18, drag: 1, casing: true, spinR: rand(10, 20) });
 }
 const _zAxis = new THREE.Vector3(0, 0, 1);
-function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'emoji'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; if (w.arch === 'sprayer') return 'cloud'; return w.shape; }
+function projVisual(w){ if (w.shape === 'model' && w.mdl) return 'model'; if (w.shape === 'emoji') return 'orb'; if (w.shape === 'rocket') return 'rocket'; if (w.range <= 260) return 'slash'; if (w.arch === 'sprayer') return 'cloud'; return w.shape; }
 const ARC = new THREE.TorusGeometry(1, .08, 6, 20, Math.PI);
 function bulletMesh(w, color, light){
   if (light){ const s = Math.max(.1, w.size * .028), m = new THREE.Group(); m.add(mesh(G.sph, basic(color), s * .45, s * 1.5, s * .45, 0, 0, 0, false)); m.userData.vis = 'pellet'; dynamic.add(m); return m; }
@@ -2104,7 +2404,6 @@ function bulletMesh(w, color, light){
     for (let k = 0; k < 3; k++){ const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireLike ? FXT.flame : FXT.smoke, color: lin(cols[k % 2]), transparent: true, opacity: .9, blending: fireLike ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: false }));
       sp.material.rotation = rand(0, 6.28); sp.scale.setScalar(s * 3); sp.position.set(rand(-.12, .12), rand(-.12, .12), rand(-.12, .12)); m.add(sp); }
     m.userData.base = s * 3; m.userData.cloud = true; }
-  else if (vis === 'emoji'){ m.add(glowSprite(color, Math.max(.9, s * 5), .5)); const sp = emojiSprite(w.projEmoji, Math.max(.6, s * 3.4)); m.add(sp); m.userData.sp = sp; }
   else if (vis === 'slash'){ const a = new THREE.Mesh(ARC, addMat(color, .85)); a.rotation.x = Math.PI / 2; m.add(a); const c = new THREE.Mesh(ARC, addMat('#ffffff', .9)); c.rotation.x = Math.PI / 2; c.scale.set(.93, .93, .5); m.add(c); m.userData.base = Math.max(.7, s * 4.5); m.scale.setScalar(m.userData.base * .5); }
   m.userData.vis = vis; dynamic.add(m); return m;
 }
@@ -2117,7 +2416,6 @@ function bulletTrail(b, prev, dt){
   else if (u.vis === 'orb'){ if (u.rings) u.rings.forEach((rg, i) => { rg.rotation.x += dt * (4 + i * 3); rg.rotation.y += dt * (3 - i * 5); }); const t = performance.now() / 160; u.motes.forEach((mo, k) => mo.position.set(Math.cos(t + k * 2.1) * u.r, Math.sin(t * 1.3 + k) * u.r * .5, Math.sin(t + k * 2.1) * u.r));
     if (b.trailT <= 0){ b.trailT = .03; fx(prev, { color: b.color, size: b.r * 4, life: .25, add: true, alpha: .7 }); } }
   else if (u.vis === 'model'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { tex: 'smoke', color: '#ffffff', size: .4, grow: 1.5, life: .35, alpha: .22, drag: .3 }); } }
-  else if (u.vis === 'emoji'){ if (b.trailT <= 0){ b.trailT = .05; fx(prev, { color: b.color, size: .5, life: .3, add: true, alpha: .55 }); } }
   else if (u.vis === 'slash'){ const k = 1 - b.life / b.max; b.mesh.scale.setScalar(u.base * (.5 + k * .9)); b.mesh.children.forEach(c => c.material.opacity = .9 * (1 - k * .7)); }
   else if (u.vis === 'bullet' && b.trailT <= 0 && w.size > 9){ b.trailT = .04; fx(prev, { color: b.color, size: b.r * 3, life: .15, add: true, alpha: .5 }); }
   if (w.effect !== 'none' && Math.random() < .35){
@@ -2229,6 +2527,68 @@ function makeTurretModel(owner, it){
   g.userData.head = head; g.userData.gun = gun;
   return g;
 }
+/* ================= melee combat =================
+   Punches, claws, bites, sword swings and ground smashes. A combo has N hits (one per arm for multi-armed forms);
+   each hit lands after a short wind-up, hits everything inside reach and arc in front of the attacker, and plays an animation. */
+const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 6.283185; while (d < -Math.PI) d += 6.283185; return d; };
+function formArms(f){ const rigs = f.form && f.form.userData.rigs; return rigs ? rigs.filter(r => r.type === 'arm').sort((x, y) => x.idx - y.idx || y.side - x.side) : []; }
+function autoAnim(f){ return f.transT > 0 ? (formArms(f).length ? 'punch' : 'ram') : 'slash'; }
+function meleeStart(f, w, color){
+  const n = clamp(Math.round(w.count) || 1, 1, 12), anim = w.anim && w.anim !== 'auto' ? w.anim : autoAnim(f);
+  const wind = anim === 'smash' ? .26 : anim === 'bite' ? .13 : .09, gap = clamp(.55 / n, .07, .2);
+  f.atk = { w, color, n, i: 0, t: 0, wind, gap, anim, total: wind + (n - 1) * gap + .2 };
+  f.cool = Math.max(1 / w.fireRate, f.atk.total + .02); f.swingV = 0; f.swingSide = 1;
+  gunSound('melee', f.i);
+}
+function meleeTick(f, dt){
+  const a = f.atk; if (!a) return;
+  if (f.hp <= 0){ f.atk = null; return; }
+  a.t += dt;
+  while (a.i < a.n && a.t >= a.wind + a.i * a.gap){ meleeHit(f, a, a.i); a.i++; }
+  if (a.t >= a.total) f.atk = null;
+}
+const sectorGeos = {};
+function sectorGeo(deg){ const k = Math.round(deg / 10) * 10; if (!sectorGeos[k]){ const half = k * Math.PI / 360; sectorGeos[k] = { fill: new THREE.CircleGeometry(1, 30, -Math.PI / 2 - half, half * 2), edge: new THREE.RingGeometry(.9, 1, 30, 1, -Math.PI / 2 - half, half * 2) }; } return sectorGeos[k]; }
+function swingArc(f, a, i, reach){
+  const w = a.w, geo = sectorGeo(w.arc || 140), n = a.anim === 'claw' ? 3 : 1;
+  for (let k = 0; k < n; k++){
+    const mat = new THREE.MeshBasicMaterial({ color: lin(k ? '#ffffff' : a.color), transparent: true, opacity: a.anim === 'claw' ? .75 : .5, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+    const m = new THREE.Mesh(a.anim === 'claw' ? geo.edge : geo.fill, mat); m.rotation.order = 'YXZ'; m.rotation.y = f.yaw; m.rotation.x = -Math.PI / 2 + (i % 2 ? .55 : -.55) + (k - (n - 1) / 2) * .22;
+    m.position.set(f.x, f.y + f.h * (.38 + k * .06), f.z); m.scale.setScalar(.2); dynamic.add(m); rings.push({ mesh: m, r: reach, life: .22, max: .22 });
+    if (a.anim !== 'claw'){ const e = new THREE.Mesh(geo.edge, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .8, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); e.rotation.copy(m.rotation); e.position.copy(m.position); e.scale.setScalar(.2); dynamic.add(e); rings.push({ mesh: e, r: reach, life: .2, max: .2 }); }
+  }
+}
+function meleeHit(f, a, i){
+  const w = a.w, dirx = Math.sin(f.yaw), dirz = Math.cos(f.yaw), reach = w.reach + f.r * .6, half = (w.arc || 140) * Math.PI / 360, dmg = w.damage;
+  const tip = new THREE.Vector3(f.x + dirx * Math.min(reach, w.reach) * .8, f.y + f.h * .45, f.z + dirz * Math.min(reach, w.reach) * .8);
+  f.swingV = 1; f.swingSide = i % 2 ? -1 : 1;
+  const arms = formArms(f); if (arms.length) arms[i % arms.length].kick = 1;
+  const rigs = f.form && f.form.userData.rigs; if (rigs && a.anim === 'bite') rigs.forEach(r => { if (r.type === 'head') r.kick = 1; });
+  // step toward the nearest enemy so short reach still connects
+  let near = null, nd = 1e9; for (const t of enemyTargets(f.i)){ const d = hdist(f, t); if (d < nd){ nd = d; near = t; } }
+  if (near && nd > reach * .55 && nd < reach * 2.4 && Math.abs(angDiff(Math.atan2(near.x - f.x, near.z - f.z), f.yaw)) < .9){ const k = a.anim === 'ram' ? 11 : 5; f.kx += dirx * k; f.kz += dirz * k; }
+  let hit = false;
+  if (w.explosion > 0){ explode(new THREE.Vector3(tip.x, f.y + .5, tip.z), w.explosion * S, dmg, f.i, w.effect, a.color); hit = true; }
+  else for (const t of enemyTargets(f.i)){
+    const dx = t.x - f.x, dz = t.z - f.z, d = Math.hypot(dx, dz), tr = t.r || .5;
+    if (d > reach + tr) continue;
+    if (d > tr + .5 && Math.abs(angDiff(Math.atan2(dx, dz), f.yaw)) > half) continue;
+    const ty = t.y || 0, th = t.h || 2; if (ty > f.y + f.h + .4 || ty + th < f.y - .4) continue;
+    applyDamage(t, dmg, f.i, w.effect, new THREE.Vector3(f.x, f.y, f.z)); hit = true;
+    if (t.isFighter){ const k = w.knock != null ? w.knock : a.anim === 'smash' ? 9 : a.anim === 'punch' || a.anim === 'ram' ? 4.5 : 2; t.kx += dirx * k; t.kz += dirz * k; }
+    const c = chest(t); impactFx(c, a.color, true); fx(c, { tex: 'flash', color: '#ffffff', size: .9 + Math.min(2.2, dmg / 40), life: .09, add: true });
+  }
+  for (const wl of walls){ if (wl.owner === f.i) continue; const nx = clamp(f.x, wl.minX, wl.maxX), nz = clamp(f.z, wl.minZ, wl.maxZ); if (Math.hypot(nx - f.x, nz - f.z) <= reach && Math.abs(angDiff(Math.atan2(nx - f.x, nz - f.z), f.yaw)) <= half + .3){ wl.hp -= dmg; hit = true; } }
+  // visuals
+  if (a.anim === 'slash' || a.anim === 'claw') swingArc(f, a, i, reach);
+  else if (a.anim === 'smash'){ const ring = new THREE.Mesh(G.ring, new THREE.MeshBasicMaterial({ color: lin(a.color), transparent: true, opacity: .8, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })); ring.rotation.x = -Math.PI / 2; ring.position.set(tip.x, f.y + .06, tip.z); ring.scale.setScalar(.2); dynamic.add(ring); rings.push({ mesh: ring, r: reach * 1.5, life: .45, max: .45 });
+    for (let k = 0; k < 7; k++) fx(new THREE.Vector3(tip.x, f.y + .2, tip.z), { tex: 'smoke', color: '#8a847c', size: .5, grow: 3, life: .8, alpha: .5, vel: [rand(-2, 2), rand(.5, 2), rand(-2, 2)], drag: .3 }); if (f.i === 0) camShake = Math.max(camShake, .45); }
+  else { fx(tip, { tex: 'flash', color: a.color, size: 1.3, life: .1, add: true }); if (a.anim === 'ram') for (let k = 0; k < 6; k++) spark(new THREE.Vector3(f.x, f.y + .3, f.z), '#ffffff', rand(3, 8), .3, .08); }
+  flashLight(tip, a.color, 2.2, 8, .1);
+  if (hit){ sfx('hit', f.i === 0 ? 1 : .6); if (f.i === 0) camShake = Math.max(camShake, Math.min(.35, dmg / 90 + .05)); } else if (f.i === 0) sfx('jump', .5);
+}
+function meleeSwing(f, dt){ f.swingV = Math.max(0, (f.swingV || 0) - dt * 4.5); const a = f.atk, wu = a && a.t < a.wind ? clamp(a.t / a.wind, 0, 1) : 0; return f.swingV * 1.2 - wu * .95; }
+
 const ACT_KEYS = ['KeyZ','KeyX','KeyN','KeyM','KeyJ','KeyK','KeyL','KeyU','KeyI','KeyO'], ACT_LABEL = ['Z','X','N','M','J','K','L','U','I','O'];
 function gadgetReady(g, p){ return !g.used && !(g.cd > 0) && !(g.item.kind === 'transform' && p.transT > 0); }
 // One button per usable thing: every alien/form of a transformation item gets its own button.
@@ -2292,7 +2652,6 @@ function useGadget(p, gi, fi){
       const mm = new THREE.Group(); const body = mesh(G.box, new THREE.MeshStandardMaterial({ color: lin(it.color), roughness: .6, transparent: true, opacity: 1 }), w, H, d, x, gy + H/2, z); mm.add(body);
       mm.add(mesh(G.box, basic(PCOL[p.i]), w + .04, .08, d + .04, x, gy + H - .1, z, false));
       mm.add(mesh(G.box, MAT.dark, w + .1, .25, d + .1, x, gy + .12, z));
-      const ic = emojiSprite(it.emoji, .9); ic.position.set(x, gy + H + .6, z); mm.add(ic);
       mm.scale.y = .01; mm.userData.grow = 0;
       dynamic.add(mm); box.mesh = mm; box.body = body; walls.push(box); break; }
     case 'transform': { const idx = (fi !== undefined && fi !== null) ? fi : (g.formIdx || 0) % it.forms.length; g.formIdx = idx + 1; startTransform(p, it.forms[idx], g); break; }
@@ -2306,7 +2665,8 @@ function useGadget(p, gi, fi){
     case 'strike': { const ey = e.groundY || 0; for (let k = 0; k < it.count; k++){ const a = rand(0, 6.28), rr = k === 0 ? 0 : rand(1, 5.5); const [x, z] = inArena(e.x + Math.cos(a) * rr, e.z + Math.sin(a) * rr);
       const R = it.radius * S; const ring = new THREE.Mesh(G.ring, basic('#ff4d5e', { transparent: true, opacity: .8, side: THREE.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(x, ey + .04, z); ring.scale.setScalar(R);
       const fillm = new THREE.Mesh(G.disc, basic('#ff4d5e', { transparent: true, opacity: .2, side: THREE.DoubleSide, depthWrite: false })); fillm.rotation.x = -Math.PI / 2; fillm.position.set(x, ey + .03, z);
-      const met = emojiSprite(it.emoji, 1.6); met.position.set(x, 30, z); dynamic.add(ring, fillm, met);
+      const met = new THREE.Group(); const mrock = new THREE.Mesh(MG.rock, std('#3a2a26', { roughness: 1 })); mrock.scale.set(.55, .5, .55); mrock.castShadow = true; met.add(mrock); met.add(glowSprite(it.color, 3.2, .9));
+      const mtail = mesh(G.cone, addMat('#ff8a2a', .8), .42, 2.4, .42, 0, 1.4, 0, false); met.add(mtail); met.position.set(x, 30, z); dynamic.add(ring, fillm, met);
       const t = it.delay + k * .22; strikes.push({ owner: p.i, x, y: ey, z, t, max: t, item: it, ring, fillm, met, R }); } break; }
   }
   floatText(chest(p).add(new THREE.Vector3(0, 1.3, 0)), it.emoji + ' ' + it.name, p.color);
@@ -2315,7 +2675,6 @@ function useGadget(p, gi, fi){
 }
 function makeTurret(owner, it, x, z, y){
   const g = makeTurretModel(owner, it); g.position.set(x, y, z);
-  const ic = emojiSprite(it.emoji, .7); ic.position.y = 2.5; g.add(ic);
   g.scale.setScalar(.01); g.userData.grow = 0;
   dynamic.add(g);
   return { owner, x, y, z, r: .75, h: 2.1, hp: it.hp, maxHp: it.hp, item: it, cool: .6, mesh: g, head: g.userData.head, gun: g.userData.gun, flash: 0, recoil: 0, firing: false };
@@ -2326,7 +2685,7 @@ function makeMinion(owner, it, x, z, y){
   const ring = new THREE.Mesh(G.ring, basic(PCOL[owner], { transparent: true, opacity: .8, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; ring.position.y = .05; ring.scale.setScalar(.8); g.add(ring);
   let sp;
   if (it.mdl){ sp = buildMdl(it.mdl, true); sp.scale.setScalar(1.5); const bx = new THREE.Box3().setFromObject(sp); sp.userData.base = -bx.min.y; sp.position.y = sp.userData.base; }
-  else { sp = emojiSprite(it.emoji, 1.7); sp.userData.base = .95; sp.position.y = .95; }
+  else { sp = buildMdl(procCreature(it.name, it.desc, it.color), true); sp.scale.setScalar(1.5); const bx = new THREE.Box3().setFromObject(sp); sp.userData.base = -bx.min.y; sp.position.y = sp.userData.base; }
   g.add(sp);
   dynamic.add(g);
   return { owner, x, y, z, vy: 0, r: .6, h: 1.8, hp: it.hp, maxHp: it.hp, item: it, cool: .8, mesh: g, sprite: sp, model: !!it.mdl, flash: 0, wob: rand(0, 6), stuck: 0, lx: x, lz: z };
@@ -2337,8 +2696,8 @@ function floatText(pos, s, color){ const el = document.createElement('div'); el.
 function cpuThink(p, e, dt){
   const ai = p.ai || (p.ai = { strafe: Math.random() < .5 ? 1 : -1, t: 1, gT: rand(2, 4), swT: 0, stuckT: 0, lx: p.x, lz: p.z, jumpT: rand(2, 5), losT: 0 });
   ai.t -= dt; if (ai.t <= 0){ ai.strafe *= -1; ai.t = rand(.6, 1.9); }
-  const w = p.weapons[p.wi].item.weapon, d = hdist(p, e), range = w.range * S;
-  const want = clamp(range * .6, 6, 20);
+  const w = p.weapons[p.wi].item.weapon, d = hdist(p, e), range = w.melee ? w.reach + 1.2 : w.range * S;
+  const want = w.melee ? Math.max(1.3, w.reach * .65) : clamp(range * .6, 6, 20);
   const a = Math.atan2(e.z - p.z, e.x - p.x);
   ai.losT -= dt; if (ai.losT <= 0){ ai.los = hasLOS(p, e, p.i); ai.losT = .15; }
   const los = ai.los;
@@ -2423,9 +2782,11 @@ function updateFighter(f, inp, dt){
   for (const g of f.gadgets){ if (g.cd > 0){ g.cd -= dt; if (g.cd <= 0){ g.cd = 0; if (g.used && gameMode === 'sandbox') g.used = false; } } }
   setGun(f);
   f.cool -= dt; f.recoil = Math.max(0, f.recoil - dt * 7); f.firing = !!inp.fire;
+  meleeTick(f, dt);
   const wi0 = f.weapons[f.wi];
   const wi = (f.transT > 0 && f.transItem && f.transItem.weapon) ? { item: { weapon: f.transItem.weapon, color: f.transItem.color, name: f.transItem.name }, ammo: Infinity } : wi0;
-  if (inp.fire && f.cool <= 0 && wi && countdown <= 0 && f.dashT <= 0){
+  if (inp.fire && f.cool <= 0 && wi && countdown <= 0 && f.dashT <= 0 && wi.item.weapon.melee) meleeStart(f, wi.item.weapon, wi.item.color);
+  else if (inp.fire && f.cool <= 0 && wi && countdown <= 0 && f.dashT <= 0){
     f.model.updateMatrixWorld(true);
     let muzzle;
     if (f.transT > 0) muzzle = chest(f).add(new THREE.Vector3(Math.sin(f.yaw), .25, Math.cos(f.yaw)).multiplyScalar(f.r + .4));
@@ -2554,7 +2915,6 @@ function update(dt){
     if (vis === 'laser' || vis === 'rocket' || vis === 'bullet' || vis === 'pellet'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_up, _v); }
     else if (vis === 'slash') b.mesh.rotation.y = Math.atan2(b.vel.x, b.vel.z);
     else if (vis === 'model'){ _v.copy(b.vel).normalize(); b.mesh.quaternion.setFromUnitVectors(_zAxis, _v); const inn = b.mesh.userData.inner, ax = b.mesh.userData.axis; if (b.mesh.userData.spin) inn.rotation[ax] = b.spin * (ax === 'y' ? 1.1 : .7); else { inn.rotation.z = Math.sin(b.spin * 1.6) * .3; inn.rotation.x = Math.sin(b.spin) * .12; } }
-    else if (vis === 'emoji') b.mesh.userData.sp.material.rotation = b.spin;
   }
   bullets = bullets.filter(b => !b.dead);
   for (const t of turrets) if (t.hp <= 0){ t.dead = true; dynamic.remove(t.mesh); explode(new THREE.Vector3(t.x, t.y + 1.2, t.z), 2, 0, t.owner, 'none', '#aaaaaa'); }
@@ -2656,7 +3016,7 @@ function animateModels(dt){
     m.position.set(f.x, f.y, f.z); m.rotation.y = f.yaw;
     if (f.hp <= 0 && f.deadT > 0){ const dk = Math.min(1, f.deadT * 2.4); m.rotation.x = -1.45 * (1 - Math.pow(1 - dk, 3)); m.position.y = f.y + .15 * dk; f.shieldMesh.visible = false; continue; }
     m.rotation.x = 0;
-    if (f.form){ const sp = Math.min(1.2, Math.hypot(f.vx, f.vz) / PSPEED); f.form.position.y = f.form.userData.base + Math.abs(Math.sin(f.walk)) * .12 * sp; f.form.rotation.z = Math.sin(f.walk) * .05 * sp; animateRig(f.form, t, f.walk * .8, Math.max(.15, sp), f.recoil, dt); }
+    if (f.form){ const sp = Math.min(1.2, Math.hypot(f.vx, f.vz) / PSPEED); f.form.position.y = f.form.userData.base + Math.abs(Math.sin(f.walk)) * .12 * sp; f.form.rotation.z = Math.sin(f.walk) * .05 * sp; animateRig(f.form, t, f.walk * .8, Math.max(.15, sp), f.recoil, dt, f.atk); const sv = f.swingV || 0; f.form.rotation.x = sv * .14; f.form.position.z = sv * .2; }
     const fx = Math.sin(f.yaw), fz = Math.cos(f.yaw), rx = -Math.cos(f.yaw), rz = Math.sin(f.yaw);
     const fwd = (f.vx * fx + f.vz * fz) / PSPEED, side = (f.vx * rx + f.vz * rz) / PSPEED, sp = Math.min(1.4, Math.hypot(f.vx, f.vz) / PSPEED);
     A.lean += ((f.dashT > 0 ? .45 : fwd * .14) - A.lean) * k; A.side += (-side * .1 - A.side) * k; A.air += ((f.onGround ? 0 : 1) - A.air) * k;
@@ -2669,9 +3029,9 @@ function animateModels(dt){
     });
     u.hips.position.y = .95 + Math.abs(Math.sin(ph)) * .05 * amp + Math.sin(t * 2 + f.i) * .008 - A.air * .05;
     u.torso.rotation.x = A.lean; u.torso.rotation.z = A.side;
-    u.torso.rotation.y = Math.sin(ph) * .08 * amp;
+    u.torso.rotation.y = Math.sin(ph) * .08 * amp; u.torso.rotation.y += (f.swingSide || 1) * (f.swingV || 0) * .35;
     const aimP = f.pitch - A.lean * .9;
-    u.arms.rotation.x = f.dummy ? 1.25 : -aimP - f.recoil * .18; u.arms.rotation.y = -u.torso.rotation.y;
+    u.arms.rotation.x = f.dummy ? 1.25 : -aimP - f.recoil * .18 + meleeSwing(f, dt); u.arms.rotation.y = -u.torso.rotation.y;
     u.head.rotation.x = -f.pitch * .6 - A.lean * .5;
     if (f.gun){ f.gun.position.z = -f.recoil * .14; if (f.gun.userData.arch === 'melee'){ f.gun.rotation.y = -f.recoil * 1.3; f.gun.rotation.x = -f.recoil * .4; } f.gun.userData.tick(dt, f, t); }
     f.shieldMesh.visible = f.shield > 0; if (f.shield > 0) f.shieldMesh.material.opacity = .15 + .1 * Math.sin(t * 8);
@@ -2787,6 +3147,6 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__game = { setAim(a, b){ yaw = a; pitch = b; }, actionsOf, triggerAction, get coarse(){ return COARSE; }, setMap, get world(){ return world; }, get dbg(){ return { keys: Object.keys(keys).filter(k => keys[k]), P: [fighters[0].x, fighters[0].kx, fighters[0].boostMul, fighters[0].slow, countdown], cam: camera.position.toArray().map(v=>+v.toFixed(2)), yaw, pitch, locked, lockFailed, camDistNow }; }, get phase(){ return phase; }, get fighters(){ return fighters; }, get bullets(){ return bullets; }, startGame, requestForge };
+window.__game = { setAim(a, b){ yaw = a; pitch = b; }, actionsOf, triggerAction, get coarse(){ return COARSE; }, procCreature, procObject, buildModel, parsePartsText, autoFit, meleeStart, finalize, normItem, localForge, libMdl, get sceneRef(){ return scene; }, dynamicGroup(){ return dynamic; }, setMap, get world(){ return world; }, get dbg(){ return { keys: Object.keys(keys).filter(k => keys[k]), P: [fighters[0].x, fighters[0].kx, fighters[0].boostMul, fighters[0].slow, countdown], cam: camera.position.toArray().map(v=>+v.toFixed(2)), yaw, pitch, locked, lockFailed, camDistNow }; }, get phase(){ return phase; }, get fighters(){ return fighters; }, get bullets(){ return bullets; }, startGame, requestForge };
 })();
 </script>
