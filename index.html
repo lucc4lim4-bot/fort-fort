@@ -234,6 +234,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     </div>
     <div class="modes opts">
       <label><input type="checkbox" id="deep" checked> Forja caprichada: pesquisa profunda e modelos 3D detalhados (mais lenta)</label>
+      <div id="keyBox" hidden style="margin:.5rem 0;padding:.6rem;border:1px dashed #556;border-radius:8px"><label style="display:block">🔑 IA neste site: cole sua chave da API Anthropic (sk-ant-…). Ela fica só neste navegador e vai direto para a Anthropic; o uso é cobrado na sua conta.<input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…" style="width:100%;margin-top:.3rem"></label><button type="button" id="keySave">Salvar e ativar IA</button> <button type="button" id="keyClear">Remover</button> <small id="keyMsg"></small></div>
       <label><input type="checkbox" id="rev" checked> Revisão visual: a IA olha imagens do modelo 3D e corrige (mais lenta)</label>
       <label><input type="checkbox" id="bal"> Balancear armas (desligado = sem limites)</label>
     </div>
@@ -962,8 +963,63 @@ function statLine(it){
 /* ================= AI forge (Claude) ================= */
 let sampleFn = null, aiMode = 'checking', aiResolve;
 const aiReady = new Promise(r => aiResolve = r);
-function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? 'IA: Claude forjando' : aiMode === 'local' ? 'SEM IA — palpite local, sem pesquisa' : 'IA: conectando…'; }
-(async () => { try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; } aiMode = sampleFn ? 'claude' : 'local'; updateBadge(); aiResolve(); })();
+function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? (keyMode ? 'IA: Claude (sua chave)' : 'IA: Claude forjando') : aiMode === 'local' ? 'SEM IA — palpite local, sem pesquisa' : 'IA: conectando…'; }
+const KEY_LS = 'forja_api_key', TIER_MODEL = { quick: 'claude-haiku-5-5', default: 'claude-sonnet-5-5', complex: 'claude-opus-5-5' };
+let keyMode = false;
+const getKey = () => { try { return (localStorage.getItem(KEY_LS) || '').trim(); } catch(_){ return ''; } };
+const blobB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(b); });
+// Same interface as the Artifact "sample" capability, but calling the Anthropic API directly with the player's own key (GitHub Pages has no server).
+function makeKeySample(key){
+  const err = (code, message, text) => Object.assign(new Error(message), { code, text });
+  async function sample(input, opts){
+    opts = opts || {};
+    const model = TIER_MODEL[opts.modelTier] || TIER_MODEL.default;
+    const messages = (typeof input === 'string' ? [{ role: 'user', content: input }] : input).map(m => ({ role: m.role, content: m.content }));
+    if (opts.images && opts.images.length){
+      const imgs = []; for (const b of opts.images) imgs.push({ type: 'image', source: { type: 'base64', media_type: b.type || 'image/png', data: await blobB64(b) } });
+      const last = messages[messages.length - 1]; messages[messages.length - 1] = { role: 'user', content: [...imgs, { type: 'text', text: last.content }] };
+    }
+    let resp;
+    try { resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', signal: opts.signal, headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model, max_tokens: opts.modelTier === 'quick' ? 4096 : 16000, stream: true, messages }) }); }
+    catch(e){ throw err('network_error', 'Sem conexão com a API: ' + e.message); }
+    if (!resp.ok){
+      let m = ''; try { m = (await resp.json()).error.message; } catch(_){}
+      if (resp.status === 401 || resp.status === 403) throw err('not_granted', 'Chave da API recusada (' + resp.status + '): ' + m);
+      if (resp.status === 429) throw err('rate_limited', 'Limite da API atingido: ' + m);
+      throw err('api_error', 'API ' + resp.status + ': ' + m);
+    }
+    const rd = resp.body.getReader(), dec = new TextDecoder(); let buf = '', text = '', stop = null;
+    for (;;){
+      const { done, value } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true });
+      let i; while ((i = buf.indexOf('\n')) >= 0){
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith('data:')) continue;
+        const d = line.slice(5).trim(); if (!d || d === '[DONE]') continue; let ev; try { ev = JSON.parse(d); } catch(_){ continue; }
+        if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta'){ text += ev.delta.text; if (opts.onText) try { opts.onText({ text, delta: ev.delta.text }); } catch(_){} }
+        else if (ev.type === 'message_delta' && ev.delta) stop = ev.delta.stop_reason;
+        else if (ev.type === 'error') throw err('api_error', (ev.error && ev.error.message) || 'erro na API', text);
+      }
+    }
+    return { text, truncated: stop === 'max_tokens' };
+  }
+  sample.json = async (input, opts) => {
+    const msgs = typeof input === 'string' ? input + '\n\nResponda SOMENTE com um objeto JSON válido, sem markdown e sem texto fora do JSON.' : input;
+    const r = await sample(msgs, opts), t = r.text, a = t.indexOf('{'), b = t.lastIndexOf('}');
+    if (a < 0 || b <= a) throw err('bad_json', 'a IA não devolveu JSON', t);
+    try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ throw err('bad_json', 'JSON da IA inválido' + (r.truncated ? ' (resposta cortada)' : ''), t); }
+  };
+  sample.limits = async () => ({ images: true });
+  return sample;
+}
+function setKeyMode(on){ keyMode = on; const k = getKey(); if (on && k){ sampleFn = makeKeySample(k); aiMode = 'claude'; } else if (!window.claude){ sampleFn = null; aiMode = 'local'; } updateBadge(); const kb = $('#keyBox'); if (kb) kb.hidden = !!(window.claude && sampleFn && !keyMode); }
+(async () => {
+  try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; }
+  if (sampleFn) aiMode = 'claude'; else if (getKey()){ keyMode = true; sampleFn = makeKeySample(getKey()); aiMode = 'claude'; } else aiMode = 'local';
+  updateBadge(); aiResolve();
+  const kb = $('#keyBox'), inp = $('#apiKey'); if (kb){ kb.hidden = !!(sampleFn && !keyMode); if (getKey()) inp.placeholder = 'chave salva neste navegador'; }
+  const sv = $('#keySave'), cl = $('#keyClear');
+  if (sv) sv.onclick = () => { const v = inp.value.trim(); if (!/^sk-ant-/.test(v)){ $('#keyMsg').textContent = 'Chave inválida: ela começa com sk-ant-'; return; } try { localStorage.setItem(KEY_LS, v); } catch(_){ $('#keyMsg').textContent = 'Seu navegador bloqueou o armazenamento.'; return; } inp.value = ''; setKeyMode(true); $('#keyMsg').textContent = 'IA ativada com a sua chave.'; };
+  if (cl) cl.onclick = () => { try { localStorage.removeItem(KEY_LS); } catch(_){} keyMode = false; sampleFn = null; aiMode = 'local'; updateBadge(); $('#keyMsg').textContent = 'Chave removida.'; };
+})();
 setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); aiResolve(); } }, 12000);
 const q = s => String(s).replace(/"/g, "'").replace(/`/g, "'");
 function itemSchemaText(deep){
@@ -1177,7 +1233,7 @@ async function forgeItem(req, opts){
   await aiReady;
   const why = e => (e && (e.message || e.code)) ? String(e.message || e.code).slice(0, 140) : 'erro desconhecido';
   const noAI = (reason) => { const it = localForge(req); it.noAI = reason; it.desc = '⚠️ SEM PESQUISA — ' + reason + '. Isto é só um palpite por palavras-chave.'; return it; };
-  if (!sampleFn || aiMode !== 'claude') return noAI(window.claude ? 'a IA não está liberada para esta página (permita o acesso ao Claude e recarregue)' : 'este site não tem IA; abra a versão do Claude (Artifact) para a IA pesquisar e criar');
+  if (!sampleFn || aiMode !== 'claude') return noAI(window.claude ? 'a IA não está liberada para esta página (permita o acesso ao Claude e recarregue)' : 'sem IA ativa: cole sua chave da API Anthropic no menu (ou abra a versão do Claude)');
   let lastErr = null;
   {
     if (opts.research && deepForge){
