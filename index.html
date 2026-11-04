@@ -962,7 +962,7 @@ function statLine(it){
 /* ================= AI forge (Claude) ================= */
 let sampleFn = null, aiMode = 'checking', aiResolve;
 const aiReady = new Promise(r => aiResolve = r);
-function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? 'IA: Claude forjando' : aiMode === 'local' ? 'IA: forja local (offline)' : 'IA: conectando…'; }
+function updateBadge(){ const b = $('#aiBadge'); b.className = 'badge ' + (aiMode === 'claude' ? 'on' : aiMode === 'local' ? 'off' : ''); b.textContent = aiMode === 'claude' ? 'IA: Claude forjando' : aiMode === 'local' ? 'SEM IA — palpite local, sem pesquisa' : 'IA: conectando…'; }
 (async () => { try { if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample'); } catch(e){ sampleFn = null; } aiMode = sampleFn ? 'claude' : 'local'; updateBadge(); aiResolve(); })();
 setTimeout(() => { if (aiMode === 'checking'){ aiMode = 'local'; updateBadge(); aiResolve(); } }, 12000);
 const q = s => String(s).replace(/"/g, "'").replace(/`/g, "'");
@@ -1175,10 +1175,16 @@ async function deepForgeRun(req, say){
 async function forgeItem(req, opts){
   opts = opts || {}; const say = opts.status || (() => {});
   await aiReady;
-  if (sampleFn && aiMode === 'claude'){
+  const why = e => (e && (e.message || e.code)) ? String(e.message || e.code).slice(0, 140) : 'erro desconhecido';
+  const noAI = (reason) => { const it = localForge(req); it.noAI = reason; it.desc = '⚠️ SEM PESQUISA — ' + reason + '. Isto é só um palpite por palavras-chave.'; return it; };
+  if (!sampleFn || aiMode !== 'claude') return noAI(window.claude ? 'a IA não está liberada para esta página (permita o acesso ao Claude e recarregue)' : 'este site não tem IA; abra a versão do Claude (Artifact) para a IA pesquisar e criar');
+  let lastErr = null;
+  {
     if (opts.research && deepForge){
-      try { return await deepForgeRun(req, say); }
-      catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); return localForge(req); } say('⚠️ A forja detalhada falhou, tentando um caminho mais simples…'); }
+      for (let attempt = 0; attempt < 2; attempt++){
+        try { return await deepForgeRun(req, say); }
+        catch(e){ lastErr = e; if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); return noAI('IA bloqueada (' + why(e) + ')'); } say(attempt ? '⚠️ A forja detalhada falhou de novo, tentando o caminho simples…' : '⚠️ A forja detalhada falhou (' + why(e) + '). Tentando outra vez…'); }
+      }
     }
     try {
       let research = '';
@@ -1191,9 +1197,9 @@ Em até 4 frases em português: o que é (origem), aparência (formato, partes, 
       }
       const raw = await sampleFn.json(buildPrompt(req, research), { modelTier: research ? 'default' : 'quick' });
       const it = finalize(normItem(raw, req, 'claude'), req); if (research) it.research = research; return it;
-    } catch(e){ if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); } }
+    } catch(e){ lastErr = e; if (e && PERMANENT.includes(e.code)){ aiMode = 'local'; updateBadge(); } }
   }
-  return localForge(req);
+  return noAI('a IA falhou (' + why(lastErr) + ')');
 }
 
 /* ================= local fallback forge ================= */
@@ -2178,7 +2184,7 @@ async function requestForge(i, req){
   try { it = await forgeItem(req, { research: i === 0, status: m => { if (st && phase === 'forge') st.textContent = m; } }); } catch(e){ it = localForge(req); }
   if (phase !== 'forge' || round !== myRound || !fighters.includes(p)) return;
   p.pending--; p.inv.push(it); while (p.inv.length > (gameMode === 'sandbox' ? 40 : MAX_INV)) p.inv.shift();
-  if (st) st.textContent = `Pronto: ${it.emoji} ${it.name} (${KIND_LABEL[it.kind]})`;
+  if (st) st.textContent = it.noAI ? `⚠️ ${it.name}: sem pesquisa — ${it.desc.replace(/^⚠️ SEM PESQUISA — /, '')}` : `Pronto: ${it.emoji} ${it.name} (${KIND_LABEL[it.kind]})`;
   sfx('use'); renderForge(); checkReady();
 }
 async function cpuForge(){
@@ -3147,6 +3153,6 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__game = { setAim(a, b){ yaw = a; pitch = b; }, actionsOf, triggerAction, get coarse(){ return COARSE; }, procCreature, procObject, buildModel, parsePartsText, autoFit, meleeStart, finalize, normItem, localForge, libMdl, get sceneRef(){ return scene; }, dynamicGroup(){ return dynamic; }, setMap, get world(){ return world; }, get dbg(){ return { keys: Object.keys(keys).filter(k => keys[k]), P: [fighters[0].x, fighters[0].kx, fighters[0].boostMul, fighters[0].slow, countdown], cam: camera.position.toArray().map(v=>+v.toFixed(2)), yaw, pitch, locked, lockFailed, camDistNow }; }, get phase(){ return phase; }, get fighters(){ return fighters; }, get bullets(){ return bullets; }, startGame, requestForge };
+window.__game = { setAim(a, b){ yaw = a; pitch = b; }, actionsOf, triggerAction, get coarse(){ return COARSE; }, procCreature, procObject, buildModel, parsePartsText, autoFit, meleeStart, finalize, normItem, localForge, forgeItem, libMdl, get sceneRef(){ return scene; }, dynamicGroup(){ return dynamic; }, setMap, get world(){ return world; }, get dbg(){ return { keys: Object.keys(keys).filter(k => keys[k]), P: [fighters[0].x, fighters[0].kx, fighters[0].boostMul, fighters[0].slow, countdown], cam: camera.position.toArray().map(v=>+v.toFixed(2)), yaw, pitch, locked, lockFailed, camDistNow }; }, get phase(){ return phase; }, get fighters(){ return fighters; }, get bullets(){ return bullets; }, startGame, requestForge };
 })();
 </script>
