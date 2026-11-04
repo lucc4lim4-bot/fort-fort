@@ -1,0 +1,10 @@
+# Deploy gratuito no Render: crie um "Blueprint" apontando para este repositório.
+services:
+  - type: web
+    name: fort-fort-battle-royale
+    runtime: node
+    rootDir: battle-royale
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    plan: free
